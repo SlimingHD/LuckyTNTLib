@@ -107,9 +107,9 @@ jar {
     }
 }
 
-jar.finalizedBy('reobfJar')
+//jar.finalizedBy('reobfJar')
 
-publish.dependsOn('reobfJar')
+publish
 
 publishing {
     publications {
@@ -118,8 +118,9 @@ publishing {
         }
     }
     repositories {
+        mavenCentral()
         maven {
-            url ""
+        	url = "/luckytntlib/mcmodsrepo"
         }
     }
 }
