@@ -107,7 +107,7 @@ jar {
     }
 }
 
-//jar.finalizedBy('reobfJar')
+jar.finalizedBy('reobfJar')
 
 publish.dependsOn('reobfJar')
 
