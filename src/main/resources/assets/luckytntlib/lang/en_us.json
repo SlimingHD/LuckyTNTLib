@@ -1,0 +1,17 @@
+{
+	"block.luckytntlib.lucky_tnt": "Lucky TNT",
+	"block.luckytntlib.lucky_god": "Lucky God",
+	"block.luckytntlib.lucky_doomsday": "Lucky Doomsday",
+	
+	"item.luckytntlib.lucky_tnt": "Lucky TNT",
+	"item.luckytntlib.lucky_god": "Lucky God",
+	"item.luckytntlib.lucky_doomsday": "Lucky Doomsday",
+	"item.luckytntlib.lucky_dynamite": "Lucky Dynamite",
+		
+	"itemGroup.normal_tnt": "Normal TNTs",
+	"itemGroup.god_tnt": "God TNTs",	
+	"itemGroup.doomsday_tnt": "Doomsday TNTs",
+	"itemGroup.dynamite": "Dynamite",
+	"itemGroup.minecarts": "Minecarts",
+	"itemGroup.other": "Other"
+}

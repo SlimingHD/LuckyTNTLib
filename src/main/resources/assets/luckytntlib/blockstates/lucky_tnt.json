@@ -1,0 +1,7 @@
+{
+	"variants": {
+		"": {
+			"model": "luckytntlib:block/lucky_tnt"
+		}
+	}
+}

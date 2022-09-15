@@ -1,0 +1,8 @@
+{
+	"parent": "minecraft:block/cube_bottom_top",
+	"textures": {
+		"bottom": "minecraft:block/tnt_bottom",
+		"side": "luckytntlib:block/lucky_god_side",
+		"top": "minecraft:block/tnt_top"
+	}
+}
