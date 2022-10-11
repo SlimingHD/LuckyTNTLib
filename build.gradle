@@ -2,11 +2,12 @@ plugins {
     id 'eclipse'
     id 'maven-publish'
     id 'net.minecraftforge.gradle' version '5.1.+'
+    id "com.jfrog.artifactory" version "4.29.0"
 }
 
-version = '1.19.2-1.0'
-group = 'luckytntlib.luckytntlib'
-archivesBaseName = 'luckytntlib'
+version = '43.0.0.3'
+group = 'libs.luckytntlib'
+archivesBaseName = 'luckytntlib-1.19.2'
 
 java.toolchain.languageVersion = JavaLanguageVersion.of(17)
 
@@ -107,20 +108,33 @@ jar {
     }
 }
 
-//jar.finalizedBy('reobfJar')
+task sourceJar(type: Jar) {
+    classifier 'sources'
+    from sourceSets.main.allJava
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+}
 
-publish
+
+jar.finalizedBy("reobfJar")
+
+//publish should always depend on this, but build not
+//publish.dependsOn("reobfJar")
 
 publishing {
     publications {
         mavenJava(MavenPublication) {
             artifact jar
+            artifact tasks.sourceJar
         }
     }
     repositories {
-        mavenCentral()
-        maven {
-        	url = "/luckytntlib/mcmodsrepo"
+       	//mavenLocal()
+        maven{     	
+        	credentials {
+        		username "eliaskuehne@outlook.com"
+        		password "3Hallo284!"
+        	}
+			url "https://sliminglibs.jfrog.io/artifactory/ltnt-libs-release-local/"
         }
     }
 }
