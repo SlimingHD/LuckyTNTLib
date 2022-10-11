@@ -5,13 +5,19 @@ import net.minecraft.world.phys.Vec3;
 
 public interface IExplosiveEntity{
 
-	public int getFuse();
+	public int getTNTFuse();
 	
-	public void setFuse(int fuse);
+	public void setTNTFuse(int fuse);
 	
-	public Level getLevel();
+	public Level getTNTLevel();
 	
-	public Vec3 getPos();
+	public Vec3 getTNTPos();
+	
+	public double x();
+	
+	public double y();
+	
+	public double z();
 	
 	public void destroy();
 }

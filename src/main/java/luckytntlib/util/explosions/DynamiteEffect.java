@@ -1,5 +1,7 @@
-package luckytntlib.util;
+package luckytntlib.util.explosions;
 
+import luckytntlib.util.IExplosiveEntity;
+import luckytntlib.util.IThrownExplosiveEntity;
 import net.minecraft.client.Minecraft;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.particles.ParticleTypes;
@@ -15,11 +17,11 @@ public abstract class DynamiteEffect extends ExplosiveEffect implements ItemSupp
 	public void baseTick(IExplosiveEntity entity) {
 		if(entity instanceof IThrownExplosiveEntity ent) {
 			if(ent.inGround() || ent.hitEntity()) {
-				if(ent.getFuse() <= 0) {
-					ent.setFuse(2);
+				if(ent.getTNTFuse() <= 0) {
+					ent.setTNTFuse(2);
 				}
-				if(ent.getLevel().isClientSide) {
-					int clientFuse = ent.getFuse() - 1;
+				if(ent.getTNTLevel().isClientSide) {
+					int clientFuse = ent.getTNTFuse() - 1;
 					if(clientFuse == 0) {
 						clientExplosion(ent);
 						ent.destroy();
@@ -29,25 +31,25 @@ public abstract class DynamiteEffect extends ExplosiveEffect implements ItemSupp
 					}
 				}
 				else {
-					if(ent.getFuse() == 0) {
+					if(ent.getTNTFuse() == 0) {
 						serverExplosion(ent);
 						ent.destroy();
 					}
 				}
-				if(ent.getFuse() > 0) {
+				if(ent.getTNTFuse() > 0) {
 					explosionTick(ent);
-					ent.setFuse(ent.getFuse() - 1);
+					ent.setTNTFuse(ent.getTNTFuse() - 1);
 				}
 			}
 		}
 	}
 	
 	public void spawnParticles(IExplosiveEntity entity) {
-		entity.getLevel().addParticle(ParticleTypes.SMOKE, entity.getPos().x, entity.getPos().y + 0.5f, entity.getPos().z(), 0, 0, 0);
+		entity.getTNTLevel().addParticle(ParticleTypes.SMOKE, entity.getTNTPos().x, entity.getTNTPos().y + 0.5f, entity.getTNTPos().z(), 0, 0, 0);
 	}
 	
 	public void clientExplosion(IExplosiveEntity entity) {
-		DistExecutor.unsafeRunWhenOn(Dist.CLIENT, () -> () -> entity.getLevel().playSound(Minecraft.getInstance().player, new BlockPos(entity.getPos()), SoundEvents.GENERIC_EXPLODE, SoundSource.MASTER, 4f, (1f + (entity.getLevel().random.nextFloat() - entity.getLevel().random.nextFloat()) * 0.2f) * 0.7f));
+		DistExecutor.unsafeRunWhenOn(Dist.CLIENT, () -> () -> entity.getTNTLevel().playSound(Minecraft.getInstance().player, new BlockPos(entity.getTNTPos()), SoundEvents.GENERIC_EXPLODE, SoundSource.MASTER, 4f, (1f + (entity.getTNTLevel().random.nextFloat() - entity.getTNTLevel().random.nextFloat()) * 0.2f) * 0.7f));
 	}
 
 	public int getDefaultFuse() {

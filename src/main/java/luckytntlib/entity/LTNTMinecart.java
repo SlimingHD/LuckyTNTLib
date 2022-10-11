@@ -3,7 +3,7 @@ package luckytntlib.entity;
 import javax.annotation.Nullable;
 
 import luckytntlib.util.IExplosiveEntity;
-import luckytntlib.util.PrimedTNTEffect;
+import luckytntlib.util.explosions.PrimedTNTEffect;
 import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.syncher.EntityDataAccessor;
@@ -36,19 +36,19 @@ public class LTNTMinecart extends AbstractMinecart implements IExplosiveEntity{
 		this.effect = effect;
 		this.explodeInstantly = explodeInstantly;
 		this.drop = drop;
-		setFuse(-2);
+		setTNTFuse(-2);
 	}
 	
 	@Override
 	public void tick() {
 		super.tick();
-		if(getFuse() > 0) {
+		if(getTNTFuse() > 0) {
 			effect.baseTick(this);
 		}
-		if(horizontalCollision && getFuse() < 0) {
+		if(horizontalCollision && getTNTFuse() < 0) {
 			if(explodesInstantly()) {
 				fuse();
-				setFuse(1);
+				setTNTFuse(1);
 			}
 			else {
 				fuse();
@@ -60,7 +60,7 @@ public class LTNTMinecart extends AbstractMinecart implements IExplosiveEntity{
 	public boolean hurt(DamageSource source, float amount) {
 		Entity entity = source.getDirectEntity();
 		if (entity instanceof AbstractArrow abstractarrow) {
-			if (abstractarrow.isOnFire() && getFuse() < 0) {
+			if (abstractarrow.isOnFire() && getTNTFuse() < 0) {
 				fuse();
 			}
 		}
@@ -73,22 +73,22 @@ public class LTNTMinecart extends AbstractMinecart implements IExplosiveEntity{
 		if (!source.isFire() && !source.isExplosion() && !(speed >= 0.01f)) {
 			super.destroy(source);
 		} else {
-			if (this.getFuse() < 0) {
+			if (this.getTNTFuse() < 0) {
 				this.fuse();
-				setFuse(random.nextInt(effect.getDefaultFuse() / 4) + random.nextInt(effect.getDefaultFuse() / 4));
+				setTNTFuse(random.nextInt(effect.getDefaultFuse() / 4) + random.nextInt(effect.getDefaultFuse() / 4));
 			}
 		}
 	}
 	
 	@Override
 	public void activateMinecart(int x, int y, int z, boolean active) {
-		if(active && getFuse() < 0) {
+		if(active && getTNTFuse() < 0) {
 			fuse();
 		}
 	}
 
 	public void fuse() {
-		setFuse(effect.getDefaultFuse());	
+		setTNTFuse(effect.getDefaultFuse());	
 		level.playSound(null, new BlockPos(getPosition(1)), SoundEvents.TNT_PRIMED, getSoundSource(), 1f, 1f);
 	}
 	
@@ -106,20 +106,11 @@ public class LTNTMinecart extends AbstractMinecart implements IExplosiveEntity{
 		return null;
 	}
 	
-	public int getFuse() {
-		return entityData.get(DATA_FUSE_ID);
-	}
-	
-	public void setFuse(int fuse) {
-		entityData.set(DATA_FUSE_ID, fuse);
-	}
-	
 	@Override
 	protected Item getDropItem() {
 		return drop.get();
 	}
 	
-	@SuppressWarnings("deprecation")
 	@Override
 	public BlockState getDisplayBlockState() {
 		return effect.getBlock().defaultBlockState();
@@ -130,7 +121,7 @@ public class LTNTMinecart extends AbstractMinecart implements IExplosiveEntity{
 		if(placer != null) {
 			tag.putInt("placerID", placer.getId());
 		}
-		tag.putShort("fuse", (short)getFuse());
+		tag.putShort("fuse", (short)getTNTFuse());
 		super.addAdditionalSaveData(tag);
 	}
 	
@@ -139,7 +130,7 @@ public class LTNTMinecart extends AbstractMinecart implements IExplosiveEntity{
 		if(level.getEntity(tag.getInt("placerID")) instanceof LivingEntity lEnt) {
 			placer = lEnt;
 		}
-		setFuse(tag.getShort("fuse"));
+		setTNTFuse(tag.getShort("fuse"));
 		super.readAdditionalSaveData(tag);
 	}
 	
@@ -155,14 +146,44 @@ public class LTNTMinecart extends AbstractMinecart implements IExplosiveEntity{
 	public PrimedTNTEffect getEffect() {
 		return effect;
 	}
-
+	
 	@Override
-	public Vec3 getPos() {
+	public int getTNTFuse() {
+		return entityData.get(DATA_FUSE_ID);
+	}
+	
+	@Override
+	public void setTNTFuse(int fuse) {
+		entityData.set(DATA_FUSE_ID, fuse);
+	}
+	
+	@Override
+	public Vec3 getTNTPos() {
 		return getPosition(1);
 	}
 
 	@Override
 	public void destroy() {
 		discard();
+	}
+	
+	@Override
+	public Level getTNTLevel() {
+		return level;
+	}
+	
+	@Override
+	public double x() {
+		return getX();
+	}
+
+	@Override
+	public double y() {
+		return getY();
+	}
+
+	@Override
+	public double z() {
+		return getZ();
 	}
 }

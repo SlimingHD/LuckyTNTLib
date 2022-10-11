@@ -2,8 +2,8 @@ package luckytntlib.entity;
 
 import javax.annotation.Nullable;
 
-import luckytntlib.util.DynamiteEffect;
 import luckytntlib.util.IExplosiveEntity;
+import luckytntlib.util.explosions.DynamiteEffect;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.protocol.Packet;
 import net.minecraft.network.syncher.EntityDataAccessor;
@@ -31,7 +31,7 @@ public class LDynamite extends AbstractArrow implements IExplosiveEntity{
 	
 	public LDynamite(EntityType<LDynamite> type, Level level, DynamiteEffect effect) {
 		super(type, level);
-		setFuse(effect.getDefaultFuse());
+		setTNTFuse(effect.getDefaultFuse());
 		pickup = AbstractArrow.Pickup.DISALLOWED;
 		this.effect = effect;
 	}
@@ -81,14 +81,6 @@ public class LDynamite extends AbstractArrow implements IExplosiveEntity{
 		effect.baseTick(this);
 	}
 	
-	public void setFuse(int fuse) {
-		entityData.set(DATA_FUSE_ID, fuse);
-	}
-	
-	public int getFuse() {
-		return entityData.get(DATA_FUSE_ID);
-	}
-	
 	@Override
 	public void defineSynchedData() {
 		entityData.define(DATA_FUSE_ID, -1);
@@ -111,7 +103,7 @@ public class LDynamite extends AbstractArrow implements IExplosiveEntity{
 		if(thrower != null) {
 			tag.putInt("throwerID", thrower.getId());
 		}
-		tag.putShort("Fuse", (short)getFuse());
+		tag.putShort("Fuse", (short)getTNTFuse());
 		super.addAdditionalSaveData(tag);
 	}
 	
@@ -120,7 +112,7 @@ public class LDynamite extends AbstractArrow implements IExplosiveEntity{
 		if(level.getEntity(tag.getInt("throwerID")) instanceof LivingEntity lEnt) {
 			thrower = lEnt;
 		}
-		setFuse(tag.getShort("Fuse"));
+		setTNTFuse(tag.getShort("Fuse"));
 		super.readAdditionalSaveData(tag);
 	}
 	
@@ -132,13 +124,41 @@ public class LDynamite extends AbstractArrow implements IExplosiveEntity{
 		return hitEntity;
 	}
 
+	public void setTNTFuse(int fuse) {
+		entityData.set(DATA_FUSE_ID, fuse);
+	}
+	
+	public int getTNTFuse() {
+		return entityData.get(DATA_FUSE_ID);
+	}
+	
 	@Override
-	public Vec3 getPos() {
+	public Vec3 getTNTPos() {
 		return getPosition(1);
 	}
 
 	@Override
 	public void destroy() {
 		discard();
+	}
+	
+	@Override
+	public Level getTNTLevel() {
+		return level;
+	}
+	
+	@Override
+	public double x() {
+		return getX();
+	}
+
+	@Override
+	public double y() {
+		return getY();
+	}
+
+	@Override
+	public double z() {
+		return getZ();
 	}
 }

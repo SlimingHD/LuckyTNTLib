@@ -1,5 +1,6 @@
 package luckytntlib.registry;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Supplier;
 
@@ -7,13 +8,12 @@ import javax.annotation.Nullable;
 
 import com.mojang.datafixers.util.Pair;
 
-import luckytntlib.LuckyTNTLib;
 import luckytntlib.block.LTNTBlock;
 import luckytntlib.entity.LDynamite;
 import luckytntlib.entity.PrimedLTNT;
 import luckytntlib.item.LDynamiteItem;
-import luckytntlib.util.DynamiteEffect;
-import luckytntlib.util.PrimedTNTEffect;
+import luckytntlib.util.explosions.DynamiteEffect;
+import luckytntlib.util.explosions.PrimedTNTEffect;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.network.chat.contents.TranslatableContents;
@@ -36,19 +36,37 @@ import net.minecraftforge.registries.RegistryObject;
 
 public class RegistryHelper {
 	
-	public static RegistryObject<LTNTBlock> registerTNTBlock(String registryName, RegistryObject<EntityType<PrimedLTNT>> TNT, CreativeModeTab tab){
-		return registerTNTBlock(new TNTBlockItemRegistryData.Builder(registryName, () -> new LTNTBlock(BlockBehaviour.Properties.of(Material.EXPLOSIVE, MaterialColor.COLOR_RED).sound(SoundType.GRASS), TNT)).tab(tab).build());
+	public final DeferredRegister<Block> blockRegistry;
+	public final DeferredRegister<Item> itemRegistry;
+	public final DeferredRegister<EntityType<?>> entityRegistry;
+	
+	public RegistryHelper(DeferredRegister<Block> blockRegistry, DeferredRegister<Item> itemRegistry, DeferredRegister<EntityType<?>> entityRegistry) {
+		this.blockRegistry = blockRegistry;
+		this.itemRegistry = itemRegistry;
+		this.entityRegistry = entityRegistry;
 	}
 	
-	public static RegistryObject<LTNTBlock> registerTNTBlock(String registryName, RegistryObject<EntityType<PrimedLTNT>> TNT, CreativeModeTab tab, MaterialColor color){
-		return registerTNTBlock(new TNTBlockItemRegistryData.Builder(registryName, () -> new LTNTBlock(BlockBehaviour.Properties.of(Material.EXPLOSIVE, color).sound(SoundType.GRASS), TNT)).tab(tab).build());
+	public RegistryObject<LTNTBlock> registerTNTBlock(String registryName, RegistryObject<EntityType<PrimedLTNT>> TNT, CreativeModeTab tab){
+		return registerTNTBlock(registryName, TNT, tab, MaterialColor.COLOR_RED);
 	}
 	
-	public static RegistryObject<LTNTBlock> registerTNTBlock(TNTBlockItemRegistryData blockData){
-		return registerTNTBlock(LuckyTNTLib.TNT_BLOCKS, LuckyTNTLib.TNT_ITEMS, blockData);
+	public RegistryObject<LTNTBlock> registerTNTBlock(String registryName, RegistryObject<EntityType<PrimedLTNT>> TNT, CreativeModeTab tab, MaterialColor color){
+		return registerTNTBlock(registryName, TNT, tab, color, true);
 	}
 	
-	public static RegistryObject<LTNTBlock> registerTNTBlock(DeferredRegister<Block> blockRegistry, @Nullable DeferredRegister<Item> itemRegistry, TNTBlockItemRegistryData blockData){
+	public RegistryObject<LTNTBlock> registerTNTBlock(String registryName, RegistryObject<EntityType<PrimedLTNT>> TNT, CreativeModeTab tab, MaterialColor color, boolean addDispenserBehaviour){
+		return registerTNTBlock(new TNTBlockItemRegistryData.Builder(registryName, () -> new LTNTBlock(BlockBehaviour.Properties.of(Material.EXPLOSIVE, color).sound(SoundType.GRASS), TNT)).tab(tab).addDispenserBehaviour(addDispenserBehaviour).build());
+	}
+	
+	public RegistryObject<LTNTBlock> registerTNTBlock(TNTBlockItemRegistryData blockData){
+		return registerTNTBlock(blockRegistry, itemRegistry, blockData);
+	}
+	
+	public RegistryObject<LTNTBlock> registerTNTBlock(DeferredRegister<Block> blockRegistry, DeferredRegister<Item> itemRegistry, String registryName, RegistryObject<EntityType<PrimedLTNT>> TNT, CreativeModeTab tab, MaterialColor color){
+		return registerTNTBlock(blockRegistry, itemRegistry, new TNTBlockItemRegistryData.Builder(registryName, () -> new LTNTBlock(BlockBehaviour.Properties.of(Material.EXPLOSIVE, color).sound(SoundType.GRASS), TNT)).tab(tab).build());
+	}
+	
+	public RegistryObject<LTNTBlock> registerTNTBlock(DeferredRegister<Block> blockRegistry, @Nullable DeferredRegister<Item> itemRegistry, TNTBlockItemRegistryData blockData){
 		RegistryObject<LTNTBlock> block = blockRegistry.register(blockData.getRegistryName(), (Supplier<LTNTBlock>)blockData.getBlock());
 		if(blockData.makeItem() && itemRegistry != null) {
 			RegistryObject<Item> item = itemRegistry.register(blockData.getRegistryName(), () -> new BlockItem(block.get(), new Item.Properties().tab(blockData.getTab())) {		
@@ -61,7 +79,10 @@ public class RegistryHelper {
 				}
 			});
 			if(blockData.addToTNTLists()) {
-				//To do: add to lists
+				if(TNTLists.TNTLists.get(blockData.getTab().getRecipeFolderName()) == null) {
+					TNTLists.TNTLists.put(blockData.getTab().getRecipeFolderName(), new ArrayList<RegistryObject<LTNTBlock>>());
+				}
+				TNTLists.TNTLists.get(blockData.getTab().getRecipeFolderName()).add(block);
 			}
 			if(blockData.addDispenserBehaviour()) {
 				TNTLists.TNT_DISPENSER_REGISTRY_LIST.add(new Pair<RegistryObject<LTNTBlock>, RegistryObject<Item>>(block, item));
@@ -71,7 +92,7 @@ public class RegistryHelper {
 	}
 	
 	
-	public static RegistryObject<Block> registerBlockWithDesc(DeferredRegister<Block> blockRegistry, @Nullable DeferredRegister<Item> itemRegistry, BlockItemRegistryData blockData){
+	public RegistryObject<Block> registerBlockWithDesc(DeferredRegister<Block> blockRegistry, @Nullable DeferredRegister<Item> itemRegistry, BlockItemRegistryData blockData){
 		RegistryObject<Block> block = blockRegistry.register(blockData.getRegistryName(), blockData.getBlock());
 		if(blockData.makeItem() && itemRegistry != null){
 			itemRegistry.register(blockData.getRegistryName(), () -> new BlockItem(block.get(), new Item.Properties().tab(blockData.getTab())) {		
@@ -87,35 +108,40 @@ public class RegistryHelper {
 		return block;
 	}
 	
-	public static RegistryObject<LDynamiteItem> registerDynamiteItem(String registryName, RegistryObject<EntityType<LDynamite>> dynamite){
+	public RegistryObject<LDynamiteItem> registerDynamiteItem(String registryName, RegistryObject<EntityType<LDynamite>> dynamite){
 		return registerDynamiteItem(registryName, () -> new LDynamiteItem(new Item.Properties(), dynamite, true));
 	}
 	
-	public static RegistryObject<LDynamiteItem> registerDynamiteItem(String registryName, Supplier<LDynamiteItem> dynamiteSupplier){
+	public RegistryObject<LDynamiteItem> registerDynamiteItem(String registryName, Supplier<LDynamiteItem> dynamiteSupplier){
 		return registerDynamiteItem(registryName, dynamiteSupplier, true);
 	}
 	
-	public static RegistryObject<LDynamiteItem> registerDynamiteItem(String registryName, Supplier<LDynamiteItem> dynamiteSupplier, boolean addToLists){
-		return registerDynamiteItem(LuckyTNTLib.DYNAMITE_ITEMS, registryName, dynamiteSupplier, addToLists);
+	public RegistryObject<LDynamiteItem> registerDynamiteItem(String registryName, Supplier<LDynamiteItem> dynamiteSupplier, boolean addToLists){
+		return registerDynamiteItem(itemRegistry, registryName, dynamiteSupplier, addToLists);
 	}
 	
-	public static RegistryObject<LDynamiteItem> registerDynamiteItem(DeferredRegister<Item> itemRegistry, String registryName, Supplier<LDynamiteItem> dynamiteSupplier, boolean addToLists){
+	//Not fully done
+	public RegistryObject<LDynamiteItem> registerDynamiteItem(DeferredRegister<Item> itemRegistry, String registryName, Supplier<LDynamiteItem> dynamiteSupplier, boolean addToLists){
 		RegistryObject<LDynamiteItem> item = itemRegistry.register(registryName, dynamiteSupplier);		
 		if(addToLists) {
-			TNTLists.DYNAMITE.add(item);
+			if(TNTLists.DynamiteLists.get("dynamites") == null) {
+				TNTLists.DynamiteLists.put("dynamites", new ArrayList<RegistryObject<LDynamiteItem>>());
+			}
+			TNTLists.DynamiteLists.get("dynamites").add(item);
 		}
 		return item;
 	}
 	
-	public static RegistryObject<EntityType<PrimedLTNT>> registerTNTEntity(String registryName, PrimedTNTEffect effect){
+	public RegistryObject<EntityType<PrimedLTNT>> registerTNTEntity(String registryName, PrimedTNTEffect effect){
 		return registerTNTEntity(registryName, effect, 1f, true);
 	}
 	
-	public static RegistryObject<EntityType<PrimedLTNT>> registerTNTEntity(String registryName, PrimedTNTEffect effect, float size, boolean fireImmune){
-		return registerTNTEntity(LuckyTNTLib.TNT_ENTITIES, registryName, effect, size, fireImmune);
+	public RegistryObject<EntityType<PrimedLTNT>> registerTNTEntity(String registryName, PrimedTNTEffect effect, float size, boolean fireImmune){
+		return registerTNTEntity(entityRegistry, registryName, effect, size, fireImmune);
 	}
 	
-	public static RegistryObject<EntityType<PrimedLTNT>> registerTNTEntity(DeferredRegister<EntityType<?>> entityRegistry, String registryName, PrimedTNTEffect effect, float size, boolean fireImmune){
+	//Not fully done
+	public RegistryObject<EntityType<PrimedLTNT>> registerTNTEntity(DeferredRegister<EntityType<?>> entityRegistry, String registryName, PrimedTNTEffect effect, float size, boolean fireImmune){
 		if(fireImmune) {
 			return entityRegistry.register(registryName, () -> EntityType.Builder.<PrimedLTNT>of((EntityType<PrimedLTNT> type, Level level) -> new PrimedLTNT(type, level, effect), MobCategory.MISC).setShouldReceiveVelocityUpdates(true).setTrackingRange(64).fireImmune().sized(size, size).build(registryName));
 		}
@@ -124,7 +150,8 @@ public class RegistryHelper {
 		}
 	}
 	
-	public static RegistryObject<EntityType<LDynamite>> registerDynamiteProjectile(DeferredRegister<EntityType<?>> entityRegistry, String registryName, RegistryObject<EntityType<LDynamite>> entity, DynamiteEffect effect, float size, boolean fireImmune){
+	//Not fully done
+	public RegistryObject<EntityType<LDynamite>> registerDynamiteProjectile(DeferredRegister<EntityType<?>> entityRegistry, String registryName, RegistryObject<EntityType<LDynamite>> entity, DynamiteEffect effect, float size, boolean fireImmune){
 		if(fireImmune) {
 			return entityRegistry.register(registryName, () -> EntityType.Builder.<LDynamite>of((EntityType<LDynamite> type, Level level) -> new LDynamite(type, level, effect), MobCategory.MISC).setShouldReceiveVelocityUpdates(true).setTrackingRange(64).fireImmune().sized(size, size).build(registryName));
 		}
@@ -133,15 +160,15 @@ public class RegistryHelper {
 		}
 	}
 	
-	public static RegistryObject<Item> registerSimpleItem(DeferredRegister<Item> itemRegistry, Supplier<Item> itemSupplier, String registryName){
+	public RegistryObject<Item> registerSimpleItem(DeferredRegister<Item> itemRegistry, Supplier<Item> itemSupplier, String registryName){
 		return itemRegistry.register(registryName, itemSupplier);
 	}
 	
-	public static RegistryObject<Block> registerSimpleBlock(DeferredRegister<Block> blockRegistry, Supplier<Block> blockSupplier, String registryName){
+	public RegistryObject<Block> registerSimpleBlock(DeferredRegister<Block> blockRegistry, Supplier<Block> blockSupplier, String registryName){
 		return blockRegistry.register(registryName, blockSupplier);
 	}
 	
-	public static<T extends Entity> RegistryObject<EntityType<T>> registerSimpleEntity(DeferredRegister<EntityType<?>> entityRegistry, String registryName, EntityType.Builder<T> builder){
+	public<T extends Entity> RegistryObject<EntityType<T>> registerSimpleEntity(DeferredRegister<EntityType<?>> entityRegistry, String registryName, EntityType.Builder<T> builder){
 		return entityRegistry.register(registryName, () -> builder.build(registryName));
 	}
 }

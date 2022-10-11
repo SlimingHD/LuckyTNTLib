@@ -24,7 +24,6 @@ public class LTNTRenderer extends EntityRenderer<PrimedLTNT>{
 		this.blockRenderer = context.getBlockRenderDispatcher();
 	}
 	
-	@SuppressWarnings("deprecation")
 	public void render(PrimedLTNT entity, float yaw, float partialTicks, PoseStack posestack, MultiBufferSource buffer, int light) {
     	posestack.pushPose();
         posestack.translate(0, 0, 0);

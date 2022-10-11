@@ -5,7 +5,6 @@ import java.util.Random;
 import javax.annotation.Nullable;
 
 import luckytntlib.entity.LDynamite;
-import luckytntlib.util.LMathUtil;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.BlockSource;
 import net.minecraft.core.dispenser.DispenseItemBehavior;
@@ -41,7 +40,7 @@ public class LDynamiteItem extends Item{
 					Level level = source.getLevel();
 					BlockPos dPos = source.getPos();
 					BlockPos pos = new BlockPos(DispenserBlock.getDispensePosition(source));
-					Vec3 direction = new Vec3(pos.getX() - dPos.getX(), pos.getY() - dPos.getY(), pos.getZ() - dPos.getZ()).normalize().add(LMathUtil.getRandomVector().scale(0.1f));
+					Vec3 direction = new Vec3(pos.getX() - dPos.getX(), pos.getY() - dPos.getY(), pos.getZ() - dPos.getZ()).normalize().add(new Vec3(Math.random() - Math.random(), Math.random() - Math.random(), Math.random() - Math.random()).scale(0.1f));
 					shoot(level, pos.getX() + 0.5f, pos.getY() + 0.5f, pos.getZ() + 0.5f, direction, 2, null);
 					stack.shrink(1);
 					return stack;

@@ -3,7 +3,7 @@ package luckytntlib.entity;
 import javax.annotation.Nullable;
 
 import luckytntlib.util.IExplosiveEntity;
-import luckytntlib.util.PrimedTNTEffect;
+import luckytntlib.util.explosions.PrimedTNTEffect;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.protocol.Packet;
 import net.minecraft.sounds.SoundSource;
@@ -24,11 +24,13 @@ public class PrimedLTNT extends PrimedTnt implements IExplosiveEntity{
 	public PrimedLTNT(EntityType<PrimedLTNT> type, Level level, PrimedTNTEffect effect) {
 		super(type, level);
 		this.effect = effect;
+	    double movement = level.random.nextDouble() * (double)(Math.PI * 2F);
+	    this.setDeltaMovement(-Math.sin(movement) * 0.02D, 0.2F, -Math.cos(movement) * 0.02D);
 	}
 	
 	@Override
 	public Packet<?> getAddEntityPacket(){
-		return NetworkHooks.getEntitySpawningPacket(this);
+		return NetworkHooks.getEntitySpawningPacket(this);	
 	}
 	
 	@Override
@@ -84,14 +86,44 @@ public class PrimedLTNT extends PrimedTnt implements IExplosiveEntity{
 		}
 		super.readAdditionalSaveData(tag);
 	}
+	
+	@Override
+	public void setTNTFuse(int fuse) {
+		setFuse(fuse);
+	}
+	
+	@Override
+	public int getTNTFuse() {
+		return getFuse();
+	}
 
 	@Override
-	public Vec3 getPos() {
+	public Vec3 getTNTPos() {
 		return getPosition(1);
 	}
 
 	@Override
 	public void destroy() {
 		discard();
+	}
+	
+	@Override
+	public Level getTNTLevel() {
+		return level;
+	}
+
+	@Override
+	public double x() {
+		return getX();
+	}
+
+	@Override
+	public double y() {
+		return getY();
+	}
+
+	@Override
+	public double z() {
+		return getZ();
 	}
 }

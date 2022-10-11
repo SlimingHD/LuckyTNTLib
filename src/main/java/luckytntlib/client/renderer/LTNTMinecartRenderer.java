@@ -11,7 +11,10 @@ import net.minecraft.client.renderer.entity.MinecartRenderer;
 import net.minecraft.client.renderer.entity.TntMinecartRenderer;
 import net.minecraft.util.Mth;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.api.distmarker.OnlyIn;
 
+@OnlyIn(Dist.CLIENT)
 public class LTNTMinecartRenderer extends MinecartRenderer<LTNTMinecart>{
 	
 	public LTNTMinecartRenderer(EntityRendererProvider.Context context) {
@@ -20,7 +23,7 @@ public class LTNTMinecartRenderer extends MinecartRenderer<LTNTMinecart>{
 	
 	@Override
 	public void renderMinecartContents(LTNTMinecart entity, float partialTicks, BlockState state, PoseStack stack, MultiBufferSource buffer, int i1) {
-		int fuse = entity.getFuse();
+		int fuse = entity.getTNTFuse();
 		if(fuse > -1 && (float) fuse - partialTicks + 1f < 10f) {
 			float scaleMult = 1f - ((float)fuse - partialTicks + 1f) / 10f;
 			scaleMult = Mth.clamp(scaleMult, 0f, 1f);

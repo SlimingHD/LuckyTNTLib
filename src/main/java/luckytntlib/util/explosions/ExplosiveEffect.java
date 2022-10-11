@@ -1,7 +1,9 @@
-package luckytntlib.util;
+package luckytntlib.util.explosions;
 
-@SuppressWarnings("deprecation")
-public abstract class ExplosiveEffect implements IRenderAsBlock{
+import luckytntlib.util.IExplosiveEntity;
+import net.minecraft.world.level.block.Block;
+
+public abstract class ExplosiveEffect{
 
 	public abstract void baseTick(IExplosiveEntity entity);
 	
@@ -13,8 +15,7 @@ public abstract class ExplosiveEffect implements IRenderAsBlock{
 	
 	public abstract void spawnParticles(IExplosiveEntity entity);
 	
-	@Override
-	public float getSize() {
-		return 1;
-	}
+	public abstract Block getBlock();
+	
+	public abstract float getSize();
 }
