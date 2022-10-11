@@ -14,8 +14,7 @@ out
 .idea
 
 # gradle
-build
-.gradle
+build.gradle
 
 # other
 eclipse
@@ -23,6 +22,5 @@ run
 
 # Files from Forge MDK
 forge*changelog.txt
-*.gradle
-build.gradle
-build.gradle
+/.gradle/
+/build/
