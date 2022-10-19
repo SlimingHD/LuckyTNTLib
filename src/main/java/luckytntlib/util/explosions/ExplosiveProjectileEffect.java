@@ -17,12 +17,12 @@ public abstract class ExplosiveProjectileEffect extends ExplosiveEffect implemen
 	public void baseTick(IExplosiveEntity entity) {
 		if(entity instanceof IExplosiveProjectileEntity ent) {
 			if(ent.inGround() || ent.hitEntity()) {
-				if(ent.getTNTFuse() < 0 || airFuse()) {
+				if(ent.getTNTFuse() < 0 || (airFuse() && ent.getTNTFuse() >= 2)) {
 					ent.setTNTFuse(2);
 				}
 				if(ent.level().isClientSide) {
 					int clientFuse = ent.getTNTFuse() - 1;
-					if(clientFuse == 0) {
+					if(clientFuse <= 0) {
 						clientExplosion(ent);
 						ent.destroy();
 					}
