@@ -11,6 +11,7 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
+import net.minecraft.util.Mth;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.item.ItemStack;
@@ -77,7 +78,7 @@ public class LTNTBlock extends TntBlock{
 	public PrimedLTNT explode(Level level, boolean exploded, double x, double y, double z, @Nullable LivingEntity igniter) throws NullPointerException {
 		if(TNT != null) {
 			PrimedLTNT tnt = TNT.get().create(level);
-			tnt.setFuse(exploded ? tnt.getEffect().getDefaultFuse() / 8 + random.nextInt(tnt.getEffect().getDefaultFuse() / 4) : tnt.getEffect().getDefaultFuse());
+			tnt.setFuse(exploded ? tnt.getEffect().getDefaultFuse() / 8 + random.nextInt(Mth.clamp(tnt.getEffect().getDefaultFuse() / 4, 1, Integer.MAX_VALUE)) : tnt.getEffect().getDefaultFuse());
 			tnt.setPos(x + 0.5f, y, z + 0.5f);
 			tnt.setOwner(igniter);
 			level.addFreshEntity(tnt);
