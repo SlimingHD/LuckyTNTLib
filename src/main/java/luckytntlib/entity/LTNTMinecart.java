@@ -25,7 +25,7 @@ import net.minecraftforge.registries.RegistryObject;
 
 public class LTNTMinecart extends AbstractMinecart implements IExplosiveEntity{
 
-	private static final EntityDataAccessor<Integer> DATA_FUSE_ID = SynchedEntityData.defineId(LDynamite.class, EntityDataSerializers.INT);
+	private static final EntityDataAccessor<Integer> DATA_FUSE_ID = SynchedEntityData.defineId(LExplosiveProjectile.class, EntityDataSerializers.INT);
 	private boolean explodeInstantly;
 	private PrimedTNTEffect effect;
 	private RegistryObject<Item> drop;
@@ -158,7 +158,7 @@ public class LTNTMinecart extends AbstractMinecart implements IExplosiveEntity{
 	}
 	
 	@Override
-	public Vec3 getTNTPos() {
+	public Vec3 getPos() {
 		return getPosition(1);
 	}
 
@@ -168,7 +168,7 @@ public class LTNTMinecart extends AbstractMinecart implements IExplosiveEntity{
 	}
 	
 	@Override
-	public Level getTNTLevel() {
+	public Level level() {
 		return level;
 	}
 	

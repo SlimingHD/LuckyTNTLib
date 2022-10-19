@@ -7,13 +7,16 @@ import javax.annotation.Nullable;
 import luckytntlib.block.LTNTBlock;
 import luckytntlib.util.IExplosiveEntity;
 import net.minecraft.world.entity.Entity;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.ItemLike;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraftforge.registries.RegistryObject;
 
-public class TNTxStrengthEffect extends PrimedTNTEffect{
+public class ProjectilexStrengthEffect extends ExplosiveProjectileEffect{
 	
 	@Nullable private final Supplier<RegistryObject<LTNTBlock>> TNT;
+	@Nullable private final ItemStack item;
 	private final int fuse;
 	private final float strength;
 	private final float xzStrength, yStrength;
@@ -21,9 +24,11 @@ public class TNTxStrengthEffect extends PrimedTNTEffect{
 	private final float randomVecLength;
 	private final float knockbackStrength;
 	private final boolean isStrongExplosion;
+	private final boolean airFuse;
 	
-	private TNTxStrengthEffect(@Nullable Supplier<RegistryObject<LTNTBlock>> TNT, int fuse, float strength, float xzStrength, float yStrength, float resistanceImpact, float randomVecLength, float knockbackStrength, boolean isStrongExplosion) {
+	private ProjectilexStrengthEffect(@Nullable Supplier<RegistryObject<LTNTBlock>> TNT, @Nullable Supplier<RegistryObject<ItemLike>> item, int fuse, float strength, float xzStrength, float yStrength, float resistanceImpact, float randomVecLength, float knockbackStrength, boolean isStrongExplosion, boolean airFuse) {
 		this.TNT = TNT;
+		this.item = item == null ? ItemStack.EMPTY : new ItemStack(item.get().get());
 		this.fuse = fuse;
 		this.strength = strength;
 		this.xzStrength = xzStrength;
@@ -32,6 +37,7 @@ public class TNTxStrengthEffect extends PrimedTNTEffect{
 		this.randomVecLength = randomVecLength;
 		this.knockbackStrength = knockbackStrength;
 		this.isStrongExplosion = isStrongExplosion;
+		this.airFuse = airFuse;
 	}
 	
 	@Override
@@ -49,8 +55,18 @@ public class TNTxStrengthEffect extends PrimedTNTEffect{
 	}
 	
 	@Override
+	public ItemStack getItem() {
+		return item;
+	}
+	
+	@Override
 	public Block getBlock() {
 		return TNT.get().get() == null ? Blocks.TNT : TNT.get().get();
+	}
+	
+	@Override
+	public boolean airFuse() {
+		return airFuse;
 	}
 	
 	@Override
@@ -61,16 +77,19 @@ public class TNTxStrengthEffect extends PrimedTNTEffect{
 	public static class Builder {
 		
 		@Nullable private final Supplier<RegistryObject<LTNTBlock>> TNT;
-		private int fuse = 80;
+		@Nullable private final Supplier<RegistryObject<ItemLike>> item;
+		private int fuse = -1;
 		private float strength = 4f;
 		private float xzStrength = 1f, yStrength = 1f;
 		private float resistanceImpact = 1f;
 		private float randomVecLength = 1f;
 		private float knockbackStrength = 1f;
 		private boolean isStrongExplosion = false;
+		private boolean airFuse = false;
 		
-		public Builder(@Nullable Supplier<RegistryObject<LTNTBlock>> TNT) {
+		public Builder(@Nullable Supplier<RegistryObject<LTNTBlock>> TNT, @Nullable Supplier<RegistryObject<ItemLike>> item) {
 			this.TNT = TNT;
+			this.item = item;
 		}
 		
 		public Builder fuse(int fuse) {
@@ -113,8 +132,13 @@ public class TNTxStrengthEffect extends PrimedTNTEffect{
 			return this;
 		}
 		
-		public TNTxStrengthEffect build() {
-			return new TNTxStrengthEffect(TNT, fuse, strength, xzStrength, yStrength, resistanceImpact, randomVecLength, knockbackStrength, isStrongExplosion);
+		public Builder airFuse(boolean airFuse) {
+			this.airFuse = airFuse;
+			return this;
+		}
+		
+		public ProjectilexStrengthEffect build() {
+			return new ProjectilexStrengthEffect(TNT, item, fuse, strength, xzStrength, yStrength, resistanceImpact, randomVecLength, knockbackStrength, isStrongExplosion, airFuse);
 		}
 	}
 }

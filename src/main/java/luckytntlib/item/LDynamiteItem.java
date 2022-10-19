@@ -4,7 +4,7 @@ import java.util.Random;
 
 import javax.annotation.Nullable;
 
-import luckytntlib.entity.LDynamite;
+import luckytntlib.entity.LExplosiveProjectile;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.BlockSource;
 import net.minecraft.core.dispenser.DispenseItemBehavior;
@@ -27,10 +27,10 @@ import net.minecraftforge.registries.RegistryObject;
 public class LDynamiteItem extends Item{
 	
 	@Nullable
-	protected RegistryObject<EntityType<LDynamite>> dynamite;
+	protected RegistryObject<EntityType<LExplosiveProjectile>> dynamite;
 	protected Random random = new Random();
 	
-	public LDynamiteItem(Item.Properties properties, @Nullable RegistryObject<EntityType<LDynamite>> dynamite, boolean addDispenseBehaviour) {
+	public LDynamiteItem(Item.Properties properties, @Nullable RegistryObject<EntityType<LExplosiveProjectile>> dynamite, boolean addDispenseBehaviour) {
 		super(properties);
 		this.dynamite = dynamite;
 		if(addDispenseBehaviour) {
@@ -68,9 +68,9 @@ public class LDynamiteItem extends Item{
 	}
 	
 	@Nullable
-	public LDynamite shoot(Level level, double x, double y, double z, Vec3 direction, float power, @Nullable LivingEntity thrower) throws NullPointerException {
+	public LExplosiveProjectile shoot(Level level, double x, double y, double z, Vec3 direction, float power, @Nullable LivingEntity thrower) throws NullPointerException {
 		if(dynamite != null) {
-			LDynamite dyn = dynamite.get().create(level);
+			LExplosiveProjectile dyn = dynamite.get().create(level);
 			dyn.setPos(x, y, z);
 			dyn.shoot(direction.x, direction.y, direction.z, power, 0);
 			dyn.setOwner(thrower);

@@ -9,10 +9,10 @@ import javax.annotation.Nullable;
 import com.mojang.datafixers.util.Pair;
 
 import luckytntlib.block.LTNTBlock;
-import luckytntlib.entity.LDynamite;
+import luckytntlib.entity.LExplosiveProjectile;
 import luckytntlib.entity.PrimedLTNT;
 import luckytntlib.item.LDynamiteItem;
-import luckytntlib.util.explosions.DynamiteEffect;
+import luckytntlib.util.explosions.ExplosiveProjectileEffect;
 import luckytntlib.util.explosions.PrimedTNTEffect;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
@@ -108,7 +108,7 @@ public class RegistryHelper {
 		return block;
 	}
 	
-	public RegistryObject<LDynamiteItem> registerDynamiteItem(String registryName, RegistryObject<EntityType<LDynamite>> dynamite){
+	public RegistryObject<LDynamiteItem> registerDynamiteItem(String registryName, RegistryObject<EntityType<LExplosiveProjectile>> dynamite){
 		return registerDynamiteItem(registryName, () -> new LDynamiteItem(new Item.Properties(), dynamite, true));
 	}
 	
@@ -140,7 +140,6 @@ public class RegistryHelper {
 		return registerTNTEntity(entityRegistry, registryName, effect, size, fireImmune);
 	}
 	
-	//Not fully done
 	public RegistryObject<EntityType<PrimedLTNT>> registerTNTEntity(DeferredRegister<EntityType<?>> entityRegistry, String registryName, PrimedTNTEffect effect, float size, boolean fireImmune){
 		if(fireImmune) {
 			return entityRegistry.register(registryName, () -> EntityType.Builder.<PrimedLTNT>of((EntityType<PrimedLTNT> type, Level level) -> new PrimedLTNT(type, level, effect), MobCategory.MISC).setShouldReceiveVelocityUpdates(true).setTrackingRange(64).fireImmune().sized(size, size).build(registryName));
@@ -150,13 +149,20 @@ public class RegistryHelper {
 		}
 	}
 	
-	//Not fully done
-	public RegistryObject<EntityType<LDynamite>> registerDynamiteProjectile(DeferredRegister<EntityType<?>> entityRegistry, String registryName, RegistryObject<EntityType<LDynamite>> entity, DynamiteEffect effect, float size, boolean fireImmune){
+	public RegistryObject<EntityType<LExplosiveProjectile>> registerExplosiveProjectile(String registryName, ExplosiveProjectileEffect effect){
+		return registerExplosiveProjectile(registryName, effect, 1, false);
+	}
+	
+	public RegistryObject<EntityType<LExplosiveProjectile>> registerExplosiveProjectile(String registryName, ExplosiveProjectileEffect effect, float size, boolean fireImmune) {
+		return registerExplosiveProjectile(entityRegistry, registryName, effect, size, fireImmune);
+	}
+	
+	public RegistryObject<EntityType<LExplosiveProjectile>> registerExplosiveProjectile(DeferredRegister<EntityType<?>> entityRegistry, String registryName, ExplosiveProjectileEffect effect, float size, boolean fireImmune){
 		if(fireImmune) {
-			return entityRegistry.register(registryName, () -> EntityType.Builder.<LDynamite>of((EntityType<LDynamite> type, Level level) -> new LDynamite(type, level, effect), MobCategory.MISC).setShouldReceiveVelocityUpdates(true).setTrackingRange(64).fireImmune().sized(size, size).build(registryName));
+			return entityRegistry.register(registryName, () -> EntityType.Builder.<LExplosiveProjectile>of((EntityType<LExplosiveProjectile> type, Level level) -> new LExplosiveProjectile(type, level, effect), MobCategory.MISC).setShouldReceiveVelocityUpdates(true).setTrackingRange(64).fireImmune().sized(size, size).build(registryName));
 		}
 		else {
-			return entityRegistry.register(registryName, () -> EntityType.Builder.<LDynamite>of((EntityType<LDynamite> type, Level level) -> new LDynamite(type, level, effect), MobCategory.MISC).setShouldReceiveVelocityUpdates(true).setTrackingRange(64).sized(size, size).build(registryName));
+			return entityRegistry.register(registryName, () -> EntityType.Builder.<LExplosiveProjectile>of((EntityType<LExplosiveProjectile> type, Level level) -> new LExplosiveProjectile(type, level, effect), MobCategory.MISC).setShouldReceiveVelocityUpdates(true).setTrackingRange(64).sized(size, size).build(registryName));
 		}
 	}
 	

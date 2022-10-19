@@ -98,7 +98,7 @@ public class PrimedLTNT extends PrimedTnt implements IExplosiveEntity{
 	}
 
 	@Override
-	public Vec3 getTNTPos() {
+	public Vec3 getPos() {
 		return getPosition(1);
 	}
 
@@ -108,7 +108,7 @@ public class PrimedLTNT extends PrimedTnt implements IExplosiveEntity{
 	}
 	
 	@Override
-	public Level getTNTLevel() {
+	public Level level() {
 		return level;
 	}
 

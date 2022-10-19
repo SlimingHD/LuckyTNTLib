@@ -10,7 +10,7 @@ import net.minecraft.world.level.Level;
 public abstract class PrimedTNTEffect extends ExplosiveEffect{
 	
 	public void baseTick(IExplosiveEntity entity) {
-		Level level = entity.getTNTLevel();
+		Level level = entity.level();
 		if(level.isClientSide) {
 			int clientFuse = entity.getTNTFuse() - 1;
 			if (clientFuse <= 0) {
@@ -29,12 +29,12 @@ public abstract class PrimedTNTEffect extends ExplosiveEffect{
 	}
 	
 	public void spawnParticles(IExplosiveEntity entity) {
-		entity.getTNTLevel().addParticle(ParticleTypes.SMOKE, entity.getTNTPos().x(), entity.getTNTPos().y + 0.5f, entity.getTNTPos().z, 0, 0, 0);
+		entity.level().addParticle(ParticleTypes.SMOKE, entity.getPos().x(), entity.getPos().y + 0.5f, entity.getPos().z, 0, 0, 0);
 	}
 	
 	@SuppressWarnings("resource")
 	public void clientExplosion(IExplosiveEntity entity) {
-		ClientSoundExecutor.playSoundAt(entity.getTNTPos().x, entity.getTNTPos().y, entity.getTNTPos().z, SoundEvents.GENERIC_EXPLODE, SoundSource.MASTER, 4f, (1f + (entity.getTNTLevel().random.nextFloat() - entity.getTNTLevel().random.nextFloat()) * 0.2f) * 0.7f);
+		ClientSoundExecutor.playSoundAt(entity.getPos().x, entity.getPos().y, entity.getPos().z, SoundEvents.GENERIC_EXPLODE, SoundSource.MASTER, 4f, (1f + (entity.level().random.nextFloat() - entity.level().random.nextFloat()) * 0.2f) * 0.7f);
 	}
 	
 	public void serverExplosion(IExplosiveEntity entity) {	

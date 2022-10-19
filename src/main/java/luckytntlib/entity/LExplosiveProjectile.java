@@ -2,8 +2,8 @@ package luckytntlib.entity;
 
 import javax.annotation.Nullable;
 
-import luckytntlib.util.IExplosiveEntity;
-import luckytntlib.util.explosions.DynamiteEffect;
+import luckytntlib.util.IExplosiveProjectileEntity;
+import luckytntlib.util.explosions.ExplosiveProjectileEffect;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.protocol.Packet;
 import net.minecraft.network.syncher.EntityDataAccessor;
@@ -14,6 +14,7 @@ import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.entity.projectile.AbstractArrow;
+import net.minecraft.world.entity.projectile.ItemSupplier;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.BlockHitResult;
@@ -21,15 +22,15 @@ import net.minecraft.world.phys.EntityHitResult;
 import net.minecraft.world.phys.Vec3;
 import net.minecraftforge.network.NetworkHooks;
 
-public class LDynamite extends AbstractArrow implements IExplosiveEntity{
+public class LExplosiveProjectile extends AbstractArrow implements IExplosiveProjectileEntity, ItemSupplier{
 	
-	private static final EntityDataAccessor<Integer> DATA_FUSE_ID = SynchedEntityData.defineId(LDynamite.class, EntityDataSerializers.INT);
+	private static final EntityDataAccessor<Integer> DATA_FUSE_ID = SynchedEntityData.defineId(LExplosiveProjectile.class, EntityDataSerializers.INT);
 	@Nullable
 	private LivingEntity thrower;
 	private boolean hitEntity = false;
-	private DynamiteEffect effect;
+	private ExplosiveProjectileEffect effect;
 	
-	public LDynamite(EntityType<LDynamite> type, Level level, DynamiteEffect effect) {
+	public LExplosiveProjectile(EntityType<LExplosiveProjectile> type, Level level, ExplosiveProjectileEffect effect) {
 		super(type, level);
 		setTNTFuse(effect.getDefaultFuse());
 		pickup = AbstractArrow.Pickup.DISALLOWED;
@@ -48,19 +49,6 @@ public class LDynamite extends AbstractArrow implements IExplosiveEntity{
 		Vec3 pos2 = pos.normalize().scale((double) 0.05F);
 		setPosRaw(this.getX() - pos2.x, this.getY() - pos2.y, this.getZ() - pos2.z);
 	    inGround = true;
-	}
-	
-	@Override
-	public ItemStack getPickupItem() {
-		return null;
-	}
-	
-	public void setOwner(@Nullable LivingEntity thrower) {
-		this.thrower = thrower;
-	}
-	
-	public DynamiteEffect getEffect() {
-		return effect;
 	}
 	
 	@Override
@@ -88,17 +76,6 @@ public class LDynamite extends AbstractArrow implements IExplosiveEntity{
 	}
 	
 	@Override
-	@Nullable
-	public LivingEntity getOwner() {
-		return thrower;
-	}
-	
-	@Override
-	public void setOwner(Entity entity) {
-		thrower = entity instanceof LivingEntity ? (LivingEntity) entity : thrower;
-	}
-	
-	@Override
 	public void addAdditionalSaveData(CompoundTag tag) {
 		if(thrower != null) {
 			tag.putInt("throwerID", thrower.getId());
@@ -116,6 +93,35 @@ public class LDynamite extends AbstractArrow implements IExplosiveEntity{
 		super.readAdditionalSaveData(tag);
 	}
 	
+	@Override
+	public void setTNTFuse(int fuse) {
+		entityData.set(DATA_FUSE_ID, fuse);
+	}
+	
+	public void setOwner(@Nullable LivingEntity thrower) {
+		this.thrower = thrower;
+	}
+	
+	@Override
+	public void setOwner(Entity entity) {
+		thrower = entity instanceof LivingEntity ? (LivingEntity) entity : thrower;
+	}
+	
+	@Override
+	@Nullable
+	public LivingEntity getOwner() {
+		return thrower;
+	}
+	
+	@Override
+	public ItemStack getPickupItem() {
+		return null;
+	}
+	
+	public ExplosiveProjectileEffect getEffect() {
+		return effect;
+	}
+	
 	public boolean inGround() {
 		return inGround;
 	}
@@ -123,17 +129,14 @@ public class LDynamite extends AbstractArrow implements IExplosiveEntity{
 	public boolean hitEntity() {
 		return hitEntity;
 	}
-
-	public void setTNTFuse(int fuse) {
-		entityData.set(DATA_FUSE_ID, fuse);
-	}
 	
+	@Override
 	public int getTNTFuse() {
 		return entityData.get(DATA_FUSE_ID);
 	}
 	
 	@Override
-	public Vec3 getTNTPos() {
+	public Vec3 getPos() {
 		return getPosition(1);
 	}
 
@@ -143,7 +146,7 @@ public class LDynamite extends AbstractArrow implements IExplosiveEntity{
 	}
 	
 	@Override
-	public Level getTNTLevel() {
+	public Level level() {
 		return level;
 	}
 	
@@ -160,5 +163,10 @@ public class LDynamite extends AbstractArrow implements IExplosiveEntity{
 	@Override
 	public double z() {
 		return getZ();
+	}
+	
+	@Override
+	public ItemStack getItem() {
+		return effect.getItem();
 	}
 }
