@@ -169,4 +169,9 @@ public class LExplosiveProjectile extends AbstractArrow implements IExplosivePro
 	public ItemStack getItem() {
 		return effect.getItem();
 	}
+	
+	@Override
+	public Entity owner() {
+		return getOwner();
+	}
 }

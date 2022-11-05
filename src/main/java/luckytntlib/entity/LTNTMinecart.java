@@ -186,4 +186,9 @@ public class LTNTMinecart extends AbstractMinecart implements IExplosiveEntity{
 	public double z() {
 		return getZ();
 	}
+	
+	@Override
+	public Entity owner() {
+		return getOwner();
+	}
 }

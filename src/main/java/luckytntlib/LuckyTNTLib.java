@@ -3,6 +3,7 @@ package luckytntlib;
 import com.mojang.datafixers.util.Pair;
 
 import luckytntlib.block.LTNTBlock;
+import luckytntlib.network.LuckyTNTLibPacketHandler;
 import luckytntlib.registry.TNTLists;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.BlockSource;
@@ -30,6 +31,7 @@ public class LuckyTNTLib
     }
     
     private void commonSetup(final FMLCommonSetupEvent event) {
+        LuckyTNTLibPacketHandler.regiser();
     	
     	for(Pair<RegistryObject<LTNTBlock>, RegistryObject<Item>> pair : TNTLists.TNT_DISPENSER_REGISTRY_LIST) {
     		LTNTBlock block = pair.getFirst().get();

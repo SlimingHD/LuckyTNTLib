@@ -22,11 +22,12 @@ public class ProjectilexStrengthEffect extends ExplosiveProjectileEffect{
 	private final float xzStrength, yStrength;
 	private final float resistanceImpact;
 	private final float randomVecLength;
+	private final boolean fire;
 	private final float knockbackStrength;
 	private final boolean isStrongExplosion;
 	private final boolean airFuse;
 	
-	private ProjectilexStrengthEffect(@Nullable Supplier<RegistryObject<LTNTBlock>> TNT, @Nullable Supplier<RegistryObject<ItemLike>> item, int fuse, float strength, float xzStrength, float yStrength, float resistanceImpact, float randomVecLength, float knockbackStrength, boolean isStrongExplosion, boolean airFuse) {
+	private ProjectilexStrengthEffect(@Nullable Supplier<RegistryObject<LTNTBlock>> TNT, @Nullable Supplier<RegistryObject<ItemLike>> item, int fuse, float strength, float xzStrength, float yStrength, float resistanceImpact, float randomVecLength, boolean fire, float knockbackStrength, boolean isStrongExplosion, boolean airFuse) {
 		this.TNT = TNT;
 		this.item = item == null ? ItemStack.EMPTY : new ItemStack(item.get().get());
 		this.fuse = fuse;
@@ -35,23 +36,17 @@ public class ProjectilexStrengthEffect extends ExplosiveProjectileEffect{
 		this.yStrength = yStrength;
 		this.resistanceImpact = resistanceImpact;
 		this.randomVecLength = randomVecLength;
+		this.fire = fire;
 		this.knockbackStrength = knockbackStrength;
 		this.isStrongExplosion = isStrongExplosion;
 		this.airFuse = airFuse;
 	}
-	
-	@Override
-	public void clientExplosion(IExplosiveEntity entity) {
-		super.clientExplosion(entity);
-		ImprovedExplosion explosion = new ImprovedExplosion(entity.level(), (Entity) entity, entity.getPos().x, entity.getPos().y, entity.getPos().z, strength);
-		explosion.doEntityExplosion(knockbackStrength, true);
-	}
 
 	@Override
 	public void serverExplosion(IExplosiveEntity entity) {
-		ImprovedExplosion explosion = new ImprovedExplosion(entity.level(), (Entity) entity, entity.getPos().x, entity.getPos().y, entity.getPos().z, strength);
+		ImprovedExplosion explosion = new ImprovedExplosion(entity.level(), (Entity) entity, entity.getPos().x, entity.getPos().y + 0.5f, entity.getPos().z, strength);
 		explosion.doEntityExplosion(knockbackStrength, true);
-		explosion.doBlockExplosion(xzStrength, yStrength, resistanceImpact, randomVecLength, false, isStrongExplosion);
+		explosion.doBlockExplosion(xzStrength, yStrength, resistanceImpact, randomVecLength, fire, isStrongExplosion);
 	}
 	
 	@Override
@@ -83,6 +78,7 @@ public class ProjectilexStrengthEffect extends ExplosiveProjectileEffect{
 		private float xzStrength = 1f, yStrength = 1f;
 		private float resistanceImpact = 1f;
 		private float randomVecLength = 1f;
+		private boolean fire = false;
 		private float knockbackStrength = 1f;
 		private boolean isStrongExplosion = false;
 		private boolean airFuse = false;
@@ -122,6 +118,11 @@ public class ProjectilexStrengthEffect extends ExplosiveProjectileEffect{
 			return this;
 		}
 		
+		public Builder fire(boolean fire) {
+			this.fire = fire;
+			return this;
+		}
+		
 		public Builder knockbackStrength(float knockbackStrength) {
 			this.knockbackStrength = knockbackStrength;
 			return this;
@@ -138,7 +139,7 @@ public class ProjectilexStrengthEffect extends ExplosiveProjectileEffect{
 		}
 		
 		public ProjectilexStrengthEffect build() {
-			return new ProjectilexStrengthEffect(TNT, item, fuse, strength, xzStrength, yStrength, resistanceImpact, randomVecLength, knockbackStrength, isStrongExplosion, airFuse);
+			return new ProjectilexStrengthEffect(TNT, item, fuse, strength, xzStrength, yStrength, resistanceImpact, randomVecLength, fire, knockbackStrength, isStrongExplosion, airFuse);
 		}
 	}
 }

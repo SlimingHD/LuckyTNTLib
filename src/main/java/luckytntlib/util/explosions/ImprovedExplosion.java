@@ -156,7 +156,7 @@ public class ImprovedExplosion extends Explosion{
 	
 	public void doEntityExplosion(float knockbackStrength, boolean damageEntities) {
 		List<Entity> entities = level.getEntities(getExploder(), new AABB(posX - size * 2, posY - size * 2, posZ - size * 2, posX + size * 2, posY + size * 2, posZ + size * 2));
-		ForgeEventFactory.onExplosionDetonate(level, this, entities, size*2);
+		ForgeEventFactory.onExplosionDetonate(level, this, entities, size * 2);
 		for(Entity entity : entities) {
 			if(!entity.ignoreExplosion()) {
 				double distance = Math.sqrt(entity.distanceToSqr(getPosition())) / (size * 2);
@@ -171,18 +171,33 @@ public class ImprovedExplosion extends Explosion{
 					double seenPercent = getSeenPercent(getPosition(), entity);
 					float damage = (1f - (float)distance) * (float)seenPercent;
 					if(damageEntities) {
-						entity.hurt(getDamageSource(), (damage * damage + damage) * 7 * size + 1f);
+						entity.hurt(getDamageSource(), (damage * damage + damage) / 2f * 7 * size + 1f);
 					}
 					double knockback = damage;
 					if(entity instanceof LivingEntity lEnt) {
 						knockback = ProtectionEnchantment.getExplosionKnockbackAfterDampener(lEnt, damage);
 					}
 					entity.setDeltaMovement(entity.getDeltaMovement().add(offX * knockback * knockbackStrength, offY * knockback * knockbackStrength, offZ * knockback * knockbackStrength));
-					if(entity instanceof Player player) {
+					if(entity instanceof Player) {
+						Player player = (Player)entity;
+						player.hurtMarked = true;
 						if(!player.isSpectator() && (!player.isCreative() || !player.getAbilities().flying)) {
 							getHitPlayers().put(player, new Vec3(offX * damage, offY * damage, offZ * damage));
 						}
 					}
+				}
+			}
+		}
+	}
+	
+	public void doEntityExplosion(IForEachEntityExplosionEffect entityEffect) {
+		List<Entity> entities = level.getEntities(getExploder(), new AABB(posX - size * 2, posY - size * 2, posZ - size * 2, posX + size * 2, posY + size * 2, posZ + size * 2));
+		ForgeEventFactory.onExplosionDetonate(level, this, entities, size * 2);
+		for(Entity entity : entities) {
+			if(!entity.ignoreExplosion()) {
+				double distance = Math.sqrt(entity.distanceToSqr(getPosition())) / (size * 2);
+				if(distance < 1f && distance != 0) {
+					entityEffect.doEntityExplosion(entity, distance);
 				}
 			}
 		}

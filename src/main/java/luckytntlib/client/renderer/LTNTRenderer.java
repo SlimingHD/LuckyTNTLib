@@ -43,7 +43,7 @@ public class LTNTRenderer extends EntityRenderer<Entity>{
 	        posestack.mulPose(Vector3f.YP.rotationDegrees(-90f));
 	        posestack.translate(-0.5d, 0, 0.5d);
 	        posestack.mulPose(Vector3f.YP.rotationDegrees(90f));
-	        TntMinecartRenderer.renderWhiteSolidBlock(blockRenderer, ent.getEffect().getBlock().defaultBlockState(), posestack, buffer, light, ent.getEffect().getBlock() instanceof LTNTBlock ? i / 5 % 2 == 0 : false);
+	        TntMinecartRenderer.renderWhiteSolidBlock(blockRenderer, ent.getEffect().getBlockState(), posestack, buffer, light, ent.getEffect().getBlock() instanceof LTNTBlock ? i / 5 % 2 == 0 : false);
 	        posestack.popPose();
     	}
         super.render(entity, yaw, partialTicks, posestack, buffer, light);

@@ -17,7 +17,6 @@ import luckytntlib.util.explosions.PrimedTNTEffect;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.network.chat.contents.TranslatableContents;
-import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.MobCategory;
 import net.minecraft.world.item.BlockItem;
@@ -164,17 +163,5 @@ public class RegistryHelper {
 		else {
 			return entityRegistry.register(registryName, () -> EntityType.Builder.<LExplosiveProjectile>of((EntityType<LExplosiveProjectile> type, Level level) -> new LExplosiveProjectile(type, level, effect), MobCategory.MISC).setShouldReceiveVelocityUpdates(true).setTrackingRange(64).sized(size, size).build(registryName));
 		}
-	}
-	
-	public RegistryObject<Item> registerSimpleItem(DeferredRegister<Item> itemRegistry, Supplier<Item> itemSupplier, String registryName){
-		return itemRegistry.register(registryName, itemSupplier);
-	}
-	
-	public RegistryObject<Block> registerSimpleBlock(DeferredRegister<Block> blockRegistry, Supplier<Block> blockSupplier, String registryName){
-		return blockRegistry.register(registryName, blockSupplier);
-	}
-	
-	public<T extends Entity> RegistryObject<EntityType<T>> registerSimpleEntity(DeferredRegister<EntityType<?>> entityRegistry, String registryName, EntityType.Builder<T> builder){
-		return entityRegistry.register(registryName, () -> builder.build(registryName));
 	}
 }
