@@ -13,12 +13,13 @@ import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.monster.Monster;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.Vec3;
 import net.minecraftforge.network.NetworkHooks;
 
-public class LivingPrimedLTNT extends Monster implements IExplosiveEntity{
+public class LivingPrimedLTNT extends Mob implements IExplosiveEntity{
 	
 	@Nullable 
 	private LivingEntity igniter;
@@ -63,6 +64,10 @@ public class LivingPrimedLTNT extends Monster implements IExplosiveEntity{
 		}
 		setTNTFuse(tag.getShort("Fuse"));
 		super.readAdditionalSaveData(tag);
+	}
+	
+	@Override
+	public void pushEntities() {
 	}
 	
 	public void setOwner(@Nullable LivingEntity thrower) {
