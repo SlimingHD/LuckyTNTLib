@@ -1,5 +1,6 @@
 package luckytntlib.util.explosions;
 
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
@@ -7,6 +8,7 @@ import java.util.Set;
 
 import javax.annotation.Nullable;
 
+import luckytntlib.util.IExplosiveEntity;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
@@ -36,18 +38,18 @@ public class ImprovedExplosion extends Explosion{
 		this(level, null, position, size);
 	}
 	
-	public ImprovedExplosion(Level level, @Nullable Entity owner, Vec3 position, float size) {
-		this(level, owner, position.x, position.y, position.z, size);
+	public ImprovedExplosion(Level level, @Nullable Entity explodingEntity, Vec3 position, float size) {
+		this(level, explodingEntity, position.x, position.y, position.z, size);
 	}
 	
-	public ImprovedExplosion(Level level, @Nullable Entity owner, double x, double y, double z, float size) {
-		super(level, owner, null, null, x, y, z, size, false, BlockInteraction.NONE);
+	public ImprovedExplosion(Level level, @Nullable Entity explodingEntity, double x, double y, double z, float size) {
+		super(level, explodingEntity, null, null, x, y, z, size, false, BlockInteraction.NONE);
 		this.level = level;
 		this.posX = x;
 		this.posY = y;
 		this.posZ = z;
 		this.size = size;
-		damageCalculator = owner == null ? new ExplosionDamageCalculator() : new EntityBasedExplosionDamageCalculator(owner);
+		damageCalculator = explodingEntity == null ? new ExplosionDamageCalculator() : new EntityBasedExplosionDamageCalculator(explodingEntity);
 	}
 	
 	public void doBlockExplosion(float xzStrength, float yStrength, float resistanceImpact, float randomVecLength, boolean fire, boolean isStrongExplosion) {
@@ -202,6 +204,15 @@ public class ImprovedExplosion extends Explosion{
 			}
 		}
 	}
+	
+	@Nullable
+	@Override
+	public LivingEntity getSourceMob() {
+		if(super.getSourceMob() instanceof IExplosiveEntity ent) {
+			return ent.owner() instanceof LivingEntity ? (LivingEntity)ent.owner() : null;
+		}
+		return super.getSourceMob();
+	}
 
 	@Override
 	@Deprecated
@@ -217,6 +228,6 @@ public class ImprovedExplosion extends Explosion{
 	@Deprecated
 	@Nullable
 	public List<BlockPos> getToBlow(){
-		return null;
+		return new ArrayList<BlockPos>();
 	}
 }

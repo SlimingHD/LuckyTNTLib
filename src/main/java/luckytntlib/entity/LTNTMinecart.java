@@ -75,7 +75,7 @@ public class LTNTMinecart extends AbstractMinecart implements IExplosiveEntity{
 		} else {
 			if (this.getTNTFuse() < 0) {
 				this.fuse();
-				setTNTFuse(random.nextInt(effect.getDefaultFuse() / 4) + random.nextInt(effect.getDefaultFuse() / 4));
+				setTNTFuse(random.nextInt(effect.getDefaultFuse(this) / 4) + random.nextInt(effect.getDefaultFuse(this) / 4));
 			}
 		}
 	}
@@ -88,7 +88,7 @@ public class LTNTMinecart extends AbstractMinecart implements IExplosiveEntity{
 	}
 
 	public void fuse() {
-		setTNTFuse(effect.getDefaultFuse());	
+		setTNTFuse(effect.getDefaultFuse(this));	
 		level.playSound(null, new BlockPos(getPosition(1)), SoundEvents.TNT_PRIMED, getSoundSource(), 1f, 1f);
 	}
 	

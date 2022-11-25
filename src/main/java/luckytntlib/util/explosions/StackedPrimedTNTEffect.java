@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import luckytntlib.util.IExplosiveEntity;
+import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.Block;
 
 public class StackedPrimedTNTEffect extends PrimedTNTEffect{
@@ -33,10 +34,25 @@ public class StackedPrimedTNTEffect extends PrimedTNTEffect{
 	public void spawnParticles(IExplosiveEntity entity) {
 		effects.get(0).spawnParticles(entity);
 	}
-
+	
+	@Override
+	public ItemStack getItem() {
+		return effects.get(0).getItem();
+	}
+	
 	@Override
 	public Block getBlock() {
 		return effects.get(0).getBlock();
+	}
+	
+	@Override
+	public boolean airFuse() {
+		return effects.get(0).airFuse();
+	}
+	
+	@Override
+	public boolean explodesOnImpact() {
+		return effects.get(0).explodesOnImpact();
 	}
 	
 	@Override
@@ -45,7 +61,7 @@ public class StackedPrimedTNTEffect extends PrimedTNTEffect{
 	}
 	
 	@Override
-	public int getDefaultFuse() {
-		return effects.get(0).getDefaultFuse();
+	public int getDefaultFuse(IExplosiveEntity entity) {
+		return effects.get(0).getDefaultFuse(entity);
 	}
 }

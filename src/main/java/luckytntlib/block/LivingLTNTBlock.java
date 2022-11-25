@@ -6,6 +6,7 @@ import java.util.Random;
 
 import javax.annotation.Nullable;
 
+import luckytntlib.entity.LivingPrimedLTNT;
 import luckytntlib.entity.PrimedLTNT;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
@@ -19,23 +20,20 @@ import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.Explosion;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Blocks;
-import net.minecraft.world.level.block.TntBlock;
 import net.minecraft.world.level.block.state.BlockBehaviour;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.storage.loot.LootContext;
 import net.minecraftforge.registries.RegistryObject;
 
-public class LTNTBlock extends TntBlock{
+public class LivingLTNTBlock extends LTNTBlock{
 
 	@Nullable
-	protected RegistryObject<EntityType<PrimedLTNT>> TNT;
+	protected RegistryObject<EntityType<LivingPrimedLTNT>> TNT;
 	protected Random random = new Random();
-	protected boolean shouldRandomlyFuse = true;
 	
-	public LTNTBlock(BlockBehaviour.Properties properties, @Nullable RegistryObject<EntityType<PrimedLTNT>> TNT, boolean shouldRandomlyFuse) {
-		super(properties);
+	public LivingLTNTBlock(BlockBehaviour.Properties properties, @Nullable RegistryObject<EntityType<LivingPrimedLTNT>> TNT, boolean shouldRandomlyFuse) {
+		super(properties, null, shouldRandomlyFuse);
 		this.TNT = TNT;
-		this.shouldRandomlyFuse = shouldRandomlyFuse;
 	}
 	
 	@Override
@@ -76,11 +74,18 @@ public class LTNTBlock extends TntBlock{
 	public void wasExploded(Level level, BlockPos pos, Explosion explosion) {
 	}
 	
+	@Override
 	@Nullable
-	public PrimedLTNT explode(Level level, boolean exploded, double x, double y, double z, @Nullable LivingEntity igniter) throws NullPointerException {
+	public PrimedLTNT explode(Level level, boolean exploded, double x, double y, double z, @Nullable LivingEntity igniter) {
+		explodus(level, exploded, x, y, z, igniter);
+		return null;
+	}
+	
+	@Nullable
+	public LivingPrimedLTNT explodus(Level level, boolean exploded, double x, double y, double z, @Nullable LivingEntity igniter) throws NullPointerException {
 		if(TNT != null) {
-			PrimedLTNT tnt = TNT.get().create(level);
-			tnt.setFuse(exploded && shouldRandomlyFuse() ? tnt.getEffect().getDefaultFuse(tnt) / 8 + random.nextInt(Mth.clamp(tnt.getEffect().getDefaultFuse(tnt) / 4, 1, Integer.MAX_VALUE)) : tnt.getEffect().getDefaultFuse(tnt));
+			LivingPrimedLTNT tnt = TNT.get().create(level);
+			tnt.setTNTFuse(exploded && shouldRandomlyFuse() ? tnt.getEffect().getDefaultFuse(tnt) / 8 + random.nextInt(Mth.clamp(tnt.getEffect().getDefaultFuse(tnt) / 4, 1, Integer.MAX_VALUE)) : tnt.getEffect().getDefaultFuse(tnt));
 			tnt.setPos(x + 0.5f, y, z + 0.5f);
 			tnt.setOwner(igniter);
 			level.addFreshEntity(tnt);

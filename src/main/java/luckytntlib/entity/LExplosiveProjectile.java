@@ -2,8 +2,8 @@ package luckytntlib.entity;
 
 import javax.annotation.Nullable;
 
-import luckytntlib.util.IExplosiveProjectileEntity;
-import luckytntlib.util.explosions.ExplosiveProjectileEffect;
+import luckytntlib.util.IExplosiveEntity;
+import luckytntlib.util.explosions.PrimedTNTEffect;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.protocol.Packet;
 import net.minecraft.network.syncher.EntityDataAccessor;
@@ -22,17 +22,17 @@ import net.minecraft.world.phys.EntityHitResult;
 import net.minecraft.world.phys.Vec3;
 import net.minecraftforge.network.NetworkHooks;
 
-public class LExplosiveProjectile extends AbstractArrow implements IExplosiveProjectileEntity, ItemSupplier{
+public class LExplosiveProjectile extends AbstractArrow implements IExplosiveEntity, ItemSupplier{
 	
 	private static final EntityDataAccessor<Integer> DATA_FUSE_ID = SynchedEntityData.defineId(LExplosiveProjectile.class, EntityDataSerializers.INT);
 	@Nullable
 	private LivingEntity thrower;
 	private boolean hitEntity = false;
-	private ExplosiveProjectileEffect effect;
+	private PrimedTNTEffect effect;
 	
-	public LExplosiveProjectile(EntityType<LExplosiveProjectile> type, Level level, ExplosiveProjectileEffect effect) {
+	public LExplosiveProjectile(EntityType<LExplosiveProjectile> type, Level level, PrimedTNTEffect effect) {
 		super(type, level);
-		setTNTFuse(effect.getDefaultFuse());
+		setTNTFuse(effect.getDefaultFuse(this));
 		pickup = AbstractArrow.Pickup.DISALLOWED;
 		this.effect = effect;
 	}
@@ -118,7 +118,7 @@ public class LExplosiveProjectile extends AbstractArrow implements IExplosivePro
 		return null;
 	}
 	
-	public ExplosiveProjectileEffect getEffect() {
+	public PrimedTNTEffect getEffect() {
 		return effect;
 	}
 	

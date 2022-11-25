@@ -4,8 +4,6 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.function.Supplier;
 
-import javax.annotation.Nullable;
-
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraftforge.api.distmarker.Dist;
@@ -17,35 +15,23 @@ public class ClientboundExplosionPacket {
 	public final String className;
 	public final String toExecute;
 	public final BlockPos pos;
-	@Nullable public final float radius;
-	@Nullable public final float strength;
-	@Nullable public final int ownerId;
 	
-	public ClientboundExplosionPacket(String className, String toExecute, BlockPos pos, @Nullable float radius, @Nullable float strength, @Nullable int ownerId) {
+	public ClientboundExplosionPacket(String className, String toExecute, BlockPos pos) {
 		this.className = className;
 		this.toExecute = toExecute;
 		this.pos = pos;
-		this.radius = radius;
-		this.strength = strength;
-		this.ownerId = ownerId;
 	}
 	
 	public ClientboundExplosionPacket(FriendlyByteBuf buffer) {
 		className = buffer.readUtf();
 		toExecute = buffer.readUtf();
 		pos = buffer.readBlockPos();
-		radius = buffer.readFloat();
-		strength = buffer.readFloat();
-		ownerId = buffer.readInt();
 	}
 	
 	public void encode(FriendlyByteBuf buffer) {
 		buffer.writeUtf(className);
 		buffer.writeUtf(toExecute);
 		buffer.writeBlockPos(pos);
-		buffer.writeFloat(radius);
-		buffer.writeFloat(strength);
-		buffer.writeInt(ownerId);
 	}
 	
 	public void handle(Supplier<NetworkEvent.Context> ctx) {
@@ -53,11 +39,11 @@ public class ClientboundExplosionPacket {
 			try {
 				Class<?> clazz = Class.forName(className);
 				try {
-					Method runnable = clazz.getMethod(toExecute, new Class[] {BlockPos.class, float.class, float.class, int.class});
+					Method runnable = clazz.getMethod(toExecute, new Class[] {BlockPos.class});
 					runnable.setAccessible(true);
 					DistExecutor.unsafeRunWhenOn(Dist.CLIENT, () -> () -> {
 						try {
-							runnable.invoke(null, pos, radius, strength, ownerId);
+							runnable.invoke(null, pos);
 						} catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
 							e.printStackTrace();
 						}

@@ -49,7 +49,7 @@ public class TNTxStrengthEffect extends PrimedTNTEffect{
 	}
 	
 	@Override
-	public int getDefaultFuse() {
+	public int getDefaultFuse(IExplosiveEntity entity) {
 		return fuse;
 	}
 	

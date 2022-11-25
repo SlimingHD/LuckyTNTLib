@@ -54,6 +54,7 @@ public class PrimedLTNT extends PrimedTnt implements IExplosiveEntity{
 	public void explode() {
 	}
 	
+	@Override
 	public PrimedTNTEffect getEffect() {
 		return effect;
 	}
