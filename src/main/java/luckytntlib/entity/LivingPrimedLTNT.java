@@ -13,20 +13,19 @@ import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.LivingEntity;
-import net.minecraft.world.entity.Mob;
-import net.minecraft.world.entity.monster.Monster;
+import net.minecraft.world.entity.PathfinderMob;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.Vec3;
 import net.minecraftforge.network.NetworkHooks;
 
-public class LivingPrimedLTNT extends Mob implements IExplosiveEntity{
+public class LivingPrimedLTNT extends PathfinderMob implements IExplosiveEntity{
 	
 	@Nullable 
 	private LivingEntity igniter;
 	private PrimedTNTEffect effect;
 	private static final EntityDataAccessor<Integer> DATA_FUSE_ID = SynchedEntityData.defineId(LivingPrimedLTNT.class, EntityDataSerializers.INT);
 	
-	public LivingPrimedLTNT(EntityType<? extends Monster> type, Level level, @Nullable PrimedTNTEffect effect) {
+	public LivingPrimedLTNT(EntityType<? extends PathfinderMob> type, Level level, @Nullable PrimedTNTEffect effect) {
 		super(type, level);
 		this.effect = effect;
 	}
@@ -68,6 +67,10 @@ public class LivingPrimedLTNT extends Mob implements IExplosiveEntity{
 	
 	@Override
 	public void pushEntities() {
+	}
+	
+	@Override
+	public void push(double x, double y, double z) {
 	}
 	
 	public void setOwner(@Nullable LivingEntity thrower) {
