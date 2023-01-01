@@ -1,5 +1,6 @@
 package luckytntlib.registry;
 
+import net.minecraft.network.chat.contents.TranslatableContents;
 import net.minecraft.world.item.CreativeModeTab;
 import net.minecraft.world.level.material.MaterialColor;
 
@@ -10,16 +11,18 @@ public class TNTBlockRegistryData {
 	private final boolean addDispenserBehaviour;
 	private final boolean shouldRandomlyFuse;
 	private final boolean addToTNTLists;
+	private final TranslatableContents description;
 	private final CreativeModeTab tab;
 	private final MaterialColor color;
 	
 	
-	private TNTBlockRegistryData(String registryName, boolean makeItem, boolean addDispenserBehaviour, boolean shouldRandomlyFuse, boolean addToTNTLists, CreativeModeTab tab, MaterialColor color) {
+	private TNTBlockRegistryData(String registryName, boolean makeItem, boolean addDispenserBehaviour, boolean shouldRandomlyFuse, boolean addToTNTLists, TranslatableContents description, CreativeModeTab tab, MaterialColor color) {
 		this.registryName = registryName;
 		this.makeItem = makeItem;
 		this.addDispenserBehaviour = addDispenserBehaviour;
 		this.shouldRandomlyFuse = shouldRandomlyFuse;
 		this.addToTNTLists = addToTNTLists;
+		this.description = description;
 		this.tab = tab;
 		this.color = color;
 	}
@@ -43,6 +46,10 @@ public class TNTBlockRegistryData {
 	public boolean addToTNTLists() {
 		return addToTNTLists;
 	}
+	
+	public TranslatableContents getDescription() {
+		return description;
+	}
 
 	public CreativeModeTab getTab() {
 		return tab;
@@ -59,6 +66,7 @@ public class TNTBlockRegistryData {
 		private boolean addDispenserBehaviour = true;
 		private boolean shouldRandomlyFuse = true;
 		private boolean addToTNTLists = true;
+		private TranslatableContents description = new TranslatableContents("");
 		private CreativeModeTab tab = CreativeModeTab.TAB_REDSTONE;
 		private MaterialColor color = MaterialColor.COLOR_RED;
 		
@@ -85,6 +93,11 @@ public class TNTBlockRegistryData {
 			this.addToTNTLists = addToTNTLists;
 			return this;
 		}
+		
+		public Builder description(TranslatableContents description) {
+			this.description = description;
+			return this;
+		}
 
 		public Builder tab(CreativeModeTab tab) {
 			this.tab = tab;
@@ -97,7 +110,7 @@ public class TNTBlockRegistryData {
 		}
 		
 		public TNTBlockRegistryData build() {
-			return new TNTBlockRegistryData(registryName, makeItem, addDispenserBehaviour, shouldRandomlyFuse, addToTNTLists, tab, color);
+			return new TNTBlockRegistryData(registryName, makeItem, addDispenserBehaviour, shouldRandomlyFuse, addToTNTLists, description, tab, color);
 		}
 	}
 }

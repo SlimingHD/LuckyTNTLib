@@ -1,6 +1,7 @@
 package luckytntlib.registry;
 
 import java.util.ArrayList;
+import java.util.List;
 import java.util.function.BiFunction;
 import java.util.function.Supplier;
 
@@ -15,11 +16,15 @@ import luckytntlib.entity.LivingPrimedLTNT;
 import luckytntlib.entity.PrimedLTNT;
 import luckytntlib.item.LDynamiteItem;
 import luckytntlib.util.explosions.PrimedTNTEffect;
+import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.MobCategory;
 import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.item.CreativeModeTab;
 import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.TooltipFlag;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.SoundType;
@@ -34,11 +39,13 @@ public class RegistryHelper {
 	public final DeferredRegister<Block> blockRegistry;
 	public final DeferredRegister<Item> itemRegistry;
 	public final DeferredRegister<EntityType<?>> entityRegistry;
+	public final String modID;
 	
-	public RegistryHelper(DeferredRegister<Block> blockRegistry, DeferredRegister<Item> itemRegistry, DeferredRegister<EntityType<?>> entityRegistry) {
+	public RegistryHelper(DeferredRegister<Block> blockRegistry, DeferredRegister<Item> itemRegistry, DeferredRegister<EntityType<?>> entityRegistry, String modID) {
 		this.blockRegistry = blockRegistry;
 		this.itemRegistry = itemRegistry;
 		this.entityRegistry = entityRegistry;
+		this.modID = modID;
 	}
 	
 	public RegistryObject<LTNTBlock> registerTNTBlock(String registryName, RegistryObject<EntityType<PrimedLTNT>> TNT, CreativeModeTab tab){
@@ -60,12 +67,21 @@ public class RegistryHelper {
 	public RegistryObject<LTNTBlock> registerTNTBlock(DeferredRegister<Block> blockRegistry, @Nullable DeferredRegister<Item> itemRegistry, Supplier<LTNTBlock> TNTBlock, TNTBlockRegistryData blockData){
 		RegistryObject<LTNTBlock> block = blockRegistry.register(blockData.getRegistryName(), TNTBlock);
 		if(itemRegistry != null && blockData.makeItem()) {
-			RegistryObject<Item> item = itemRegistry.register(blockData.getRegistryName(), () -> new BlockItem(block.get(), new Item.Properties().tab(blockData.getTab())));
-			if(blockData.addToTNTLists()) {
-				if(TNTLists.TNTLists.get(blockData.getTab().getRecipeFolderName()) == null) {
-					TNTLists.TNTLists.put(blockData.getTab().getRecipeFolderName(), new ArrayList<RegistryObject<LTNTBlock>>());
+			RegistryObject<Item> item = itemRegistry.register(blockData.getRegistryName(), () -> new BlockItem(block.get(), new Item.Properties().tab(blockData.getTab())) {
+				
+				@Override
+				public void appendHoverText(ItemStack stack, @Nullable Level level, List<Component> components, TooltipFlag flag) {
+					super.appendHoverText(stack, level, components, flag);
+					if(!blockData.getDescription().getKey().equals("")) {
+						components.add(MutableComponent.create(blockData.getDescription()));
+					}
 				}
-				TNTLists.TNTLists.get(blockData.getTab().getRecipeFolderName()).add(block);
+			});
+			if(blockData.addToTNTLists()) {
+				if(TNTLists.TNTLists.get(modID) == null) {
+					TNTLists.TNTLists.put(modID, new ArrayList<RegistryObject<LTNTBlock>>());
+				}
+				TNTLists.TNTLists.get(modID).add(block);
 			}
 			if(blockData.addDispenserBehaviour()) {
 				TNTLists.TNT_DISPENSER_REGISTRY_LIST.add(new Pair<RegistryObject<LTNTBlock>, RegistryObject<Item>>(block, item));
@@ -93,12 +109,21 @@ public class RegistryHelper {
 	public RegistryObject<LTNTBlock> registerLivingTNTBlock(DeferredRegister<Block> blockRegistry, @Nullable DeferredRegister<Item> itemRegistry, Supplier<LivingLTNTBlock> TNTBlock, TNTBlockRegistryData blockData){
 		RegistryObject<LTNTBlock> block = blockRegistry.register(blockData.getRegistryName(), () -> ((LTNTBlock)TNTBlock.get()));
 		if(itemRegistry != null && blockData.makeItem()) {
-			RegistryObject<Item> item = itemRegistry.register(blockData.getRegistryName(), () -> new BlockItem(block.get(), new Item.Properties().tab(blockData.getTab())));
-			if(blockData.addToTNTLists()) {
-				if(TNTLists.TNTLists.get(blockData.getTab().getRecipeFolderName()) == null) {
-					TNTLists.TNTLists.put(blockData.getTab().getRecipeFolderName(), new ArrayList<RegistryObject<LTNTBlock>>());
+			RegistryObject<Item> item = itemRegistry.register(blockData.getRegistryName(), () -> new BlockItem(block.get(), new Item.Properties().tab(blockData.getTab())) {
+				
+				@Override
+				public void appendHoverText(ItemStack stack, @Nullable Level level, List<Component> components, TooltipFlag flag) {
+					super.appendHoverText(stack, level, components, flag);
+					if(!blockData.getDescription().getKey().equals("")) {
+						components.add(MutableComponent.create(blockData.getDescription()));
+					}
 				}
-				TNTLists.TNTLists.get(blockData.getTab().getRecipeFolderName()).add(block);
+			});
+			if(blockData.addToTNTLists()) {
+				if(TNTLists.TNTLists.get(modID) == null) {
+					TNTLists.TNTLists.put(modID, new ArrayList<RegistryObject<LTNTBlock>>());
+				}
+				TNTLists.TNTLists.get(modID).add(block);
 			}
 			if(blockData.addDispenserBehaviour()) {
 				TNTLists.TNT_DISPENSER_REGISTRY_LIST.add(new Pair<RegistryObject<LTNTBlock>, RegistryObject<Item>>(block, item));

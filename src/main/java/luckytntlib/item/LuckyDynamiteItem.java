@@ -3,7 +3,6 @@ package luckytntlib.item;
 import java.util.List;
 
 import luckytntlib.entity.LExplosiveProjectile;
-import luckytntlib.util.IllegalTNTException;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.level.Level;
@@ -23,10 +22,10 @@ public class LuckyDynamiteItem extends LDynamiteItem{
 	}
 	
 	@Override
-	public LExplosiveProjectile shoot(Level level, double x, double y, double z, Vec3 direction, float power, LivingEntity thrower) throws IllegalTNTException{
+	public LExplosiveProjectile shoot(Level level, double x, double y, double z, Vec3 direction, float power, LivingEntity thrower) throws NullPointerException{
 		if(!(dynamites.get(random.nextInt(dynamites.size())).get() instanceof LuckyDynamiteItem)) {
 			return dynamites.get(random.nextInt(dynamites.size())).get().shoot(level, x, y, z, direction, power, thrower);
 		}
-		throw new IllegalTNTException("Oh uh, you can't shoot a Lucky Dynamite through a Lucky Dynamite");
+		throw new NullPointerException();
 	}
 }

@@ -10,6 +10,7 @@ import javax.annotation.Nullable;
 
 import luckytntlib.util.IExplosiveEntity;
 import net.minecraft.core.BlockPos;
+import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
@@ -34,16 +35,30 @@ public class ImprovedExplosion extends Explosion{
 	public final float size;
 	public final ExplosionDamageCalculator damageCalculator;
 	
+	private static ImprovedExplosion dummyExplosion = new ImprovedExplosion(null, new Vec3(0, 0, 0), 0);
+	
 	public ImprovedExplosion(Level level, Vec3 position, float size) {
-		this(level, null, position, size);
+		this(level, null, null, position, size);
+	}
+	
+	public ImprovedExplosion(Level level, @Nullable DamageSource source, Vec3 position, float size) {
+		this(level, null, source, position, size);
 	}
 	
 	public ImprovedExplosion(Level level, @Nullable Entity explodingEntity, Vec3 position, float size) {
-		this(level, explodingEntity, position.x, position.y, position.z, size);
+		this(level, explodingEntity, null, position.x, position.y, position.z, size);
+	}
+	
+	public ImprovedExplosion(Level level, @Nullable Entity explodingEntity, @Nullable DamageSource source, Vec3 position, float size) {
+		this(level, explodingEntity, source, position.x, position.y, position.z, size);
 	}
 	
 	public ImprovedExplosion(Level level, @Nullable Entity explodingEntity, double x, double y, double z, float size) {
-		super(level, explodingEntity, null, null, x, y, z, size, false, BlockInteraction.NONE);
+		this(level, explodingEntity, null, x, y, z, size);
+	}
+	
+	public ImprovedExplosion(Level level, @Nullable Entity explodingEntity, @Nullable DamageSource source, double x, double y, double z, float size) {
+		super(level, explodingEntity, source, null, x, y, z, size, false, BlockInteraction.NONE);
 		this.level = level;
 		this.posX = x;
 		this.posY = y;
@@ -152,8 +167,67 @@ public class ImprovedExplosion extends Explosion{
 		}
 	}
 	
+	public void doBlockExplosion(float xzStrength, float yStrength, float resistanceImpact, float randomVecLength, boolean isStrongExplosion, IBlockExplosionCondition condition, IForEachBlockExplosionEffect blockEffect) {
+		Set<BlockPos> blocks = new HashSet<>();
+		for(int offX = (int)-size; offX <= size; offX++) {
+			for(int offY = (int)-size; offY <= size; offY++) {
+				for(int offZ = (int)-size; offZ <= size; offZ++) {
+					if(offX == (int)-size || offX == size || offY == (int)-size || offY == size || offZ == (int)-size || offZ == size) {
+						double distance = Math.sqrt(offX * offX + offY * offY + offZ * offZ);
+						double xStep = offX / distance;
+						double yStep = offY / distance;
+						double zStep = offZ / distance;
+						float vecLength = size * (0.7f + (float)Math.random() * 0.6f * randomVecLength);
+						double blockX = posX;
+						double blockY = posY;
+						double blockZ = posZ;
+						for(float vecStep = 0; vecStep < vecLength; vecStep += 0.225f) {
+							blockX += xStep * 0.3f * xzStrength;
+							blockY += yStep * 0.3f * yStrength;
+							blockZ += zStep * 0.3f * xzStrength;
+							BlockPos pos = new BlockPos(blockX, blockY, blockZ);
+							if(!level.isInWorldBounds(pos)) {
+								break;
+							}
+							BlockState blockState = level.getBlockState(pos);
+							FluidState fluidState = level.getFluidState(pos);
+							if(!(isStrongExplosion && blockState.getBlock() instanceof LiquidBlock)) {
+								Optional<Float> explosionResistance = damageCalculator.getBlockExplosionResistance(this, level, pos, blockState, fluidState);
+								if(explosionResistance.isPresent()) {
+									vecLength -= (explosionResistance.get() + 0.3f) * 0.3f * resistanceImpact;
+								}
+								if(vecLength > 0 && damageCalculator.shouldBlockExplode(this, level, pos, blockState, vecLength) && blockState.getMaterial() != Material.AIR) {
+									if(condition.conditionMet(level, pos, blockState, distance)) {
+										blocks.add(pos);
+									}
+								}
+							}
+							else {
+								if(condition.conditionMet(level, pos, blockState, distance)) {
+									blocks.add(pos);
+								}
+							}
+						}
+					}
+				}
+			}
+		}
+		for(BlockPos pos : blocks) {
+			double distance = Math.sqrt(pos.distToLowCornerSqr(posX, posY, posZ));
+			blockEffect.doBlockExplosion(level, pos, level.getBlockState(pos), distance);
+		}
+	}
+	
 	public void doBlockExplosion(IForEachBlockExplosionEffect blockEffect) {
 		doBlockExplosion(1f, 1f, 1f, 1f, false, blockEffect);
+	}
+	
+	public void doBlockExplosion(IBlockExplosionCondition condition, IForEachBlockExplosionEffect blockEffect) {
+		doBlockExplosion(1f, 1f, 1f, 1f, false, condition, blockEffect);
+	}
+	
+	public void doBlockExplosion() {
+		doBlockExplosion(1f, 1f, 1f, 1f, false, false);
 	}
 	
 	public void doEntityExplosion(float knockbackStrength, boolean damageEntities) {
@@ -212,6 +286,10 @@ public class ImprovedExplosion extends Explosion{
 			return ent.owner() instanceof LivingEntity ? (LivingEntity)ent.owner() : null;
 		}
 		return super.getSourceMob();
+	}
+	
+	public static ImprovedExplosion dummyExplosion() {
+		return dummyExplosion;
 	}
 
 	@Override

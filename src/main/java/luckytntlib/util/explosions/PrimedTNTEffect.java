@@ -73,7 +73,7 @@ public abstract class PrimedTNTEffect extends ExplosiveEffect{
 	
 	@Override
 	public void spawnParticles(IExplosiveEntity entity) {
-		entity.level().addParticle(ParticleTypes.SMOKE, entity.getPos().x(), entity.getPos().y + 0.5f, entity.getPos().z, 0, 0, 0);
+		entity.level().addParticle(ParticleTypes.SMOKE, entity.x(), entity.y() + 0.5f, entity.z(), 0, 0, 0);
 	}
 	
 	@Override
