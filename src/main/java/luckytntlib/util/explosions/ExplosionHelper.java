@@ -2,6 +2,7 @@ package luckytntlib.util.explosions;
 
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
+import net.minecraft.tags.BlockTags;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.context.DirectionalPlaceContext;
 import net.minecraft.world.level.Level;
@@ -12,13 +13,30 @@ public class ExplosionHelper {
 
 	public static void doSphericalExplosion(Level level, Vec3 position, int radius, IForEachBlockExplosionEffect blockEffect) {
 		for(int offX = -radius; offX <= radius; offX++) {
-			for(int offY = -radius; offY <= radius; offY++) {
+			for(int offY = radius; offY >= -radius; offY--) {
 				for(int offZ = -radius; offZ <= radius; offZ++) {
 					double distance = Math.sqrt(offX * offX + offY * offY + offZ * offZ);
 					if(distance <= radius) {
 						BlockPos pos = new BlockPos(position).offset(offX, offY, offZ);
 						BlockState state = level.getBlockState(pos);
 						blockEffect.doBlockExplosion(level, pos, state, distance);
+					}
+				}
+			}
+		}
+	}
+	
+	public static void doModifiedSphericalExplosion(Level level, Vec3 position, int radius, Vec3 transformation, IBlockExplosionCondition condition, IForEachBlockExplosionEffect blockEffect) {
+		for(double offX = -radius * transformation.x; offX <= radius * transformation.x; offX++) {
+			for(double offY = radius * transformation.y; offY >= -radius * transformation.y; offY--) {
+				for(double offZ = -radius * transformation.z; offZ <= radius * transformation.z; offZ++) {
+					double distance = Math.sqrt(offX * offX / transformation.x + offY * offY / transformation.y + offZ * offZ / transformation.z);
+					if(distance <= radius) {
+						BlockPos pos = new BlockPos(position).offset(offX, offY, offZ);
+						BlockState state = level.getBlockState(pos);
+						if(condition.conditionMet(level, pos, state, distance)) {
+							blockEffect.doBlockExplosion(level, pos, state, distance);
+						}
 					}
 				}
 			}
@@ -98,7 +116,7 @@ public class ExplosionHelper {
 					double distance = Math.sqrt(offX * offX + offY * offY + offZ * offZ);
 					if(distance <= radius) {
 						BlockPos pos = new BlockPos(position).offset(offX, offY, offZ);
-						if(level.getBlockState(pos.below()).isCollisionShapeFullBlock(level, pos.below()) && (level.getBlockState(pos).isAir() || level.getBlockState(pos).canBeReplaced(new DirectionalPlaceContext(level, pos, Direction.DOWN, ItemStack.EMPTY, Direction.UP)))) {
+						if(level.getBlockState(pos.below()).isCollisionShapeFullBlock(level, pos.below()) && (level.getBlockState(pos).isAir() || level.getBlockState(pos).canBeReplaced(new DirectionalPlaceContext(level, pos, Direction.DOWN, ItemStack.EMPTY, Direction.UP)) || level.getBlockState(pos).is(BlockTags.FLOWERS))) {
 							BlockState state = level.getBlockState(pos);
 							blockEffect.doBlockExplosion(level, pos, state, distance);
 						}

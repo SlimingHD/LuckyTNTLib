@@ -34,6 +34,7 @@ public class ImprovedExplosion extends Explosion{
 	public final double posX, posY, posZ;
 	public final float size;
 	public final ExplosionDamageCalculator damageCalculator;
+	List<BlockPos> affectedBlocks = new ArrayList<>();
 	
 	private static ImprovedExplosion dummyExplosion = new ImprovedExplosion(null, new Vec3(0, 0, 0), 0);
 	
@@ -58,7 +59,7 @@ public class ImprovedExplosion extends Explosion{
 	}
 	
 	public ImprovedExplosion(Level level, @Nullable Entity explodingEntity, @Nullable DamageSource source, double x, double y, double z, float size) {
-		super(level, explodingEntity, source, null, x, y, z, size, false, BlockInteraction.NONE);
+		super(level, explodingEntity, source, null, x, y, z, size, false, BlockInteraction.KEEP);
 		this.level = level;
 		this.posX = x;
 		this.posY = y;
@@ -108,6 +109,7 @@ public class ImprovedExplosion extends Explosion{
 				}
 			}
 		}
+		affectedBlocks.addAll(blocks);
 		for(BlockPos pos : blocks) {
 			level.getBlockState(pos).getBlock().onBlockExploded(level.getBlockState(pos), level, pos, this);
 		}
@@ -161,6 +163,7 @@ public class ImprovedExplosion extends Explosion{
 				}
 			}
 		}
+		affectedBlocks.addAll(blocks);
 		for(BlockPos pos : blocks) {
 			double distance = Math.sqrt(pos.distToLowCornerSqr(posX, posY, posZ));
 			blockEffect.doBlockExplosion(level, pos, level.getBlockState(pos), distance);
@@ -212,6 +215,7 @@ public class ImprovedExplosion extends Explosion{
 				}
 			}
 		}
+		affectedBlocks.addAll(blocks);
 		for(BlockPos pos : blocks) {
 			double distance = Math.sqrt(pos.distToLowCornerSqr(posX, posY, posZ));
 			blockEffect.doBlockExplosion(level, pos, level.getBlockState(pos), distance);
@@ -236,7 +240,7 @@ public class ImprovedExplosion extends Explosion{
 		for(Entity entity : entities) {
 			if(!entity.ignoreExplosion()) {
 				double distance = Math.sqrt(entity.distanceToSqr(getPosition())) / (size * 2);
-				if(distance < 1f && distance != 0) {
+				if(distance <= 1f) {
 					double offX = (entity.getX() - posX);
 					double offY = (entity.getEyeY() - posY);
 					double offZ = (entity.getZ() - posZ);
@@ -281,11 +285,11 @@ public class ImprovedExplosion extends Explosion{
 	
 	@Nullable
 	@Override
-	public LivingEntity getSourceMob() {
-		if(super.getSourceMob() instanceof IExplosiveEntity ent) {
+	public LivingEntity getIndirectSourceEntity() {
+		if(super.getIndirectSourceEntity() instanceof IExplosiveEntity ent) {
 			return ent.owner() instanceof LivingEntity ? (LivingEntity)ent.owner() : null;
 		}
-		return super.getSourceMob();
+		return super.getIndirectSourceEntity();
 	}
 	
 	public static ImprovedExplosion dummyExplosion() {
@@ -303,9 +307,8 @@ public class ImprovedExplosion extends Explosion{
 	}
 	
 	@Override
-	@Deprecated
 	@Nullable
 	public List<BlockPos> getToBlow(){
-		return new ArrayList<BlockPos>();
+		return affectedBlocks;
 	}
 }

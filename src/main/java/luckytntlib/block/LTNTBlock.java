@@ -62,7 +62,7 @@ public class LTNTBlock extends TntBlock{
 	@Override
 	public void onBlockExploded(BlockState state, Level level, BlockPos pos, Explosion explosion) {
 		if(!level.isClientSide) {
-			explode(level, true, pos.getX(), pos.getY(), pos.getZ(), explosion.getSourceMob());
+			explode(level, true, pos.getX(), pos.getY(), pos.getZ(), explosion.getIndirectSourceEntity());
 		}
 	}
 	

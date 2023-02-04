@@ -3,9 +3,8 @@ package luckytntlib.entity;
 import javax.annotation.Nullable;
 
 import luckytntlib.util.IExplosiveEntity;
-import luckytntlib.util.explosions.PrimedTNTEffect;
+import luckytntlib.util.tnteffects.PrimedTNTEffect;
 import net.minecraft.nbt.CompoundTag;
-import net.minecraft.network.protocol.Packet;
 import net.minecraft.network.syncher.EntityDataAccessor;
 import net.minecraft.network.syncher.EntityDataSerializers;
 import net.minecraft.network.syncher.SynchedEntityData;
@@ -16,7 +15,6 @@ import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.PathfinderMob;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.Vec3;
-import net.minecraftforge.network.NetworkHooks;
 
 public class LivingPrimedLTNT extends PathfinderMob implements IExplosiveEntity{
 	
@@ -28,11 +26,7 @@ public class LivingPrimedLTNT extends PathfinderMob implements IExplosiveEntity{
 	public LivingPrimedLTNT(EntityType<? extends PathfinderMob> type, Level level, @Nullable PrimedTNTEffect effect) {
 		super(type, level);
 		this.effect = effect;
-	}
-
-	@Override
-	public Packet<?> getAddEntityPacket() {
-		return NetworkHooks.getEntitySpawningPacket(this);
+		this.setTNTFuse(effect.getDefaultFuse(this));
 	}
 	
 	@Override

@@ -1,9 +1,7 @@
 package luckytntlib.client.renderer;
 
 import com.mojang.blaze3d.vertex.PoseStack;
-import com.mojang.math.Vector3f;
 
-import luckytntlib.block.LTNTBlock;
 import luckytntlib.util.IExplosiveEntity;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.block.BlockRenderDispatcher;
@@ -14,6 +12,7 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.Mth;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.inventory.InventoryMenu;
+import net.minecraft.world.level.block.TntBlock;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 
@@ -31,7 +30,7 @@ public class LTNTRenderer extends EntityRenderer<Entity>{
 			posestack.pushPose();
 	        posestack.translate(0, 0, 0);
 	        int i = ent.getTNTFuse();
-	        if ((float)i - partialTicks + 1.0F < 10.0F && ent.getEffect().getBlock() instanceof LTNTBlock) {
+	        if ((float)i - partialTicks + 1.0F < 10.0F && ent.getEffect().getBlockState((IExplosiveEntity)entity).getBlock() instanceof TntBlock) {
 	           float f = 1.0F - ((float)i - partialTicks + 1.0F) / 10.0F;
 	           f = Mth.clamp(f, 0.0F, 1.0F);
 	           f *= f;
@@ -39,11 +38,9 @@ public class LTNTRenderer extends EntityRenderer<Entity>{
 	           float f1 = 1.0F + f * 0.3F;
 	           posestack.scale(f1, f1, f1);
 	        }
-	        posestack.scale(ent.getEffect().getSize(), ent.getEffect().getSize(), ent.getEffect().getSize());
-	        posestack.mulPose(Vector3f.YP.rotationDegrees(-90f));
-	        posestack.translate(-0.5d, 0, 0.5d);
-	        posestack.mulPose(Vector3f.YP.rotationDegrees(90f));
-	        TntMinecartRenderer.renderWhiteSolidBlock(blockRenderer, ent.getEffect().getBlockState(), posestack, buffer, light, ent.getEffect().getBlock() instanceof LTNTBlock ? i / 5 % 2 == 0 : false);
+	        posestack.scale(ent.getEffect().getSize((IExplosiveEntity)entity), ent.getEffect().getSize((IExplosiveEntity)entity), ent.getEffect().getSize((IExplosiveEntity)entity));
+	        posestack.translate(-0.5d, 0, -0.5d);
+	        TntMinecartRenderer.renderWhiteSolidBlock(blockRenderer, ent.getEffect().getBlockState((IExplosiveEntity)entity), posestack, buffer, light, ent.getEffect().getBlockState((IExplosiveEntity)entity).getBlock() instanceof TntBlock ? i / 5 % 2 == 0 : false);
 	        posestack.popPose();
     	}
         super.render(entity, yaw, partialTicks, posestack, buffer, light);

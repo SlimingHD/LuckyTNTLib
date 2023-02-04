@@ -1,11 +1,13 @@
-package luckytntlib.util.explosions;
+package luckytntlib.util.tnteffects;
 
 import java.util.ArrayList;
 import java.util.List;
 
 import luckytntlib.util.IExplosiveEntity;
+import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.state.BlockState;
 
 public class StackedPrimedTNTEffect extends PrimedTNTEffect{
 
@@ -36,13 +38,23 @@ public class StackedPrimedTNTEffect extends PrimedTNTEffect{
 	}
 	
 	@Override
-	public ItemStack getItem() {
+	public Item getItem() {
 		return effects.get(0).getItem();
+	}
+	
+	@Override
+	public ItemStack getItemStack() {
+		return effects.get(0).getItemStack();
 	}
 	
 	@Override
 	public Block getBlock() {
 		return effects.get(0).getBlock();
+	}
+	
+	@Override
+	public BlockState getBlockState(IExplosiveEntity entity) {
+		return effects.get(0).getBlockState(entity);
 	}
 	
 	@Override
@@ -56,8 +68,8 @@ public class StackedPrimedTNTEffect extends PrimedTNTEffect{
 	}
 	
 	@Override
-	public float getSize() {
-		return effects.get(0).getSize();
+	public float getSize(IExplosiveEntity entity) {
+		return effects.get(0).getSize(entity);
 	}
 	
 	@Override

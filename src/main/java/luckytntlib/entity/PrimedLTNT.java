@@ -3,9 +3,8 @@ package luckytntlib.entity;
 import javax.annotation.Nullable;
 
 import luckytntlib.util.IExplosiveEntity;
-import luckytntlib.util.explosions.PrimedTNTEffect;
+import luckytntlib.util.tnteffects.PrimedTNTEffect;
 import net.minecraft.nbt.CompoundTag;
-import net.minecraft.network.protocol.Packet;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
@@ -14,7 +13,6 @@ import net.minecraft.world.entity.MoverType;
 import net.minecraft.world.entity.item.PrimedTnt;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.Vec3;
-import net.minecraftforge.network.NetworkHooks;
 
 public class PrimedLTNT extends PrimedTnt implements IExplosiveEntity{
 
@@ -27,11 +25,7 @@ public class PrimedLTNT extends PrimedTnt implements IExplosiveEntity{
 		this.effect = effect;
 	    double movement = level.random.nextDouble() * (double)(Math.PI * 2F);
 	    this.setDeltaMovement(-Math.sin(movement) * 0.02D, 0.2F, -Math.cos(movement) * 0.02D);
-	}
-	
-	@Override
-	public Packet<?> getAddEntityPacket(){
-		return NetworkHooks.getEntitySpawningPacket(this);	
+	    this.setTNTFuse(effect.getDefaultFuse(this));
 	}
 	
 	@Override

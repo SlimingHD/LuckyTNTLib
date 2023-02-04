@@ -1,30 +1,35 @@
-package luckytntlib.util.explosions;
+package luckytntlib.util.tnteffects;
 
 import luckytntlib.entity.LExplosiveProjectile;
 import luckytntlib.entity.LivingPrimedLTNT;
 import luckytntlib.entity.PrimedLTNT;
-import luckytntlib.network.ClientboundExplosionPacket;
-import luckytntlib.network.LuckyTNTLibPacketHandler;
 import luckytntlib.util.IExplosiveEntity;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.sounds.SoundEvents;
+import net.minecraft.sounds.SoundSource;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
+import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
-import net.minecraftforge.network.PacketDistributor;
 
 public abstract class PrimedTNTEffect extends ExplosiveEffect{
 	
-	@SuppressWarnings("resource")
+	private ItemStack stack;
+	
 	@Override
 	public void baseTick(IExplosiveEntity entity) {
+		Level level = entity.level();
 		if(entity instanceof PrimedLTNT ent) {
 			if(ent.getTNTFuse() <= 0) {
 				if(ent.level instanceof ServerLevel) {
 					if(playsSound()) {
-						LuckyTNTLibPacketHandler.CHANNEL.send(PacketDistributor.ALL.noArg(), new ClientboundExplosionPacket("luckytntlib.client.ClientExplosions", "playExplosionSoundAt", new BlockPos(entity.getPos())));
+						entity.level().playSound((Entity)entity, new BlockPos(entity.getPos()), SoundEvents.GENERIC_EXPLODE, SoundSource.BLOCKS, 4f, (1f + (level.random.nextFloat() - level.random.nextFloat()) * 0.2f) * 0.7f);
 					}
 					serverExplosion(entity);
 				}
@@ -37,7 +42,7 @@ public abstract class PrimedTNTEffect extends ExplosiveEffect{
 			if(ent.getTNTFuse() <= 0) {
 				if(ent.level instanceof ServerLevel) {
 					if(playsSound()) {
-						LuckyTNTLibPacketHandler.CHANNEL.send(PacketDistributor.ALL.noArg(), new ClientboundExplosionPacket("luckytntlib.client.ClientExplosions", "playExplosionSoundAt", new BlockPos(entity.getPos())));
+						entity.level().playSound((Entity)entity, new BlockPos(entity.getPos()), SoundEvents.GENERIC_EXPLODE, SoundSource.BLOCKS, 4f, (1f + (level.random.nextFloat() - level.random.nextFloat()) * 0.2f) * 0.7f);
 					}
 					serverExplosion(entity);
 				}
@@ -54,19 +59,28 @@ public abstract class PrimedTNTEffect extends ExplosiveEffect{
 				if(ent.getTNTFuse() == 0) {
 					if(ent.level instanceof ServerLevel) {
 						if(playsSound()) {
-							LuckyTNTLibPacketHandler.CHANNEL.send(PacketDistributor.ALL.noArg(), new ClientboundExplosionPacket("luckytntlib.client.ClientExplosions", "playExplosionSoundAt", new BlockPos(entity.getPos())));
+							entity.level().playSound((Entity)entity, new BlockPos(entity.getPos()), SoundEvents.GENERIC_EXPLODE, SoundSource.BLOCKS, 4f, (1f + (level.random.nextFloat() - level.random.nextFloat()) * 0.2f) * 0.7f);
 						}
 						serverExplosion(entity);
 					}
 					ent.destroy();
 				}
 			}
+			else if(airFuse() && entity.getTNTFuse() == 0) {
+				if(ent.level instanceof ServerLevel) {
+					if(playsSound()) {
+						entity.level().playSound((Entity)entity, new BlockPos(entity.getPos()), SoundEvents.GENERIC_EXPLODE, SoundSource.BLOCKS, 4f, (1f + (level.random.nextFloat() - level.random.nextFloat()) * 0.2f) * 0.7f);
+					}
+					serverExplosion(entity);
+				}
+				ent.destroy();
+			}
 			if((ent.getTNTFuse() > 0 && airFuse()) || ent.hitEntity() || ent.inGround()) {
 				explosionTick(ent);
 				ent.setTNTFuse(ent.getTNTFuse() - 1);
 			}
 		}
-		if(entity.level().isClientSide) {
+		if(level.isClientSide) {
 			spawnParticles(entity);
 		}
 	}
@@ -84,17 +98,17 @@ public abstract class PrimedTNTEffect extends ExplosiveEffect{
 	public void explosionTick(IExplosiveEntity entity) {		
 	}
 	
-	public boolean playsSound() {
-		return true;
-	}
-	
 	public int getDefaultFuse(IExplosiveEntity entity) {
 		return 80;
 	}
 	
 	@Override
-	public float getSize() {
+	public float getSize(IExplosiveEntity entity) {
 		return 1f;
+	}
+	
+	public boolean playsSound() {
+		return true;
 	}
 	
 	@Override
@@ -108,12 +122,20 @@ public abstract class PrimedTNTEffect extends ExplosiveEffect{
 	}
 	
 	@Override
-	public ItemStack getItem() {
-		return ItemStack.EMPTY;
+	public ItemStack getItemStack() {
+		if(stack == null) {
+			stack = new ItemStack(getItem());
+		}
+		return stack;
 	}
 	
 	@Override
-	public BlockState getBlockState() {
+	public Item getItem() {
+		return Items.AIR;
+	}
+	
+	@Override
+	public BlockState getBlockState(IExplosiveEntity entity) {
 		return getBlock().defaultBlockState();
 	}
 	

@@ -18,7 +18,7 @@ public class EntityAttributesRegistry {
 	
 	@SubscribeEvent
 	public static void registerAttributes(EntityAttributeCreationEvent event) {
-		for(Pair<RegistryObject<EntityType<LivingPrimedLTNT>>, float[]> pair : TNTLists.attributeRegistries) {
+		for(Pair<RegistryObject<EntityType<LivingPrimedLTNT>>, float[]> pair : RegistryHelper.ATTRIBUTE_REGISTRY_LIST) {
 			event.put(pair.getFirst().get(), Mob.createMobAttributes()
 					.add(Attributes.ATTACK_DAMAGE, pair.getSecond()[0])
 					.add(Attributes.MAX_HEALTH, pair.getSecond()[1])

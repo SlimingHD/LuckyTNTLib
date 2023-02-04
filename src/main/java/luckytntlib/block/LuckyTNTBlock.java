@@ -14,8 +14,9 @@ public class LuckyTNTBlock extends LTNTBlock{
 
 	public List<RegistryObject<LTNTBlock>> TNTs;
 	
-	public LuckyTNTBlock(BlockBehaviour.Properties properties) {
+	public LuckyTNTBlock(BlockBehaviour.Properties properties, List<RegistryObject<LTNTBlock>> TNTs) {
 		super(properties, null, false);
+		this.TNTs = TNTs;
 	}
 	
 	public void setTNTList(List<RegistryObject<LTNTBlock>> TNTs) {

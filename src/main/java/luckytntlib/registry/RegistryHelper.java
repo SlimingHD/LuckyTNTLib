@@ -1,6 +1,7 @@
 package luckytntlib.registry;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.function.BiFunction;
 import java.util.function.Supplier;
@@ -15,13 +16,12 @@ import luckytntlib.entity.LExplosiveProjectile;
 import luckytntlib.entity.LivingPrimedLTNT;
 import luckytntlib.entity.PrimedLTNT;
 import luckytntlib.item.LDynamiteItem;
-import luckytntlib.util.explosions.PrimedTNTEffect;
+import luckytntlib.util.tnteffects.PrimedTNTEffect;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.MobCategory;
 import net.minecraft.world.item.BlockItem;
-import net.minecraft.world.item.CreativeModeTab;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.TooltipFlag;
@@ -39,24 +39,32 @@ public class RegistryHelper {
 	public final DeferredRegister<Block> blockRegistry;
 	public final DeferredRegister<Item> itemRegistry;
 	public final DeferredRegister<EntityType<?>> entityRegistry;
-	public final String modID;
 	
-	public RegistryHelper(DeferredRegister<Block> blockRegistry, DeferredRegister<Item> itemRegistry, DeferredRegister<EntityType<?>> entityRegistry, String modID) {
+	public final HashMap<String, List<RegistryObject<LTNTBlock>>> TNTLists = new HashMap<>();
+	public final HashMap<String, List<RegistryObject<LDynamiteItem>>> dynamiteLists = new HashMap<>();
+	
+	public final HashMap<String, List<RegistryObject<? extends Item>>> creativeTabItemLists = new HashMap<>();
+	
+	public static final List<Pair<RegistryObject<LTNTBlock>, RegistryObject<Item>>> TNT_DISPENSER_REGISTRY_LIST = new ArrayList<>();
+	public static final List<RegistryObject<LDynamiteItem>> DYNAMITE_DISPENSER_REGISTRY_LIST = new ArrayList<>();
+	
+	public static final List<Pair<RegistryObject<EntityType<LivingPrimedLTNT>>, float[]>> ATTRIBUTE_REGISTRY_LIST = new ArrayList<Pair<RegistryObject<EntityType<LivingPrimedLTNT>>, float[]>>();
+	
+	public RegistryHelper(DeferredRegister<Block> blockRegistry, DeferredRegister<Item> itemRegistry, DeferredRegister<EntityType<?>> entityRegistry) {
 		this.blockRegistry = blockRegistry;
 		this.itemRegistry = itemRegistry;
 		this.entityRegistry = entityRegistry;
-		this.modID = modID;
 	}
 	
-	public RegistryObject<LTNTBlock> registerTNTBlock(String registryName, RegistryObject<EntityType<PrimedLTNT>> TNT, CreativeModeTab tab){
+	public RegistryObject<LTNTBlock> registerTNTBlock(String registryName, RegistryObject<EntityType<PrimedLTNT>> TNT, String tab){
 		return registerTNTBlock(registryName, TNT, tab, MaterialColor.COLOR_RED, true);
 	}
 	
-	public RegistryObject<LTNTBlock> registerTNTBlock(String registryName, RegistryObject<EntityType<PrimedLTNT>> TNT, CreativeModeTab tab, boolean shouldRandomlyFuse){
+	public RegistryObject<LTNTBlock> registerTNTBlock(String registryName, RegistryObject<EntityType<PrimedLTNT>> TNT, String tab, boolean shouldRandomlyFuse){
 		return registerTNTBlock(registryName, TNT, tab, MaterialColor.COLOR_RED, shouldRandomlyFuse);
 	}
 	
-	public RegistryObject<LTNTBlock> registerTNTBlock(String registryName, RegistryObject<EntityType<PrimedLTNT>> TNT, CreativeModeTab tab, MaterialColor color, boolean shouldRandomlyFuse){
+	public RegistryObject<LTNTBlock> registerTNTBlock(String registryName, RegistryObject<EntityType<PrimedLTNT>> TNT, String tab, MaterialColor color, boolean shouldRandomlyFuse){
 		return registerTNTBlock(TNT, new TNTBlockRegistryData.Builder(registryName).tab(tab).color(color).shouldRandomlyFuse(shouldRandomlyFuse).build());
 	}
 	
@@ -67,7 +75,7 @@ public class RegistryHelper {
 	public RegistryObject<LTNTBlock> registerTNTBlock(DeferredRegister<Block> blockRegistry, @Nullable DeferredRegister<Item> itemRegistry, Supplier<LTNTBlock> TNTBlock, TNTBlockRegistryData blockData){
 		RegistryObject<LTNTBlock> block = blockRegistry.register(blockData.getRegistryName(), TNTBlock);
 		if(itemRegistry != null && blockData.makeItem()) {
-			RegistryObject<Item> item = itemRegistry.register(blockData.getRegistryName(), () -> new BlockItem(block.get(), new Item.Properties().tab(blockData.getTab())) {
+			RegistryObject<Item> item = itemRegistry.register(blockData.getRegistryName(), () -> new BlockItem(block.get(), new Item.Properties()) {
 				
 				@Override
 				public void appendHoverText(ItemStack stack, @Nullable Level level, List<Component> components, TooltipFlag flag) {
@@ -77,28 +85,35 @@ public class RegistryHelper {
 					}
 				}
 			});
+			
 			if(blockData.addToTNTLists()) {
-				if(TNTLists.TNTLists.get(modID) == null) {
-					TNTLists.TNTLists.put(modID, new ArrayList<RegistryObject<LTNTBlock>>());
+				if(TNTLists.get(blockData.getTab()) == null) {
+					TNTLists.put(blockData.getTab(), new ArrayList<RegistryObject<LTNTBlock>>());
 				}
-				TNTLists.TNTLists.get(modID).add(block);
+				TNTLists.get(blockData.getTab()).add(block);
 			}
 			if(blockData.addDispenserBehaviour()) {
-				TNTLists.TNT_DISPENSER_REGISTRY_LIST.add(new Pair<RegistryObject<LTNTBlock>, RegistryObject<Item>>(block, item));
+				TNT_DISPENSER_REGISTRY_LIST.add(new Pair<RegistryObject<LTNTBlock>, RegistryObject<Item>>(block, item));
+			}
+			if(!blockData.getTab().equals("none")) {
+				if(creativeTabItemLists.get(blockData.getTab()) == null) {
+					creativeTabItemLists.put(blockData.getTab(), new ArrayList<RegistryObject<? extends Item>>());
+				}
+				creativeTabItemLists.get(blockData.getTab()).add(item);				
 			}
 		}
 		return block;	
 	}
 	
-	public RegistryObject<LTNTBlock> registerLivingTNTBlock(String registryName, RegistryObject<EntityType<LivingPrimedLTNT>> TNT, CreativeModeTab tab){
+	public RegistryObject<LTNTBlock> registerLivingTNTBlock(String registryName, RegistryObject<EntityType<LivingPrimedLTNT>> TNT, String tab){
 		return registerLivingTNTBlock(registryName, TNT, tab, MaterialColor.COLOR_RED, true);
 	}
 	
-	public RegistryObject<LTNTBlock> registerLivingTNTBlock(String registryName, RegistryObject<EntityType<LivingPrimedLTNT>> TNT, CreativeModeTab tab, boolean shouldRandomlyFuse){
+	public RegistryObject<LTNTBlock> registerLivingTNTBlock(String registryName, RegistryObject<EntityType<LivingPrimedLTNT>> TNT, String tab, boolean shouldRandomlyFuse){
 		return registerLivingTNTBlock(registryName, TNT, tab, MaterialColor.COLOR_RED, shouldRandomlyFuse);
 	}
 	
-	public RegistryObject<LTNTBlock> registerLivingTNTBlock(String registryName, RegistryObject<EntityType<LivingPrimedLTNT>> TNT, CreativeModeTab tab, MaterialColor color, boolean shouldRandomlyFuse){
+	public RegistryObject<LTNTBlock> registerLivingTNTBlock(String registryName, RegistryObject<EntityType<LivingPrimedLTNT>> TNT, String tab, MaterialColor color, boolean shouldRandomlyFuse){
 		return registerLivingTNTBlock(TNT, new TNTBlockRegistryData.Builder(registryName).tab(tab).color(color).shouldRandomlyFuse(shouldRandomlyFuse).build());
 	}
 	
@@ -109,7 +124,7 @@ public class RegistryHelper {
 	public RegistryObject<LTNTBlock> registerLivingTNTBlock(DeferredRegister<Block> blockRegistry, @Nullable DeferredRegister<Item> itemRegistry, Supplier<LivingLTNTBlock> TNTBlock, TNTBlockRegistryData blockData){
 		RegistryObject<LTNTBlock> block = blockRegistry.register(blockData.getRegistryName(), () -> ((LTNTBlock)TNTBlock.get()));
 		if(itemRegistry != null && blockData.makeItem()) {
-			RegistryObject<Item> item = itemRegistry.register(blockData.getRegistryName(), () -> new BlockItem(block.get(), new Item.Properties().tab(blockData.getTab())) {
+			RegistryObject<Item> item = itemRegistry.register(blockData.getRegistryName(), () -> new BlockItem(block.get(), new Item.Properties()) {
 				
 				@Override
 				public void appendHoverText(ItemStack stack, @Nullable Level level, List<Component> components, TooltipFlag flag) {
@@ -120,38 +135,53 @@ public class RegistryHelper {
 				}
 			});
 			if(blockData.addToTNTLists()) {
-				if(TNTLists.TNTLists.get(modID) == null) {
-					TNTLists.TNTLists.put(modID, new ArrayList<RegistryObject<LTNTBlock>>());
+				if(TNTLists.get(blockData.getTab()) == null) {
+					TNTLists.put(blockData.getTab(), new ArrayList<RegistryObject<LTNTBlock>>());
 				}
-				TNTLists.TNTLists.get(modID).add(block);
+				TNTLists.get(blockData.getTab()).add(block);
 			}
 			if(blockData.addDispenserBehaviour()) {
-				TNTLists.TNT_DISPENSER_REGISTRY_LIST.add(new Pair<RegistryObject<LTNTBlock>, RegistryObject<Item>>(block, item));
+				TNT_DISPENSER_REGISTRY_LIST.add(new Pair<RegistryObject<LTNTBlock>, RegistryObject<Item>>(block, item));
+			}
+			if(!blockData.getTab().equals("none")) {
+				if(creativeTabItemLists.get(blockData.getTab()) == null) {
+					creativeTabItemLists.put(blockData.getTab(), new ArrayList<RegistryObject<? extends Item>>());
+				}
+				creativeTabItemLists.get(blockData.getTab()).add(item);				
 			}
 		}
 		return block;	
 	}
 	
-	public RegistryObject<LDynamiteItem> registerDynamiteItem(String registryName, RegistryObject<EntityType<LExplosiveProjectile>> dynamite){
-		return registerDynamiteItem(registryName, () -> new LDynamiteItem(new Item.Properties(), dynamite, true));
+	public RegistryObject<LDynamiteItem> registerDynamiteItem(String registryName, RegistryObject<EntityType<LExplosiveProjectile>> dynamite, String tab){
+		return registerDynamiteItem(registryName, () -> new LDynamiteItem(new Item.Properties(), dynamite, true), tab);
 	}
 	
-	public RegistryObject<LDynamiteItem> registerDynamiteItem(String registryName, Supplier<LDynamiteItem> dynamiteSupplier){
-		return registerDynamiteItem(registryName, dynamiteSupplier, true);
+	public RegistryObject<LDynamiteItem> registerDynamiteItem(String registryName, Supplier<LDynamiteItem> dynamiteSupplier, String tab){
+		return registerDynamiteItem(registryName, dynamiteSupplier, tab, true, true);
 	}
 	
-	public RegistryObject<LDynamiteItem> registerDynamiteItem(String registryName, Supplier<LDynamiteItem> dynamiteSupplier, boolean addToLists){
-		return registerDynamiteItem(itemRegistry, registryName, dynamiteSupplier, addToLists);
+	public RegistryObject<LDynamiteItem> registerDynamiteItem(String registryName, Supplier<LDynamiteItem> dynamiteSupplier, String tab, boolean addToLists, boolean addDispenserBehaviour){
+		return registerDynamiteItem(itemRegistry, registryName, dynamiteSupplier, tab, addToLists, addDispenserBehaviour);
 	}
 	
 	//Not fully done
-	public RegistryObject<LDynamiteItem> registerDynamiteItem(DeferredRegister<Item> itemRegistry, String registryName, Supplier<LDynamiteItem> dynamiteSupplier, boolean addToLists){
+	public RegistryObject<LDynamiteItem> registerDynamiteItem(DeferredRegister<Item> itemRegistry, String registryName, Supplier<LDynamiteItem> dynamiteSupplier, String tab, boolean addToLists, boolean addDispenserBehaviour){
 		RegistryObject<LDynamiteItem> item = itemRegistry.register(registryName, dynamiteSupplier);		
 		if(addToLists) {
-			if(TNTLists.DynamiteLists.get("dynamites") == null) {
-				TNTLists.DynamiteLists.put("dynamites", new ArrayList<RegistryObject<LDynamiteItem>>());
+			if(dynamiteLists.get(tab) == null) {
+				dynamiteLists.put(tab, new ArrayList<RegistryObject<LDynamiteItem>>());
 			}
-			TNTLists.DynamiteLists.get("dynamites").add(item);
+			dynamiteLists.get(tab).add(item);
+		}
+		if(addDispenserBehaviour) {
+			DYNAMITE_DISPENSER_REGISTRY_LIST.add(item);
+		}
+		if(!tab.equals("none")) {
+			if(creativeTabItemLists.get(tab) == null) {
+				creativeTabItemLists.put(tab, new ArrayList<RegistryObject<? extends Item>>());
+			}
+			creativeTabItemLists.get(tab).add(item);
 		}
 		return item;
 	}
@@ -164,6 +194,10 @@ public class RegistryHelper {
 		return registerTNTEntity(entityRegistry, registryName, effect, size, fireImmune);
 	}
 	
+	public RegistryObject<EntityType<PrimedLTNT>> registerTNTEntity(DeferredRegister<EntityType<?>> entityRegistry, String registryName, Supplier<EntityType<PrimedLTNT>> TNT){
+		return entityRegistry.register(registryName, TNT);
+	}
+	
 	public RegistryObject<EntityType<PrimedLTNT>> registerTNTEntity(DeferredRegister<EntityType<?>> entityRegistry, String registryName, PrimedTNTEffect effect, float size, boolean fireImmune){
 		if(fireImmune) {
 			return entityRegistry.register(registryName, () -> EntityType.Builder.<PrimedLTNT>of((EntityType<PrimedLTNT> type, Level level) -> new PrimedLTNT(type, level, effect), MobCategory.MISC).setShouldReceiveVelocityUpdates(true).setTrackingRange(64).fireImmune().sized(size, size).build(registryName));
@@ -173,6 +207,7 @@ public class RegistryHelper {
 		}
 	}
 	
+	
 	public RegistryObject<EntityType<LivingPrimedLTNT>> registerLivingTNTEntity(String registryName, BiFunction<EntityType<LivingPrimedLTNT>, Level, LivingPrimedLTNT> TNT, float damage, float health, float speed, float size, boolean fireImmune){
 		return registerLivingTNTEntity(entityRegistry, registryName, TNT, damage, health, speed, size, fireImmune);
 	}
@@ -180,14 +215,18 @@ public class RegistryHelper {
 	public RegistryObject<EntityType<LivingPrimedLTNT>> registerLivingTNTEntity(DeferredRegister<EntityType<?>> entityRegistry, String registryName, BiFunction<EntityType<LivingPrimedLTNT>, Level, LivingPrimedLTNT> TNT, float damage, float health, float speed, float size, boolean fireImmune){
 		if(fireImmune) {
 			RegistryObject<EntityType<LivingPrimedLTNT>> register = entityRegistry.register(registryName, () -> EntityType.Builder.<LivingPrimedLTNT>of((EntityType<LivingPrimedLTNT> type, Level level) -> TNT.apply(type, level), MobCategory.MISC).setShouldReceiveVelocityUpdates(true).setTrackingRange(64).fireImmune().sized(size, size).build(registryName));
-			TNTLists.attributeRegistries.add(new Pair<RegistryObject<EntityType<LivingPrimedLTNT>>, float[]>(register, new float[] {damage, health, speed}));
+			ATTRIBUTE_REGISTRY_LIST.add(new Pair<RegistryObject<EntityType<LivingPrimedLTNT>>, float[]>(register, new float[] {damage, health, speed}));
 			return register;
 		}
 		else {
 			RegistryObject<EntityType<LivingPrimedLTNT>> register = entityRegistry.register(registryName, () -> EntityType.Builder.<LivingPrimedLTNT>of((EntityType<LivingPrimedLTNT> type, Level level) -> TNT.apply(type, level), MobCategory.MISC).setShouldReceiveVelocityUpdates(true).setTrackingRange(64).sized(size, size).build(registryName));
-			TNTLists.attributeRegistries.add(new Pair<RegistryObject<EntityType<LivingPrimedLTNT>>, float[]>(register, new float[] {damage, health, speed}));
+			ATTRIBUTE_REGISTRY_LIST.add(new Pair<RegistryObject<EntityType<LivingPrimedLTNT>>, float[]>(register, new float[] {damage, health, speed}));
 			return register;
 		}
+	}
+	
+	public RegistryObject<EntityType<LivingPrimedLTNT>> registerLivingTNTEntity(DeferredRegister<EntityType<?>> entityRegistry, String registryName, Supplier<EntityType<LivingPrimedLTNT>> TNT){
+		return entityRegistry.register(registryName, TNT);
 	}
 	
 	public RegistryObject<EntityType<LExplosiveProjectile>> registerExplosiveProjectile(String registryName, PrimedTNTEffect effect){

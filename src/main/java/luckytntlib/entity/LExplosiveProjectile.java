@@ -3,9 +3,8 @@ package luckytntlib.entity;
 import javax.annotation.Nullable;
 
 import luckytntlib.util.IExplosiveEntity;
-import luckytntlib.util.explosions.PrimedTNTEffect;
+import luckytntlib.util.tnteffects.PrimedTNTEffect;
 import net.minecraft.nbt.CompoundTag;
-import net.minecraft.network.protocol.Packet;
 import net.minecraft.network.syncher.EntityDataAccessor;
 import net.minecraft.network.syncher.EntityDataSerializers;
 import net.minecraft.network.syncher.SynchedEntityData;
@@ -20,7 +19,6 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.EntityHitResult;
 import net.minecraft.world.phys.Vec3;
-import net.minecraftforge.network.NetworkHooks;
 
 public class LExplosiveProjectile extends AbstractArrow implements IExplosiveEntity, ItemSupplier{
 	
@@ -35,11 +33,6 @@ public class LExplosiveProjectile extends AbstractArrow implements IExplosiveEnt
 		setTNTFuse(effect.getDefaultFuse(this));
 		pickup = AbstractArrow.Pickup.DISALLOWED;
 		this.effect = effect;
-	}
-	
-	@Override
-	public Packet<?> getAddEntityPacket(){
-		return NetworkHooks.getEntitySpawningPacket(this);
 	}
 	
 	@Override
@@ -167,7 +160,7 @@ public class LExplosiveProjectile extends AbstractArrow implements IExplosiveEnt
 	
 	@Override
 	public ItemStack getItem() {
-		return effect.getItem();
+		return effect.getItemStack();
 	}
 	
 	@Override

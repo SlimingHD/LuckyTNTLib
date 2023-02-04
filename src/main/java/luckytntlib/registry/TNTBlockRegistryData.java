@@ -1,7 +1,6 @@
 package luckytntlib.registry;
 
 import net.minecraft.network.chat.contents.TranslatableContents;
-import net.minecraft.world.item.CreativeModeTab;
 import net.minecraft.world.level.material.MaterialColor;
 
 public class TNTBlockRegistryData {
@@ -12,11 +11,11 @@ public class TNTBlockRegistryData {
 	private final boolean shouldRandomlyFuse;
 	private final boolean addToTNTLists;
 	private final TranslatableContents description;
-	private final CreativeModeTab tab;
+	private final String tab;
 	private final MaterialColor color;
 	
 	
-	private TNTBlockRegistryData(String registryName, boolean makeItem, boolean addDispenserBehaviour, boolean shouldRandomlyFuse, boolean addToTNTLists, TranslatableContents description, CreativeModeTab tab, MaterialColor color) {
+	private TNTBlockRegistryData(String registryName, boolean makeItem, boolean addDispenserBehaviour, boolean shouldRandomlyFuse, boolean addToTNTLists, TranslatableContents description, String tab, MaterialColor color) {
 		this.registryName = registryName;
 		this.makeItem = makeItem;
 		this.addDispenserBehaviour = addDispenserBehaviour;
@@ -51,7 +50,7 @@ public class TNTBlockRegistryData {
 		return description;
 	}
 
-	public CreativeModeTab getTab() {
+	public String getTab() {
 		return tab;
 	}
 
@@ -67,7 +66,7 @@ public class TNTBlockRegistryData {
 		private boolean shouldRandomlyFuse = true;
 		private boolean addToTNTLists = true;
 		private TranslatableContents description = new TranslatableContents("");
-		private CreativeModeTab tab = CreativeModeTab.TAB_REDSTONE;
+		private String tab = "none";
 		private MaterialColor color = MaterialColor.COLOR_RED;
 		
 		public Builder(String registryName) {
@@ -99,7 +98,7 @@ public class TNTBlockRegistryData {
 			return this;
 		}
 
-		public Builder tab(CreativeModeTab tab) {
+		public Builder tab(String tab) {
 			this.tab = tab;
 			return this;
 		}
