@@ -286,8 +286,8 @@ public class ImprovedExplosion extends Explosion{
 	@Nullable
 	@Override
 	public LivingEntity getIndirectSourceEntity() {
-		if(super.getIndirectSourceEntity() instanceof IExplosiveEntity ent) {
-			return ent.owner() instanceof LivingEntity ? (LivingEntity)ent.owner() : null;
+		if(getExploder() instanceof IExplosiveEntity ent) {
+			return ent.owner();
 		}
 		return super.getIndirectSourceEntity();
 	}

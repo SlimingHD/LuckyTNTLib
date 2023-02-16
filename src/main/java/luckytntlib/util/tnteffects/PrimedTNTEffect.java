@@ -1,6 +1,7 @@
 package luckytntlib.util.tnteffects;
 
 import luckytntlib.entity.LExplosiveProjectile;
+import luckytntlib.entity.LTNTMinecart;
 import luckytntlib.entity.LivingPrimedLTNT;
 import luckytntlib.entity.PrimedLTNT;
 import luckytntlib.util.IExplosiveEntity;
@@ -25,11 +26,11 @@ public abstract class PrimedTNTEffect extends ExplosiveEffect{
 	@Override
 	public void baseTick(IExplosiveEntity entity) {
 		Level level = entity.level();
-		if(entity instanceof PrimedLTNT ent) {
-			if(ent.getTNTFuse() <= 0) {
-				if(ent.level instanceof ServerLevel) {
+		if(entity instanceof PrimedLTNT || entity instanceof LTNTMinecart) {
+			if(entity.getTNTFuse() <= 0) {
+				if(entity.level() instanceof ServerLevel) {
 					if(playsSound()) {
-						entity.level().playSound((Entity)entity, new BlockPos(entity.getPos()), SoundEvents.GENERIC_EXPLODE, SoundSource.BLOCKS, 4f, (1f + (level.random.nextFloat() - level.random.nextFloat()) * 0.2f) * 0.7f);
+						level.playSound((Entity)entity, new BlockPos(entity.getPos()), SoundEvents.GENERIC_EXPLODE, SoundSource.BLOCKS, 4f, (1f + (level.random.nextFloat() - level.random.nextFloat()) * 0.2f) * 0.7f);
 					}
 					serverExplosion(entity);
 				}
@@ -42,7 +43,7 @@ public abstract class PrimedTNTEffect extends ExplosiveEffect{
 			if(ent.getTNTFuse() <= 0) {
 				if(ent.level instanceof ServerLevel) {
 					if(playsSound()) {
-						entity.level().playSound((Entity)entity, new BlockPos(entity.getPos()), SoundEvents.GENERIC_EXPLODE, SoundSource.BLOCKS, 4f, (1f + (level.random.nextFloat() - level.random.nextFloat()) * 0.2f) * 0.7f);
+						level.playSound((Entity)entity, new BlockPos(entity.getPos()), SoundEvents.GENERIC_EXPLODE, SoundSource.BLOCKS, 4f, (1f + (level.random.nextFloat() - level.random.nextFloat()) * 0.2f) * 0.7f);
 					}
 					serverExplosion(entity);
 				}
@@ -59,7 +60,7 @@ public abstract class PrimedTNTEffect extends ExplosiveEffect{
 				if(ent.getTNTFuse() == 0) {
 					if(ent.level instanceof ServerLevel) {
 						if(playsSound()) {
-							entity.level().playSound((Entity)entity, new BlockPos(entity.getPos()), SoundEvents.GENERIC_EXPLODE, SoundSource.BLOCKS, 4f, (1f + (level.random.nextFloat() - level.random.nextFloat()) * 0.2f) * 0.7f);
+							level.playSound((Entity)entity, new BlockPos(entity.getPos()), SoundEvents.GENERIC_EXPLODE, SoundSource.BLOCKS, 4f, (1f + (level.random.nextFloat() - level.random.nextFloat()) * 0.2f) * 0.7f);
 						}
 						serverExplosion(entity);
 					}
@@ -69,7 +70,7 @@ public abstract class PrimedTNTEffect extends ExplosiveEffect{
 			else if(airFuse() && entity.getTNTFuse() == 0) {
 				if(ent.level instanceof ServerLevel) {
 					if(playsSound()) {
-						entity.level().playSound((Entity)entity, new BlockPos(entity.getPos()), SoundEvents.GENERIC_EXPLODE, SoundSource.BLOCKS, 4f, (1f + (level.random.nextFloat() - level.random.nextFloat()) * 0.2f) * 0.7f);
+						level.playSound((Entity)entity, new BlockPos(entity.getPos()), SoundEvents.GENERIC_EXPLODE, SoundSource.BLOCKS, 4f, (1f + (level.random.nextFloat() - level.random.nextFloat()) * 0.2f) * 0.7f);
 					}
 					serverExplosion(entity);
 				}

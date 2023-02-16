@@ -5,9 +5,12 @@ import java.util.function.Supplier;
 import javax.annotation.Nullable;
 
 import luckytntlib.block.LTNTBlock;
+import luckytntlib.item.LDynamiteItem;
 import luckytntlib.util.IExplosiveEntity;
 import luckytntlib.util.explosions.ImprovedExplosion;
 import net.minecraft.world.entity.Entity;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.Items;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraftforge.registries.RegistryObject;
@@ -15,6 +18,7 @@ import net.minecraftforge.registries.RegistryObject;
 public class TNTXStrengthEffect extends PrimedTNTEffect{
 	
 	@Nullable private final Supplier<RegistryObject<LTNTBlock>> TNT;
+	@Nullable private final Supplier<RegistryObject<LDynamiteItem>> dynamite;	
 	private final int fuse;
 	private final float strength;
 	private final float xzStrength, yStrength;
@@ -23,9 +27,12 @@ public class TNTXStrengthEffect extends PrimedTNTEffect{
 	private final boolean fire;
 	private final float knockbackStrength;
 	private final boolean isStrongExplosion;
+	private final boolean airFuse;
+	private final boolean explodesOnImpact;
 	
-	private TNTXStrengthEffect(@Nullable Supplier<RegistryObject<LTNTBlock>> TNT, int fuse, float strength, float xzStrength, float yStrength, float resistanceImpact, float randomVecLength, boolean fire, float knockbackStrength, boolean isStrongExplosion) {
+	private TNTXStrengthEffect(@Nullable Supplier<RegistryObject<LTNTBlock>> TNT, @Nullable Supplier<RegistryObject<LDynamiteItem>> dynamite, int fuse, float strength, float xzStrength, float yStrength, float resistanceImpact, float randomVecLength, boolean fire, float knockbackStrength, boolean isStrongExplosion, boolean airFuse, boolean explodesOnImpact) {
 		this.TNT = TNT;
+		this.dynamite = dynamite;
 		this.fuse = fuse;
 		this.strength = strength;
 		this.xzStrength = xzStrength;
@@ -35,6 +42,8 @@ public class TNTXStrengthEffect extends PrimedTNTEffect{
 		this.fire = fire;
 		this.knockbackStrength = knockbackStrength;
 		this.isStrongExplosion = isStrongExplosion;
+		this.airFuse = airFuse;
+		this.explodesOnImpact = explodesOnImpact;
 	}
 
 	@Override
@@ -50,30 +59,35 @@ public class TNTXStrengthEffect extends PrimedTNTEffect{
 	}
 	
 	@Override
+	public Item getItem() {
+		return dynamite.get().get() == null ? Items.AIR : dynamite.get().get();
+	}
+	
+	@Override
 	public int getDefaultFuse(IExplosiveEntity entity) {
 		return fuse;
+	}
+		
+	@Override
+	public boolean airFuse() {
+		return airFuse;
+	}
+	
+	@Override
+	public boolean explodesOnImpact() {
+		return explodesOnImpact;
 	}
 	
 	public static class Builder {
 		
-		@Nullable private final Supplier<RegistryObject<LTNTBlock>> TNT;
-		private int fuse = 80;
 		private float strength = 4f;
 		private float xzStrength = 1f, yStrength = 1f;
 		private float resistanceImpact = 1f;
 		private float randomVecLength = 1f;
-		private boolean fire = false;
 		private float knockbackStrength = 1f;
 		private boolean isStrongExplosion = false;
-		
-		public Builder(@Nullable Supplier<RegistryObject<LTNTBlock>> TNT) {
-			this.TNT = TNT;
-		}
-		
-		public Builder fuse(int fuse) {
-			this.fuse = fuse;
-			return this;
-		}
+		private boolean airFuse = false;
+		private boolean explodesOnImpact = true;
 		
 		public Builder explosionStrength(float strength) {
 			this.strength = strength;
@@ -100,11 +114,6 @@ public class TNTXStrengthEffect extends PrimedTNTEffect{
 			return this;
 		}
 		
-		public Builder fire(boolean fire) {
-			this.fire = fire;
-			return this;
-		}
-		
 		public Builder knockbackStrength(float knockbackStrength) {
 			this.knockbackStrength = knockbackStrength;
 			return this;
@@ -115,8 +124,46 @@ public class TNTXStrengthEffect extends PrimedTNTEffect{
 			return this;
 		}
 		
+		public Builder airFuse(boolean airFuse) {
+			this.airFuse = airFuse;
+			return this;
+		}
+		
+		public Builder explodesOnImpact(boolean explodesOnImpact) {
+			this.explodesOnImpact = explodesOnImpact;
+			return this;
+		}
+		
 		public TNTXStrengthEffect build() {
-			return new TNTXStrengthEffect(TNT, fuse, strength, xzStrength, yStrength, resistanceImpact, randomVecLength, fire, knockbackStrength, isStrongExplosion);
+			return new TNTXStrengthEffect(null, null, 0, strength, xzStrength, yStrength, resistanceImpact, randomVecLength, false, knockbackStrength, isStrongExplosion, airFuse, explodesOnImpact);
+		}
+		
+		public TNTXStrengthEffect build(boolean fire) {
+			return new TNTXStrengthEffect(null, null, 0, strength, xzStrength, yStrength, resistanceImpact, randomVecLength, fire, knockbackStrength, isStrongExplosion, airFuse, explodesOnImpact);
+		}
+		
+		public TNTXStrengthEffect buildTNT(Supplier<RegistryObject<LTNTBlock>> TNT) {
+			return new TNTXStrengthEffect(TNT, null, 0, strength, xzStrength, yStrength, resistanceImpact, randomVecLength, false, knockbackStrength, isStrongExplosion, airFuse, explodesOnImpact);
+		}
+		
+		public TNTXStrengthEffect buildTNT(Supplier<RegistryObject<LTNTBlock>> TNT, int fuse) {
+			return new TNTXStrengthEffect(TNT, null, fuse, strength, xzStrength, yStrength, resistanceImpact, randomVecLength, false, knockbackStrength, isStrongExplosion, airFuse, explodesOnImpact);
+		}
+		
+		public TNTXStrengthEffect buildTNT(Supplier<RegistryObject<LTNTBlock>> TNT, int fuse, boolean fire) {
+			return new TNTXStrengthEffect(TNT, null, fuse, strength, xzStrength, yStrength, resistanceImpact, randomVecLength, fire, knockbackStrength, isStrongExplosion, airFuse, explodesOnImpact);
+		}
+		
+		public TNTXStrengthEffect buildDynamite(Supplier<RegistryObject<LDynamiteItem>> dynamite) {
+			return new TNTXStrengthEffect(null, dynamite, 0, strength, xzStrength, yStrength, resistanceImpact, randomVecLength, false, knockbackStrength, isStrongExplosion, airFuse, explodesOnImpact);
+		}
+		
+		public TNTXStrengthEffect buildDynamite(Supplier<RegistryObject<LDynamiteItem>> dynamite, int fuse) {
+			return new TNTXStrengthEffect(null, dynamite, fuse, strength, xzStrength, yStrength, resistanceImpact, randomVecLength, false, knockbackStrength, isStrongExplosion, airFuse, explodesOnImpact);
+		}
+		
+		public TNTXStrengthEffect buildDynamite(Supplier<RegistryObject<LDynamiteItem>> dynamite, int fuse, boolean fire) {
+			return new TNTXStrengthEffect(null, dynamite, fuse, strength, xzStrength, yStrength, resistanceImpact, randomVecLength, fire, knockbackStrength, isStrongExplosion, airFuse, explodesOnImpact);
 		}
 	}
 }

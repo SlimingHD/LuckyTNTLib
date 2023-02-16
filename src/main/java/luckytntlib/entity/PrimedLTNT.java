@@ -6,7 +6,6 @@ import luckytntlib.util.IExplosiveEntity;
 import luckytntlib.util.tnteffects.PrimedTNTEffect;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.sounds.SoundSource;
-import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.MoverType;
@@ -124,7 +123,7 @@ public class PrimedLTNT extends PrimedTnt implements IExplosiveEntity{
 	}
 	
 	@Override
-	public Entity owner() {
+	public LivingEntity owner() {
 		return getOwner();
 	}
 }

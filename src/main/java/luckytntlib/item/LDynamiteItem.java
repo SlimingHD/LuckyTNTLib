@@ -6,8 +6,6 @@ import javax.annotation.Nullable;
 
 import luckytntlib.entity.LExplosiveProjectile;
 import net.minecraft.core.BlockPos;
-import net.minecraft.core.BlockSource;
-import net.minecraft.core.dispenser.DispenseItemBehavior;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
@@ -20,7 +18,6 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
-import net.minecraft.world.level.block.DispenserBlock;
 import net.minecraft.world.phys.Vec3;
 import net.minecraftforge.registries.RegistryObject;
 
@@ -30,24 +27,9 @@ public class LDynamiteItem extends Item{
 	protected RegistryObject<EntityType<LExplosiveProjectile>> dynamite;
 	protected Random random = new Random();
 	
-	public LDynamiteItem(Item.Properties properties, @Nullable RegistryObject<EntityType<LExplosiveProjectile>> dynamite, boolean addDispenseBehaviour) {
+	public LDynamiteItem(Item.Properties properties, @Nullable RegistryObject<EntityType<LExplosiveProjectile>> dynamite) {
 		super(properties);
 		this.dynamite = dynamite;
-		if(addDispenseBehaviour) {
-			DispenseItemBehavior behaviour = new DispenseItemBehavior() {
-				@Override
-				public ItemStack dispense(BlockSource source, ItemStack stack) {
-					Level level = source.getLevel();
-					BlockPos dPos = source.getPos();
-					BlockPos pos = new BlockPos(DispenserBlock.getDispensePosition(source));
-					Vec3 direction = new Vec3(pos.getX() - dPos.getX(), pos.getY() - dPos.getY(), pos.getZ() - dPos.getZ()).normalize().add(new Vec3(Math.random() - Math.random(), Math.random() - Math.random(), Math.random() - Math.random()).scale(0.1f));
-					shoot(level, pos.getX() + 0.5f, pos.getY() + 0.5f, pos.getZ() + 0.5f, direction, 2, null);
-					stack.shrink(1);
-					return stack;
-				}
-			};
-			DispenserBlock.registerBehavior(this, behaviour);
-		}
 	}
 	
 	@Override

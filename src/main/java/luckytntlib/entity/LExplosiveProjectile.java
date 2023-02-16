@@ -164,7 +164,7 @@ public class LExplosiveProjectile extends AbstractArrow implements IExplosiveEnt
 	}
 	
 	@Override
-	public Entity owner() {
+	public LivingEntity owner() {
 		return getOwner();
 	}
 }

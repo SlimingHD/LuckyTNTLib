@@ -13,9 +13,11 @@ import com.mojang.datafixers.util.Pair;
 import luckytntlib.block.LTNTBlock;
 import luckytntlib.block.LivingLTNTBlock;
 import luckytntlib.entity.LExplosiveProjectile;
+import luckytntlib.entity.LTNTMinecart;
 import luckytntlib.entity.LivingPrimedLTNT;
 import luckytntlib.entity.PrimedLTNT;
 import luckytntlib.item.LDynamiteItem;
+import luckytntlib.item.LTNTMinecartItem;
 import luckytntlib.util.tnteffects.PrimedTNTEffect;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
@@ -42,11 +44,13 @@ public class RegistryHelper {
 	
 	public final HashMap<String, List<RegistryObject<LTNTBlock>>> TNTLists = new HashMap<>();
 	public final HashMap<String, List<RegistryObject<LDynamiteItem>>> dynamiteLists = new HashMap<>();
+	public final HashMap<String, List<RegistryObject<LTNTMinecartItem>>> minecartLists = new HashMap<>();
 	
 	public final HashMap<String, List<RegistryObject<? extends Item>>> creativeTabItemLists = new HashMap<>();
 	
 	public static final List<Pair<RegistryObject<LTNTBlock>, RegistryObject<Item>>> TNT_DISPENSER_REGISTRY_LIST = new ArrayList<>();
 	public static final List<RegistryObject<LDynamiteItem>> DYNAMITE_DISPENSER_REGISTRY_LIST = new ArrayList<>();
+	public static final List<RegistryObject<LTNTMinecartItem>> MINECART_DISPENSER_REGISTRY_LIST = new ArrayList<>();
 	
 	public static final List<Pair<RegistryObject<EntityType<LivingPrimedLTNT>>, float[]>> ATTRIBUTE_REGISTRY_LIST = new ArrayList<Pair<RegistryObject<EntityType<LivingPrimedLTNT>>, float[]>>();
 	
@@ -154,7 +158,7 @@ public class RegistryHelper {
 	}
 	
 	public RegistryObject<LDynamiteItem> registerDynamiteItem(String registryName, RegistryObject<EntityType<LExplosiveProjectile>> dynamite, String tab){
-		return registerDynamiteItem(registryName, () -> new LDynamiteItem(new Item.Properties(), dynamite, true), tab);
+		return registerDynamiteItem(registryName, () -> new LDynamiteItem(new Item.Properties(), dynamite), tab);
 	}
 	
 	public RegistryObject<LDynamiteItem> registerDynamiteItem(String registryName, Supplier<LDynamiteItem> dynamiteSupplier, String tab){
@@ -165,7 +169,6 @@ public class RegistryHelper {
 		return registerDynamiteItem(itemRegistry, registryName, dynamiteSupplier, tab, addToLists, addDispenserBehaviour);
 	}
 	
-	//Not fully done
 	public RegistryObject<LDynamiteItem> registerDynamiteItem(DeferredRegister<Item> itemRegistry, String registryName, Supplier<LDynamiteItem> dynamiteSupplier, String tab, boolean addToLists, boolean addDispenserBehaviour){
 		RegistryObject<LDynamiteItem> item = itemRegistry.register(registryName, dynamiteSupplier);		
 		if(addToLists) {
@@ -176,6 +179,34 @@ public class RegistryHelper {
 		}
 		if(addDispenserBehaviour) {
 			DYNAMITE_DISPENSER_REGISTRY_LIST.add(item);
+		}
+		if(!tab.equals("none")) {
+			if(creativeTabItemLists.get(tab) == null) {
+				creativeTabItemLists.put(tab, new ArrayList<RegistryObject<? extends Item>>());
+			}
+			creativeTabItemLists.get(tab).add(item);
+		}
+		return item;
+	}
+	
+	public RegistryObject<LTNTMinecartItem> registerTNTMinecartItem(String registryName, Supplier<RegistryObject<EntityType<LTNTMinecart>>> TNT, String tab){
+		return registerTNTMinecartItem(registryName, () -> new LTNTMinecartItem(new Item.Properties(), TNT), tab, true, true);
+	}
+	
+	public RegistryObject<LTNTMinecartItem> registerTNTMinecartItem(String registryName, Supplier<LTNTMinecartItem> minecartSupplier, String tab, boolean addToLists, boolean addDispenserBehaviour){
+		return registerTNTMinecartItem(itemRegistry, registryName, minecartSupplier, tab, addToLists, addDispenserBehaviour);
+	}
+	
+	public RegistryObject<LTNTMinecartItem> registerTNTMinecartItem(DeferredRegister<Item> itemRegistry, String registryName, Supplier<LTNTMinecartItem> minecartSupplier, String tab, boolean addToLists, boolean addDispenserBehaviour){
+		RegistryObject<LTNTMinecartItem> item = itemRegistry.register(registryName, minecartSupplier);
+		if(addToLists) {
+			if(minecartLists.get(tab) == null) {
+				minecartLists.put(tab, new ArrayList<RegistryObject<LTNTMinecartItem>>());
+			}
+			minecartLists.get(tab).add(item);
+		}
+		if(addDispenserBehaviour) {
+			MINECART_DISPENSER_REGISTRY_LIST.add(item);
 		}
 		if(!tab.equals("none")) {
 			if(creativeTabItemLists.get(tab) == null) {
@@ -207,6 +238,18 @@ public class RegistryHelper {
 		}
 	}
 	
+	public RegistryObject<EntityType<LTNTMinecart>> registerTNTMinecart(String registryName, PrimedTNTEffect effect, RegistryObject<LTNTMinecartItem> pickItem){
+		return registerTNTMinecart(registryName, effect, pickItem, true);
+	}
+	
+	public RegistryObject<EntityType<LTNTMinecart>> registerTNTMinecart(String registryName, PrimedTNTEffect effect, RegistryObject<LTNTMinecartItem> pickItem, boolean explodesInstantly){
+		return registerTNTMinecart(entityRegistry, registryName, effect, pickItem, explodesInstantly);
+	}
+	
+	public RegistryObject<EntityType<LTNTMinecart>> registerTNTMinecart(DeferredRegister<EntityType<?>> entityRegistry, String registryName, PrimedTNTEffect effect, RegistryObject<LTNTMinecartItem> pickItem, boolean explodesInstantly){		
+		return entityRegistry.register(registryName, () -> EntityType.Builder.<LTNTMinecart>of((EntityType<LTNTMinecart> type, Level level) -> new LTNTMinecart(type, level, effect, pickItem, explodesInstantly), MobCategory.MISC).setShouldReceiveVelocityUpdates(true).setTrackingRange(64).sized(0.98f, 0.7f).build(registryName));
+	}
+	
 	
 	public RegistryObject<EntityType<LivingPrimedLTNT>> registerLivingTNTEntity(String registryName, BiFunction<EntityType<LivingPrimedLTNT>, Level, LivingPrimedLTNT> TNT, float damage, float health, float speed, float size, boolean fireImmune){
 		return registerLivingTNTEntity(entityRegistry, registryName, TNT, damage, health, speed, size, fireImmune);
@@ -229,8 +272,12 @@ public class RegistryHelper {
 		return entityRegistry.register(registryName, TNT);
 	}
 	
+	public RegistryObject<EntityType<LExplosiveProjectile>> registerExplosiveProjectile(DeferredRegister<EntityType<?>> entityRegistry, String registryName, Supplier<EntityType<LExplosiveProjectile>> projectile){
+		return entityRegistry.register(registryName, projectile);
+	}
+	
 	public RegistryObject<EntityType<LExplosiveProjectile>> registerExplosiveProjectile(String registryName, PrimedTNTEffect effect){
-		return registerExplosiveProjectile(registryName, effect, 1, false);
+		return registerExplosiveProjectile(registryName, effect, 1f, false);
 	}
 	
 	public RegistryObject<EntityType<LExplosiveProjectile>> registerExplosiveProjectile(String registryName, PrimedTNTEffect effect, float size, boolean fireImmune) {

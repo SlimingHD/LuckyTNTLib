@@ -25,8 +25,9 @@ public class LuckyTNTBlock extends LTNTBlock{
 	
 	@Override
 	public PrimedLTNT explode(Level level, boolean exploded, double x, double y, double z, @Nullable LivingEntity igniter) throws NullPointerException{
-		if(!(TNTs.get(random.nextInt(TNTs.size())).get() instanceof LuckyTNTBlock)) {
-			return TNTs.get(random.nextInt(TNTs.size())).get().explode(level, exploded, x, y, z, igniter);
+		int rand = random.nextInt(TNTs.size());
+		if(!(TNTs.get(rand).get() instanceof LuckyTNTBlock)) {
+			return TNTs.get(rand).get().explode(level, exploded, x, y, z, igniter);
 		}
 		throw new NullPointerException();
 	}
