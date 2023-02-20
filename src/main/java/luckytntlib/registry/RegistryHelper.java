@@ -238,16 +238,16 @@ public class RegistryHelper {
 		}
 	}
 	
-	public RegistryObject<EntityType<LTNTMinecart>> registerTNTMinecart(String registryName, PrimedTNTEffect effect, RegistryObject<LTNTMinecartItem> pickItem){
-		return registerTNTMinecart(registryName, effect, pickItem, true);
+	public RegistryObject<EntityType<LTNTMinecart>> registerTNTMinecart(String registryName, RegistryObject<EntityType<PrimedLTNT>> TNT, RegistryObject<LTNTMinecartItem> pickItem){
+		return registerTNTMinecart(registryName, TNT, pickItem, true);
 	}
 	
-	public RegistryObject<EntityType<LTNTMinecart>> registerTNTMinecart(String registryName, PrimedTNTEffect effect, RegistryObject<LTNTMinecartItem> pickItem, boolean explodesInstantly){
-		return registerTNTMinecart(entityRegistry, registryName, effect, pickItem, explodesInstantly);
+	public RegistryObject<EntityType<LTNTMinecart>> registerTNTMinecart(String registryName, RegistryObject<EntityType<PrimedLTNT>> TNT, RegistryObject<LTNTMinecartItem> pickItem, boolean explodesInstantly){
+		return registerTNTMinecart(entityRegistry, registryName, TNT, pickItem, explodesInstantly);
 	}
 	
-	public RegistryObject<EntityType<LTNTMinecart>> registerTNTMinecart(DeferredRegister<EntityType<?>> entityRegistry, String registryName, PrimedTNTEffect effect, RegistryObject<LTNTMinecartItem> pickItem, boolean explodesInstantly){		
-		return entityRegistry.register(registryName, () -> EntityType.Builder.<LTNTMinecart>of((EntityType<LTNTMinecart> type, Level level) -> new LTNTMinecart(type, level, effect, pickItem, explodesInstantly), MobCategory.MISC).setShouldReceiveVelocityUpdates(true).setTrackingRange(64).sized(0.98f, 0.7f).build(registryName));
+	public RegistryObject<EntityType<LTNTMinecart>> registerTNTMinecart(DeferredRegister<EntityType<?>> entityRegistry, String registryName, RegistryObject<EntityType<PrimedLTNT>> TNT, RegistryObject<LTNTMinecartItem> pickItem, boolean explodesInstantly){		
+		return entityRegistry.register(registryName, () -> EntityType.Builder.<LTNTMinecart>of((EntityType<LTNTMinecart> type, Level level) -> new LTNTMinecart(type, level, TNT, pickItem, explodesInstantly), MobCategory.MISC).setShouldReceiveVelocityUpdates(true).setTrackingRange(64).sized(0.98f, 0.7f).build(registryName));
 	}
 	
 	

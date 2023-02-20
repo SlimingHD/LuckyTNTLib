@@ -32,9 +32,11 @@ public class LTNTMinecart extends AbstractMinecart implements IExplosiveEntity{
 	private RegistryObject<LTNTMinecartItem> pickItem;
 	public LivingEntity placer;
 	
-	public LTNTMinecart(EntityType<LTNTMinecart> type, Level level, PrimedTNTEffect effect, RegistryObject<LTNTMinecartItem> pickItem, boolean explodeInstantly) {
+	public LTNTMinecart(EntityType<LTNTMinecart> type, Level level, RegistryObject<EntityType<PrimedLTNT>> TNT, RegistryObject<LTNTMinecartItem> pickItem, boolean explodeInstantly) {
 		super(type, level);
-		this.effect = effect;
+		PrimedLTNT tnt = TNT.get().create(level);
+		this.effect = tnt.getEffect();
+		tnt.discard();
 		this.explodeInstantly = explodeInstantly;
 		this.pickItem = pickItem;
 		setTNTFuse(-1);
