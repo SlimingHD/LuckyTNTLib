@@ -33,6 +33,7 @@ public class LTNTMinecartRenderer extends MinecartRenderer<LTNTMinecart>{
 			float scale = 1f + scaleMult * 0.3f;
 			stack.scale(scale, scale, scale);
 		}
+		stack.translate((-entity.getEffect().getSize(entity) + 1) / 2f, 0, (-entity.getEffect().getSize(entity) + 1) / 2f);
 		stack.scale(entity.getEffect().getSize((IExplosiveEntity)entity), entity.getEffect().getSize((IExplosiveEntity)entity), entity.getEffect().getSize((IExplosiveEntity)entity));
 		TntMinecartRenderer.renderWhiteSolidBlock(Minecraft.getInstance().getBlockRenderer(), state, stack, buffer, i1, fuse > -1 && fuse / 5 % 2 == 0);
 	}

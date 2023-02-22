@@ -19,10 +19,6 @@ public class LuckyDynamiteItem extends LDynamiteItem{
 		super(properties, null);
 		this.dynamites = dynamites;
 	}
-
-	public void setTNTList(List<RegistryObject<LDynamiteItem>> dynamites) {
-		this.dynamites = dynamites;
-	}
 	
 	@Override
 	public void onUsingTick(ItemStack stack, LivingEntity player, int count) {
