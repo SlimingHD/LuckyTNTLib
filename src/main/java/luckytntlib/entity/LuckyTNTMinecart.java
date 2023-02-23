@@ -31,6 +31,7 @@ public class LuckyTNTMinecart extends LTNTMinecart{
 	public void fuse() {
 		LTNTMinecart minecart = minecarts.get(new Random().nextInt(minecarts.size())).get().createMinecart(level, getX(), getY(), getZ(), placer);
 		minecart.setYRot(getYRot());
+		minecart.setDeltaMovement(getDeltaMovement());
 		level.addFreshEntity(minecart);
 		minecart.fuse();
 		discard();
