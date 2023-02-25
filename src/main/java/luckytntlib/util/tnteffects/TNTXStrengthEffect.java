@@ -5,6 +5,7 @@ import java.util.function.Supplier;
 import javax.annotation.Nullable;
 
 import luckytntlib.block.LTNTBlock;
+import luckytntlib.entity.PrimedLTNT;
 import luckytntlib.item.LDynamiteItem;
 import luckytntlib.util.IExplosiveEntity;
 import luckytntlib.util.explosions.ImprovedExplosion;
@@ -23,57 +24,18 @@ import net.minecraftforge.registries.RegistryObject;
  */
 public class TNTXStrengthEffect extends PrimedTNTEffect{
 	
-	/**
-	 * The TNT Block that may be rendered
-	 */
 	@Nullable private final Supplier<RegistryObject<LTNTBlock>> TNT;
-	/**
-	 * The Dynamite Item that may be rendered
-	 */
 	@Nullable private final Supplier<RegistryObject<LDynamiteItem>> dynamite;
-	/**
-	 * The fuse of this effect
-	 */
 	private final int fuse;
-	/**
-	 * The strength/size/base radius of this explosion
-	 */
 	private final float strength;
-	/**
-	 * Specific values that "scale" the explosion in xz or y
-	 */
 	private final float xzStrength, yStrength;
-	/**
-	 * The impact that explosion resistance of blocks has on the explosion
-	 */
 	private final float resistanceImpact;
-	/**
-	 * The relative length in respect to the explosion size of explosion vectors
-	 */
 	private final float randomVecLength;
-	/**
-	 * Whether or not this explosion should spawn fire
-	 */
 	private final boolean fire;
-	/**
-	 * The multiplier to the knockback defined by the explosion size
-	 */
 	private final float knockbackStrength;
-	/**
-	 * Whether or not the explosion resistance of fluids should be taken into account
-	 */
 	private final boolean isStrongExplosion;
-	/**
-	 * The size of the rendered Block/Item
-	 */
 	private final float size;
-	/**
-	 * Whether or not an explosive projectile should be allowed to tick down their fuse in the air
-	 */
 	private final boolean airFuse;
-	/**
-	 * Whether or not an explosive projectile explodes immediately upon impact
-	 */
 	private final boolean explodesOnImpact;
 	
 	private TNTXStrengthEffect(@Nullable Supplier<RegistryObject<LTNTBlock>> TNT, @Nullable Supplier<RegistryObject<LDynamiteItem>> dynamite, int fuse, float strength, float xzStrength, float yStrength, float resistanceImpact, float randomVecLength, boolean fire, float knockbackStrength, boolean isStrongExplosion, float size, boolean airFuse, boolean explodesOnImpact) {
@@ -148,6 +110,9 @@ public class TNTXStrengthEffect extends PrimedTNTEffect{
 		private boolean airFuse = false;
 		private boolean explodesOnImpact = true;
 		
+		public Builder() {			
+		}
+		
 		private Builder(int fuse, float strength, float xzStrength, float yStrength, float resistanceImpact, float randomVecLength, boolean fire, float knockbackStrength, boolean isStrongExplosion, float size, boolean airFuse,  boolean explodesOnImpact) {
 			this.fuse = fuse;
 			this.strength = strength;
@@ -163,50 +128,101 @@ public class TNTXStrengthEffect extends PrimedTNTEffect{
 			this.explodesOnImpact = explodesOnImpact;
 		}
 
+		/**
+		 * This value decides the fuse of this effect
+		 * @param fuse
+		 */
 		public Builder fuse(int fuse) {
 			return new Builder(fuse, strength, xzStrength, yStrength, resistanceImpact, randomVecLength, fire, knockbackStrength, isStrongExplosion, size, airFuse, explodesOnImpact);
 		}
 		
+		/**
+		 * This value decides the strength/size/base radius of this explosion
+		 * @param strength
+		 */
 		public Builder strength(float strength) {
 			return new Builder(fuse, strength, xzStrength, yStrength, resistanceImpact, randomVecLength, fire, knockbackStrength, isStrongExplosion, size, airFuse, explodesOnImpact);
 		}
 		
+		/**
+		 * This is a specific value that essentially scales the explosion in the x and z direction
+		 * @param xzStrength
+		 */
 		public Builder xzStrength(float xzStrength) {
 			return new Builder(fuse, strength, xzStrength, yStrength, resistanceImpact, randomVecLength, fire, knockbackStrength, isStrongExplosion, size, airFuse, explodesOnImpact);
 		}
 		
+		/**
+		 * This is a specific value that essentially scales the explosion in the y direction
+		 * @param yStrength
+		 */
 		public Builder yStrength(float yStrength) {
 			return new Builder(fuse, strength, xzStrength, yStrength, resistanceImpact, randomVecLength, fire, knockbackStrength, isStrongExplosion, size, airFuse, explodesOnImpact);
 		}
 		
+		/**
+		 * This value decides the impact that explosion resistance of blocks has on the explosion
+		 * @param resistanceImpact
+		 */
 		public Builder resistanceImpact(float resistanceImpact) {
 			return new Builder(fuse, strength, xzStrength, yStrength, resistanceImpact, randomVecLength, fire, knockbackStrength, isStrongExplosion, size, airFuse, explodesOnImpact);
 		}
 		
+		/**
+		 * This value is multiplier to the random vector length of explosion vectors shot by the {@link ImprovedExplosion}, 
+		 * which is also defined by the strength/size/base radius
+		 * @param randomVecLength
+		 */
 		public Builder randomVecLength(float randomVecLength) {
 			return new Builder(fuse, strength, xzStrength, yStrength, resistanceImpact, randomVecLength, fire, knockbackStrength, isStrongExplosion, size, airFuse, explodesOnImpact);
 		}
 
+		/**
+		 * This boolean decides whether or not this explosion should spawn fire
+		 * @param fire
+		 */
 		public Builder fire(boolean fire) {
 			return new Builder(fuse, strength, xzStrength, yStrength, resistanceImpact, randomVecLength, fire, knockbackStrength, isStrongExplosion, size, airFuse, explodesOnImpact);
 		}
 
+		/**
+		 * Tis value is a multiplier to the knockback inflicted by the explosion
+		 * @param knockbackStrength
+		 */
 		public Builder knockbackStrength(float knockbackStrength) {
 			return new Builder(fuse, strength, xzStrength, yStrength, resistanceImpact, randomVecLength, fire, knockbackStrength, isStrongExplosion, size, airFuse, explodesOnImpact);
 		}
 		
+		/**
+		 * This boolean decides whether or not the explosion resistance of fluids should be taken into account
+		 * @param isStrongExplosion
+		 */
 		public Builder isStrongExplosion(boolean isStronExplosion) {
 			return new Builder(fuse, strength, xzStrength, yStrength, resistanceImpact, randomVecLength, fire, knockbackStrength, isStrongExplosion, size, airFuse, explodesOnImpact);
 		}
 
+		/**
+		 * This value defines the size of the rendered Block/Item
+		 * @param size
+		 */
 		public Builder size(float size) {
 			return new Builder(fuse, strength, xzStrength, yStrength, resistanceImpact, randomVecLength, fire, knockbackStrength, isStrongExplosion, size, airFuse, explodesOnImpact);
 		}
-
+		
+		/**
+		 * This boolean decides whether or not an explosive projectile should be allowed to tick down their fuse in the air
+		 * @implNote only works for explosive projectiles
+		 * @param airFuse
+		 */
 		public Builder airFuse(boolean airFuse) {
 			return new Builder(fuse, strength, xzStrength, yStrength, resistanceImpact, randomVecLength, fire, knockbackStrength, isStrongExplosion, size, airFuse, explodesOnImpact);
 		}
 		
+		/**
+		 * This boolean decides whether or not an explosive projectile explodes immediately upon impact
+		 * @implNote only works for explosive projectiles
+		 * @param explodesOnImpact
+		 */
 		public Builder explodesOnImpact(boolean explodesOnImpact) {
 			return new Builder(fuse, strength, xzStrength, yStrength, resistanceImpact, randomVecLength, fire, knockbackStrength, isStrongExplosion, size, airFuse, explodesOnImpact);
 		}
@@ -222,6 +238,7 @@ public class TNTXStrengthEffect extends PrimedTNTEffect{
 		
 		/**
 		 * Builds a new {@link TNTXStrengthEffect} with a TNT Block.
+		 * @param TNT  a {@link Supplier} of a {@link RegistryObject} of a {@link PrimedLTNT}
 		 * @return new TNTXStrengthEffect
 		 */
 		public TNTXStrengthEffect buildTNT(Supplier<RegistryObject<LTNTBlock>> TNT) {
@@ -230,6 +247,7 @@ public class TNTXStrengthEffect extends PrimedTNTEffect{
 		
 		/**
 		 * Builds a new {@link TNTXStrengthEffect} with a Dynamite Item.
+		 * @param dynamite  a {@link Supplier} of a {@link RegistryObject} of a {@link LDynamiteItem}
 		 * @return new TNTXStrengthEffect
 		 */
 		public TNTXStrengthEffect buildDynamite(Supplier<RegistryObject<LDynamiteItem>> dynamite) {
