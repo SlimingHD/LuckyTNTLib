@@ -9,10 +9,25 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.state.BlockState;
 
+/**
+ * A StackedPrimedTNTEffect is a way of combining multiple PrimedTNTEffects into one.
+ * <p>
+ * It consists out of a primary and a list of secondary effects.
+ * Secondary effects get executed, limited to {@link PrimedTNTEffect#serverExplosion(IExplosiveEntity)} 
+ * and {@link PrimedTNTEffect#explosionTick(IExplosiveEntity)}, one after the other, 
+ * while the primary effect on top of this also decides how the explosive entity will look and behave.
+ */
 public class StackedPrimedTNTEffect extends PrimedTNTEffect{
 
+	/**
+	 * List of all PrimedTNTEffects. The first effect of this list is the primary effect.
+	 */
 	private final List<PrimedTNTEffect> effects = new ArrayList<>();
 	
+	/**
+	 * @param primaryEffect  the primary PrimedTNTEffect
+	 * @param secondaryEffects  the list of secondary PrimedTNTEffects
+	 */
 	public StackedPrimedTNTEffect(PrimedTNTEffect primaryEffect, List<PrimedTNTEffect> secondaryEffects) {
 		effects.add(primaryEffect);
 		effects.addAll(secondaryEffects);

@@ -29,7 +29,6 @@ import net.minecraftforge.fml.event.lifecycle.FMLCommonSetupEvent;
 import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
 import net.minecraftforge.registries.RegistryObject;
 
-
 @Mod(LuckyTNTLib.MODID)
 public class LuckyTNTLib
 {
@@ -41,7 +40,6 @@ public class LuckyTNTLib
     }
     
     private void commonSetup(final FMLCommonSetupEvent event) {
-    	
     	for(Pair<RegistryObject<LTNTBlock>, RegistryObject<Item>> pair : RegistryHelper.TNT_DISPENSER_REGISTRY_LIST) {
     		LTNTBlock block = pair.getFirst().get();
     		Item item = pair.getSecond().get();
