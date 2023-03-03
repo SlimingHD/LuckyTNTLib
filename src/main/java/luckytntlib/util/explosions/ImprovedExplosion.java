@@ -28,6 +28,12 @@ import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
 import net.minecraftforge.event.ForgeEventFactory;
 
+/**
+ * 
+ * ImprovedExplosion is an extension of Minecraft's {@link Explosion}.
+ * It is needed because the explosion of minecraft is rather limited in functionality and size,
+ * while an ImprovedExplosion has no limit in its size and offers multiple and dynamic ways to interact with and customize the explosion.
+ */
 public class ImprovedExplosion extends Explosion{
 
 	public final Level level;
@@ -68,12 +74,21 @@ public class ImprovedExplosion extends Explosion{
 		damageCalculator = explodingEntity == null ? new ExplosionDamageCalculator() : new EntityBasedExplosionDamageCalculator(explodingEntity);
 	}
 	
+	/**
+	 * Gets all blocks in an area calculated by shooting vectors to the borders of a cube determined by the {@link ImprovedExplosion#size} and destroys them. 
+	 * @param xzStrength  a multiplier to the x and z vector addition, which makes the explosion more powerful. It should not be set to high, otherwise blocks might be skipped
+	 * @param yStrength  a multiplier to the y vector addition, which makes the explosion more powerful. It should not be set to high, otherwise blocks might be skipped
+	 * @param resistanceImpact  the relative impact that explosion resistance of blocks has on the penetration force of explosion
+	 * @param randomVecLength  the greater this value, the more distributed the length of the explosion vectors will be. Large explosions should have a value less than 1
+	 * @param fire  whether or not the explosion should spawn fire afterwards
+	 * @param isStrongExplosion  whether or not fluids should be ignored in the explosion resistance calculation. Very useful for large explosions
+	 */
 	public void doBlockExplosion(float xzStrength, float yStrength, float resistanceImpact, float randomVecLength, boolean fire, boolean isStrongExplosion) {
 		Set<BlockPos> blocks = new HashSet<>();
-		for(int offX = (int)-size; offX <= size; offX++) {
-			for(int offY = (int)-size; offY <= size; offY++) {
-				for(int offZ = (int)-size; offZ <= size; offZ++) {
-					if(offX == (int)-size || offX == size || offY == (int)-size || offY == size || offZ == (int)-size || offZ == size) {
+		for(int offX = (int)-size; offX <= (int)size; offX++) {
+			for(int offY = (int)-size; offY <= (int)size; offY++) {
+				for(int offZ = (int)-size; offZ <= (int)size; offZ++) {
+					if(offX == (int)-size || offX == (int)size || offY == (int)-size || offY == (int)size || offZ == (int)-size || offZ == (int)size) {
 						double distance = Math.sqrt(offX * offX + offY * offY + offZ * offZ);
 						double xStep = offX / distance;
 						double yStep = offY / distance;
@@ -122,12 +137,23 @@ public class ImprovedExplosion extends Explosion{
 		}
 	}
 	
+	/**
+	 * Gets all blocks in an area calculated by shooting vectors to the borders of a cube determined by the {@link ImprovedExplosion#size} 
+	 * and does to them whatever specified in the {@link IForEachBlockExplosionEffect}. 
+	 * @param xzStrength  a multiplier to the x and z vector addition, which makes the explosion more powerful. It should not be set to high, otherwise blocks might be skipped
+	 * @param yStrength  a multiplier to the y vector addition, which makes the explosion more powerful. It should not be set to high, otherwise blocks might be skipped
+	 * @param resistanceImpact  the relative impact that explosion resistance of blocks has on the penetration force of explosion
+	 * @param randomVecLength  the greater this value, the more distributed the length of the explosion vectors will be. Large explosions should have a value less than 1
+	 * @param fire  whether or not the explosion should spawn fire afterwards
+	 * @param isStrongExplosion  whether or not fluids should be ignored in the explosion resistance calculation. Very useful for large explosions
+	 * @param blockEffect  determines what should happen to the blocks gotten by this explosion
+	 */
 	public void doBlockExplosion(float xzStrength, float yStrength, float resistanceImpact, float randomVecLength, boolean isStrongExplosion, IForEachBlockExplosionEffect blockEffect) {
 		Set<BlockPos> blocks = new HashSet<>();
-		for(int offX = (int)-size; offX <= size; offX++) {
-			for(int offY = (int)-size; offY <= size; offY++) {
-				for(int offZ = (int)-size; offZ <= size; offZ++) {
-					if(offX == (int)-size || offX == size || offY == (int)-size || offY == size || offZ == (int)-size || offZ == size) {
+		for(int offX = (int)-size; offX <= (int)size; offX++) {
+			for(int offY = (int)-size; offY <= (int)size; offY++) {
+				for(int offZ = (int)-size; offZ <= (int)size; offZ++) {
+					if(offX == (int)-size || offX == (int)size || offY == (int)-size || offY == (int)size || offZ == (int)-size || offZ == (int)size) {
 						double distance = Math.sqrt(offX * offX + offY * offY + offZ * offZ);
 						double xStep = offX / distance;
 						double yStep = offY / distance;
@@ -170,12 +196,24 @@ public class ImprovedExplosion extends Explosion{
 		}
 	}
 	
+	/**
+	 * Gets blocks in an area calculated by shooting vectors to the borders of a cube determined by the {@link ImprovedExplosion#size} if the {@link IBlockExplosionCondition} is met 
+	 * and does to them whatever specified in the blockEffect. 
+	 * @param xzStrength  a multiplier to the x and z vector addition, which makes the explosion more powerful. It should not be set to high, otherwise blocks might be skipped
+	 * @param yStrength  a multiplier to the y vector addition, which makes the explosion more powerful. It should not be set to high, otherwise blocks might be skipped
+	 * @param resistanceImpact  the relative impact that explosion resistance of blocks has on the penetration force of explosion
+	 * @param randomVecLength  the greater this value, the more distributed the length of the explosion vectors will be. Large explosions should have a value less than 1
+	 * @param fire  whether or not the explosion should spawn fire afterwards
+	 * @param isStrongExplosion  whether or not fluids should be ignored in the explosion resistance calculation. Very useful for large explosions
+	 * @param condition  the condition on which a block is added to the {@link Set} of blocks
+	 * @param blockEffect  determines what should happen to the blocks gotten by this explosion
+	 */
 	public void doBlockExplosion(float xzStrength, float yStrength, float resistanceImpact, float randomVecLength, boolean isStrongExplosion, IBlockExplosionCondition condition, IForEachBlockExplosionEffect blockEffect) {
 		Set<BlockPos> blocks = new HashSet<>();
-		for(int offX = (int)-size; offX <= size; offX++) {
-			for(int offY = (int)-size; offY <= size; offY++) {
-				for(int offZ = (int)-size; offZ <= size; offZ++) {
-					if(offX == (int)-size || offX == size || offY == (int)-size || offY == size || offZ == (int)-size || offZ == size) {
+		for(int offX = (int)-size; offX <= (int)size; offX++) {
+			for(int offY = (int)-size; offY <= (int)size; offY++) {
+				for(int offZ = (int)-size; offZ <= (int)size; offZ++) {
+					if(offX == (int)-size || offX == (int)size || offY == (int)-size || offY == (int)size || offZ == (int)-size || offZ == (int)size) {
 						double distance = Math.sqrt(offX * offX + offY * offY + offZ * offZ);
 						double xStep = offX / distance;
 						double yStep = offY / distance;
@@ -222,18 +260,34 @@ public class ImprovedExplosion extends Explosion{
 		}
 	}
 	
+	/**
+	 * Executes {@link ImprovedExplosion#doBlockExplosion(float, float, float, float, boolean, boolean, blockEffect)} with default values.
+	 * @param blockEffect  determines what should happen to the blocks gotten by this explosion
+	 */
 	public void doBlockExplosion(IForEachBlockExplosionEffect blockEffect) {
 		doBlockExplosion(1f, 1f, 1f, 1f, false, blockEffect);
 	}
 	
+	/**
+	 * Executes {@link ImprovedExplosion#doBlockExplosion(float, float, float, float, boolean, boolean, condition, blockEffect)} with default values.
+	 * @param blockEffect  determines what should happen to the blocks gotten by this explosion
+	 */
 	public void doBlockExplosion(IBlockExplosionCondition condition, IForEachBlockExplosionEffect blockEffect) {
 		doBlockExplosion(1f, 1f, 1f, 1f, false, condition, blockEffect);
 	}
 	
+	/**
+	 * Executes {@link ImprovedExplosion#doBlockExplosion(float, float, float, float, boolean, boolean)} with default values.
+	 */
 	public void doBlockExplosion() {
 		doBlockExplosion(1f, 1f, 1f, 1f, false, false);
 	}
 	
+	/**
+	 * Damages and throws back all entities affected by this explosion determined by the {@link ImprovedExplosion#size}.
+	 * @param knockbackStrength  multiplier to the strength of the knockback
+	 * @param damageEntities  whether or not entities should be damaged by this explosion
+	 */
 	public void doEntityExplosion(float knockbackStrength, boolean damageEntities) {
 		List<Entity> entities = level.getEntities(getExploder(), new AABB(posX - size * 2, posY - size * 2, posZ - size * 2, posX + size * 2, posY + size * 2, posZ + size * 2));
 		ForgeEventFactory.onExplosionDetonate(level, this, entities, size * 2);
@@ -270,6 +324,11 @@ public class ImprovedExplosion extends Explosion{
 		}
 	}
 	
+	/**
+	 * Does whatever specified in the {@link IForEachBlockExplosionEffect} to all entities gotten by this explosion,
+	 * which is determined by the {@link ImprovedExplosion#size}.
+	 * @param entityEffect  determines what should be done to the entities gotten by this explosion
+	 */
 	public void doEntityExplosion(IForEachEntityExplosionEffect entityEffect) {
 		List<Entity> entities = level.getEntities(getExploder(), new AABB(posX - size * 2, posY - size * 2, posZ - size * 2, posX + size * 2, posY + size * 2, posZ + size * 2));
 		ForgeEventFactory.onExplosionDetonate(level, this, entities, size * 2);
@@ -292,6 +351,9 @@ public class ImprovedExplosion extends Explosion{
 		return super.getIndirectSourceEntity();
 	}
 	
+	/** 
+	 * @return ImprovedExplosion with no {@link Level} and, no strength and position at (0, 0, 0)
+	 */
 	public static ImprovedExplosion dummyExplosion() {
 		return dummyExplosion;
 	}
