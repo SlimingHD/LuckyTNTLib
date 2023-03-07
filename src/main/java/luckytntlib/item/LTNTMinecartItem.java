@@ -5,9 +5,12 @@ import java.util.function.Supplier;
 import javax.annotation.Nullable;
 
 import luckytntlib.entity.LTNTMinecart;
+import luckytntlib.util.tnteffects.PrimedTNTEffect;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.dispenser.DispenseItemBehavior;
 import net.minecraft.tags.BlockTags;
 import net.minecraft.world.InteractionResult;
+import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.vehicle.AbstractMinecart;
@@ -22,6 +25,13 @@ import net.minecraft.world.level.block.state.properties.RailShape;
 import net.minecraft.world.level.gameevent.GameEvent;
 import net.minecraftforge.registries.RegistryObject;
 
+/**
+ * 
+ * The LTNTMinecartItem is an important step in making a custom TNT minecart.
+ * It can be used to spawn a {@link LTNTMinecart} onto rails.
+ * If a {@link DispenseItemBehavior} has been registered dispensers can also spawn the minecart.
+ * All important variables can be customized through registering and in the {@link PrimedTNTEffect} of the minecart.
+ */
 public class LTNTMinecartItem extends MinecartItem{
 
 	@Nullable Supplier<RegistryObject<EntityType<LTNTMinecart>>> minecart;
@@ -57,6 +67,16 @@ public class LTNTMinecartItem extends MinecartItem{
 		return InteractionResult.sidedSuccess(level.isClientSide);
 	}
 	
+	/**
+	 * Spawns a new {@link LTNTMinecart} held by this item at the given position.
+	 * @param level  the current level
+	 * @param x  the x position 
+	 * @param y  the y position
+	 * @param z  the z position
+	 * @param placer  the owner of the spawned minecart (used primarely for the {@link DamageSource})
+	 * @return {@link LTNTMinecart} or null
+	 * @throws NullPointerException
+	 */
 	@Nullable
 	public LTNTMinecart createMinecart(Level level, double x, double y, double z, @Nullable LivingEntity placer) throws NullPointerException{
 		if(minecart != null) {
@@ -65,6 +85,6 @@ public class LTNTMinecartItem extends MinecartItem{
 			level.addFreshEntity(cart);
 			return cart;
 		}
-		throw new NullPointerException("Could not instantiate Minecart");
+		throw new NullPointerException("Minecart entity is null");
 	}
 }

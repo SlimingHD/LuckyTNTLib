@@ -5,13 +5,16 @@ import java.util.Random;
 import javax.annotation.Nullable;
 
 import luckytntlib.entity.LExplosiveProjectile;
+import luckytntlib.util.tnteffects.PrimedTNTEffect;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.dispenser.DispenseItemBehavior;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.InteractionResultHolder;
+import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
@@ -21,6 +24,13 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.Vec3;
 import net.minecraftforge.registries.RegistryObject;
 
+/**
+ * 
+ * The LDynamiteItem is an important step in making a custom explosive projectile.
+ * It can be thrown and spawns a {@link LExplosiveProjectile} similar to an egg or a snowball.
+ * If a {@link DispenseItemBehavior} has been registered dispensers can also throw the dynamite.
+ * All important variables can be customized through registering and in the {@link PrimedTNTEffect} of the dynamite.
+ */
 public class LDynamiteItem extends Item{
 	
 	@Nullable
@@ -49,6 +59,18 @@ public class LDynamiteItem extends Item{
 		}
 	}
 	
+	/**
+	 * Spawns a new {@link LExplosiveProjectile} held by this item and launches it in the given direction.
+	 * @param level  the current level
+	 * @param x  the x position
+	 * @param y  the y position (eye level needs to be added manually!)
+	 * @param z  the z position
+	 * @param direction  the direction the projectile will be thrown in
+	 * @param power  the power with which the projectile is thrown
+	 * @param thrower  the owner for the spawned projectile (used primarely for the {@link DamageSource})
+	 * @return {@link LExplosiveProjectile} or null
+	 * @throws NullPointerException
+	 */
 	@Nullable
 	public LExplosiveProjectile shoot(Level level, double x, double y, double z, Vec3 direction, float power, @Nullable LivingEntity thrower) throws NullPointerException {
 		if(dynamite != null) {
@@ -60,6 +82,6 @@ public class LDynamiteItem extends Item{
 			level.playSound(null, new BlockPos(x, y, z), SoundEvents.SNOWBALL_THROW, SoundSource.MASTER, 1, 0.5f);
 			return dyn;
 		}
-		throw new NullPointerException("No dynamite entity present. Make sure it is registered before the item is registered");
+		throw new NullPointerException("Explosive projectile entity is null");
 	}
 }

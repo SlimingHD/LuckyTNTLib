@@ -20,6 +20,15 @@ import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.EntityHitResult;
 import net.minecraft.world.phys.Vec3;
 
+/**
+ * 
+ * The LExplosiveProjectile is an extension of Minecraft's {@link AbstractArrow} 
+ * and represents a projectile that holds a {@link PrimedTNTEffect}.
+ * Unlike a {@link PrimedLTNT} a LExplosiveProjectile has access to other types of logic specifically designed
+ * for entities that travel through the world with high speeds and hit blocks or entities, while still retaining the abilities of a TNT
+ * through its {@link PrimedTNTEffect}.
+ * It implements {@link IExplosiveEntity} and {@link ItemSupplier}.
+ */
 public class LExplosiveProjectile extends AbstractArrow implements IExplosiveEntity, ItemSupplier{
 	
 	private static final EntityDataAccessor<Integer> DATA_FUSE_ID = SynchedEntityData.defineId(LExplosiveProjectile.class, EntityDataSerializers.INT);
@@ -86,6 +95,18 @@ public class LExplosiveProjectile extends AbstractArrow implements IExplosiveEnt
 		super.readAdditionalSaveData(tag);
 	}
 	
+	public PrimedTNTEffect getEffect() {
+		return effect;
+	}
+	
+	public boolean inGround() {
+		return inGround;
+	}
+	
+	public boolean hitEntity() {
+		return hitEntity;
+	}
+	
 	@Override
 	public void setTNTFuse(int fuse) {
 		entityData.set(DATA_FUSE_ID, fuse);
@@ -109,18 +130,6 @@ public class LExplosiveProjectile extends AbstractArrow implements IExplosiveEnt
 	@Override
 	public ItemStack getPickupItem() {
 		return null;
-	}
-	
-	public PrimedTNTEffect getEffect() {
-		return effect;
-	}
-	
-	public boolean inGround() {
-		return inGround;
-	}
-	
-	public boolean hitEntity() {
-		return hitEntity;
 	}
 	
 	@Override

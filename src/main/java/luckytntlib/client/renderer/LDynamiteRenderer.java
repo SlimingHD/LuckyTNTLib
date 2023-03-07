@@ -4,16 +4,27 @@ import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.math.Axis;
 
 import luckytntlib.entity.LExplosiveProjectile;
+import luckytntlib.util.tnteffects.PrimedTNTEffect;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.block.model.ItemTransforms;
 import net.minecraft.client.renderer.entity.EntityRenderer;
 import net.minecraft.client.renderer.entity.EntityRendererProvider;
 import net.minecraft.client.renderer.entity.ItemRenderer;
+import net.minecraft.client.renderer.entity.ThrownItemRenderer;
 import net.minecraft.client.renderer.texture.OverlayTexture;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.projectile.ItemSupplier;
 import net.minecraft.world.inventory.InventoryMenu;
+import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.api.distmarker.OnlyIn;
 
+/**
+ *
+ * The LDynamiteRenderer is similar to the {@link ThrownItemRenderer}, but the item is also scaled by using
+ * the size given by the {@link PrimedTNTEffect} of the {@link LExplosiveProjectile}.
+ * @param <T>  is an instance of {@link LExplosiveProjectile} and implements {@link ItemSupplier}
+ */
+@OnlyIn(Dist.CLIENT)
 public class LDynamiteRenderer<T extends LExplosiveProjectile & ItemSupplier> extends EntityRenderer<T>{
 	
 	private final ItemRenderer itemRenderer;

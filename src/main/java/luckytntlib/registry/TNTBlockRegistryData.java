@@ -3,23 +3,29 @@ package luckytntlib.registry;
 import net.minecraft.network.chat.contents.TranslatableContents;
 import net.minecraft.world.level.material.MaterialColor;
 
+/**
+ * 
+ * The TNTBlockRegistryData only serves the purpose of bringing together relatively simple and repetitive properties that a TNT block/item may have.
+ * It is currently only used by the {@link RegistryHelper} in some registering methods of TNT blocks.
+ * A TNTBlockRegistryData can be created by using the Builder subclass.
+ */
 public class TNTBlockRegistryData {
 
 	private final String registryName;
 	private final boolean makeItem;
-	private final boolean addDispenserBehaviour;
-	private final boolean shouldRandomlyFuse;
+	private final boolean addDispenseBehavior;
+	private final boolean randomizedFuseUponExploded;
 	private final boolean addToTNTLists;
 	private final TranslatableContents description;
 	private final String tab;
 	private final MaterialColor color;
 	
 	
-	private TNTBlockRegistryData(String registryName, boolean makeItem, boolean addDispenserBehaviour, boolean shouldRandomlyFuse, boolean addToTNTLists, TranslatableContents description, String tab, MaterialColor color) {
+	private TNTBlockRegistryData(String registryName, boolean makeItem, boolean addDispenseBehavior, boolean randomizedFuseUponExploded, boolean addToTNTLists, TranslatableContents description, String tab, MaterialColor color) {
 		this.registryName = registryName;
 		this.makeItem = makeItem;
-		this.addDispenserBehaviour = addDispenserBehaviour;
-		this.shouldRandomlyFuse = shouldRandomlyFuse;
+		this.addDispenseBehavior = addDispenseBehavior;
+		this.randomizedFuseUponExploded = randomizedFuseUponExploded;
 		this.addToTNTLists = addToTNTLists;
 		this.description = description;
 		this.tab = tab;
@@ -34,12 +40,12 @@ public class TNTBlockRegistryData {
 		return makeItem;
 	}
 
-	public boolean addDispenserBehaviour() {
-		return addDispenserBehaviour;
+	public boolean addDispenseBehavior() {
+		return addDispenseBehavior;
 	}
 
-	public boolean shouldRandomlyFuse() {
-		return shouldRandomlyFuse;
+	public boolean randomizedFuseUponExploded() {
+		return randomizedFuseUponExploded;
 	}
 	
 	public boolean addToTNTLists() {
@@ -62,8 +68,8 @@ public class TNTBlockRegistryData {
 		
 		private final String registryName;
 		private boolean makeItem = true;
-		private boolean addDispenserBehaviour = true;
-		private boolean shouldRandomlyFuse = true;
+		private boolean addDispenseBehavior = true;
+		private boolean randomizedFuseUponExploded = true;
 		private boolean addToTNTLists = true;
 		private TranslatableContents description = new TranslatableContents("");
 		private String tab = "none";
@@ -78,13 +84,13 @@ public class TNTBlockRegistryData {
 			return this;
 		}
 
-		public Builder addDispenserBehaviour(boolean addDispenserBehaviour) {
-			this.addDispenserBehaviour = addDispenserBehaviour;
+		public Builder addDispenseBehavior(boolean addDispenseBehavior) {
+			this.addDispenseBehavior = addDispenseBehavior;
 			return this;
 		}
 
-		public Builder shouldRandomlyFuse(boolean shouldRandomlyFuse) {
-			this.shouldRandomlyFuse = shouldRandomlyFuse;
+		public Builder randomizedFuseUponExploded(boolean randomizedFuseUponExploded) {
+			this.randomizedFuseUponExploded = randomizedFuseUponExploded;
 			return this;
 		}
 		
@@ -109,7 +115,7 @@ public class TNTBlockRegistryData {
 		}
 		
 		public TNTBlockRegistryData build() {
-			return new TNTBlockRegistryData(registryName, makeItem, addDispenserBehaviour, shouldRandomlyFuse, addToTNTLists, description, tab, color);
+			return new TNTBlockRegistryData(registryName, makeItem, addDispenseBehavior, randomizedFuseUponExploded, addToTNTLists, description, tab, color);
 		}
 	}
 }

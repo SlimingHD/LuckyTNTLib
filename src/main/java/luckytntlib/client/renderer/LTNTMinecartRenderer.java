@@ -4,6 +4,7 @@ import com.mojang.blaze3d.vertex.PoseStack;
 
 import luckytntlib.entity.LTNTMinecart;
 import luckytntlib.util.IExplosiveEntity;
+import luckytntlib.util.tnteffects.PrimedTNTEffect;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.model.geom.ModelLayers;
 import net.minecraft.client.renderer.MultiBufferSource;
@@ -15,6 +16,11 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 
+/**
+ * 
+ * The LTNTMinecartRenderer renders a Minecart with a TNT inside of it.
+ * The TNT is scaled using the size parameter of its {@link PrimedTNTEffect}.
+ */
 @OnlyIn(Dist.CLIENT)
 public class LTNTMinecartRenderer extends MinecartRenderer<LTNTMinecart>{
 	

@@ -14,6 +14,8 @@ import net.minecraft.world.phys.Vec3;
 /**
  * 
  * The ExplosionHelper offers many basic functions that help you get or edit large ares of blocks in the current {@link Level}.
+ * This includes simple spherical functions, but also more complex methods like getting the top most block in a sphere.
+ * On top of that it also allows for easy customization.
  */
 public class ExplosionHelper {
 
