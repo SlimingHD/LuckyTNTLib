@@ -5,7 +5,6 @@ import java.util.function.Supplier;
 import javax.annotation.Nullable;
 
 import luckytntlib.entity.LTNTMinecart;
-import luckytntlib.util.tnteffects.PrimedTNTEffect;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.dispenser.DispenseItemBehavior;
 import net.minecraft.tags.BlockTags;
@@ -30,7 +29,6 @@ import net.minecraftforge.registries.RegistryObject;
  * The LTNTMinecartItem is an important step in making a custom TNT minecart.
  * It can be used to spawn a {@link LTNTMinecart} onto rails.
  * If a {@link DispenseItemBehavior} has been registered dispensers can also spawn the minecart.
- * All important variables can be customized through registering and in the {@link PrimedTNTEffect} of the minecart.
  */
 public class LTNTMinecartItem extends MinecartItem{
 
@@ -85,6 +83,6 @@ public class LTNTMinecartItem extends MinecartItem{
 			level.addFreshEntity(cart);
 			return cart;
 		}
-		throw new NullPointerException("Minecart entity is null");
+		throw new NullPointerException("Minecart entity type is null");
 	}
 }

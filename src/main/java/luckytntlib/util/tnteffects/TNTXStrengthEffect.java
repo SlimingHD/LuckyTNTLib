@@ -92,10 +92,6 @@ public class TNTXStrengthEffect extends PrimedTNTEffect{
 		return explodesOnImpact;
 	}
 	
-	/**
-	 * 
-	 * This Builder serves the purpose of not having to fill in a huge constructor
-	 */
 	public static class Builder {
 		
 		private int fuse = 80;
@@ -197,7 +193,7 @@ public class TNTXStrengthEffect extends PrimedTNTEffect{
 		 * This boolean decides whether or not the explosion resistance of fluids should be taken into account
 		 * @param isStrongExplosion
 		 */
-		public Builder isStrongExplosion(boolean isStronExplosion) {
+		public Builder isStrongExplosion(boolean isStrongExplosion) {
 			return new Builder(fuse, strength, xzStrength, yStrength, resistanceImpact, randomVecLength, fire, knockbackStrength, isStrongExplosion, size, airFuse, explodesOnImpact);
 		}
 

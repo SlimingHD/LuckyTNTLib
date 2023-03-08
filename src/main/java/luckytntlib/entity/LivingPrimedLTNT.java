@@ -69,6 +69,11 @@ public class LivingPrimedLTNT extends PathfinderMob implements IExplosiveEntity{
 	}
 	
 	@Override
+	public boolean removeWhenFarAway(double distance) {
+		return false;
+	}
+	
+	@Override
 	public void pushEntities() {
 	}
 	

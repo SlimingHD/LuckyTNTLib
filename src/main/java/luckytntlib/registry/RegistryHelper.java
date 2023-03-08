@@ -497,28 +497,8 @@ public class RegistryHelper {
 	 * @param fireImmune  whether or not this living primed TNT can burn (visual only)
 	 * @return {@link RegistryObject} of an {@link EntityType} of a {@link LivingPrimedLTNT}
 	 */
-	public RegistryObject<EntityType<LivingPrimedLTNT>> registerLivingTNTEntity(String registryName, PrimedTNTEffect effect, float size, boolean fireImmune){
-		return registerLivingTNTEntity(entityRegistry, registryName, effect, size, fireImmune);
-	}
-	
-	/**
-	 * Registers a new {@link LivingPrimedLTNT}
-	 * @param entityRegistry  the registry in which this living primed TNT is being registered into
-	 * @param registryName  the registry name of this living primed TNT
-	 * @param effect  the TNT effect this living primed TNT will have
-	 * @param size  the size of the hitbox of this living primed TNT
-	 * @param fireImmune  whether or not this living primed TNT can burn (visual only)
-	 * @return {@link RegistryObject} of an {@link EntityType} of a {@link LivingPrimedLTNT}
-	 */
-	public RegistryObject<EntityType<LivingPrimedLTNT>> registerLivingTNTEntity(DeferredRegister<EntityType<?>> entityRegistry, String registryName, PrimedTNTEffect effect, float size, boolean fireImmune){
-		if(fireImmune) {
-			RegistryObject<EntityType<LivingPrimedLTNT>> register = entityRegistry.register(registryName, () -> EntityType.Builder.<LivingPrimedLTNT>of((EntityType<LivingPrimedLTNT> type, Level level) -> new LivingPrimedLTNT(type, level, effect), MobCategory.MISC).setShouldReceiveVelocityUpdates(true).setTrackingRange(64).fireImmune().sized(size, size).build(registryName));
-			return register;
-		}
-		else {
-			RegistryObject<EntityType<LivingPrimedLTNT>> register = entityRegistry.register(registryName, () -> EntityType.Builder.<LivingPrimedLTNT>of((EntityType<LivingPrimedLTNT> type, Level level) -> new LivingPrimedLTNT(type, level, effect), MobCategory.MISC).setShouldReceiveVelocityUpdates(true).setTrackingRange(64).sized(size, size).build(registryName));
-			return register;
-		}
+	public RegistryObject<EntityType<LivingPrimedLTNT>> registerLivingTNTEntity(String registryName, Supplier<EntityType<LivingPrimedLTNT>> TNT){
+		return registerLivingTNTEntity(entityRegistry, registryName, TNT);
 	}
 	
 	/**

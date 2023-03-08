@@ -13,8 +13,10 @@ import net.minecraft.core.Direction;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.util.Mth;
+import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.item.PrimedTnt;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.Explosion;
@@ -25,14 +27,20 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.storage.loot.LootContext;
 import net.minecraftforge.registries.RegistryObject;
 
+/**
+ * 
+ * The LivingLTNTBlock is a simple extension of the {@link LTNTBlock} and only serves the purpose of hosting
+ * a {@link LivingPrimedLTNT} instead of a {@link PrimedLTNT}.
+ * This class is necessary because Minecraft's {@link LivingEntity} is fundamentally different from {@link PrimedTnt}.
+ */
 public class LivingLTNTBlock extends LTNTBlock{
 
 	@Nullable
 	protected RegistryObject<EntityType<LivingPrimedLTNT>> TNT;
 	protected Random random = new Random();
 	
-	public LivingLTNTBlock(BlockBehaviour.Properties properties, @Nullable RegistryObject<EntityType<LivingPrimedLTNT>> TNT, boolean shouldRandomlyFuse) {
-		super(properties, null, shouldRandomlyFuse);
+	public LivingLTNTBlock(BlockBehaviour.Properties properties, @Nullable RegistryObject<EntityType<LivingPrimedLTNT>> TNT, boolean randomizedFuseUponExploded) {
+		super(properties, null, randomizedFuseUponExploded);
 		this.TNT = TNT;
 	}
 	
@@ -81,11 +89,22 @@ public class LivingLTNTBlock extends LTNTBlock{
 		return null;
 	}
 	
+	/**
+	 * Spawns a new {@link LivingPrimedLTNT} held by this block
+	 * @param level  the current level
+	 * @param exploded  whether or not the block was destroyed by another explosion (used for randomized fuse)
+	 * @param x  the x position
+	 * @param y  the y position
+	 * @param z  the z position
+	 * @param igniter  the owner for the spawned TNT (used primarely for the {@link DamageSource})
+	 * @return {@link LivingPrimedLTNT} or null
+	 * @throws NullPointerException
+	 */
 	@Nullable
 	public LivingPrimedLTNT explodus(Level level, boolean exploded, double x, double y, double z, @Nullable LivingEntity igniter) throws NullPointerException {
 		if(TNT != null) {
 			LivingPrimedLTNT tnt = TNT.get().create(level);
-			tnt.setTNTFuse(exploded && shouldRandomlyFuse() ? tnt.getEffect().getDefaultFuse(tnt) / 8 + random.nextInt(Mth.clamp(tnt.getEffect().getDefaultFuse(tnt) / 4, 1, Integer.MAX_VALUE)) : tnt.getEffect().getDefaultFuse(tnt));
+			tnt.setTNTFuse(exploded && randomizedFuseUponExploded() ? tnt.getEffect().getDefaultFuse(tnt) / 8 + random.nextInt(Mth.clamp(tnt.getEffect().getDefaultFuse(tnt) / 4, 1, Integer.MAX_VALUE)) : tnt.getEffect().getDefaultFuse(tnt));
 			tnt.setPos(x + 0.5f, y, z + 0.5f);
 			tnt.setOwner(igniter);
 			level.addFreshEntity(tnt);
@@ -95,10 +114,6 @@ public class LivingLTNTBlock extends LTNTBlock{
 			}
 			return tnt;
 		}
-		throw new NullPointerException("No TNT entity present. Make sure it is registered before the block is registered");
-	}
-	
-	public boolean shouldRandomlyFuse() {
-		return shouldRandomlyFuse;
+		throw new NullPointerException("Living TNT entity type is null");
 	}
 }

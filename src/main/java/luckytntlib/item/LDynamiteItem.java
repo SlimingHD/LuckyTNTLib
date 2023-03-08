@@ -5,7 +5,6 @@ import java.util.Random;
 import javax.annotation.Nullable;
 
 import luckytntlib.entity.LExplosiveProjectile;
-import luckytntlib.util.tnteffects.PrimedTNTEffect;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.dispenser.DispenseItemBehavior;
 import net.minecraft.server.level.ServerPlayer;
@@ -29,7 +28,6 @@ import net.minecraftforge.registries.RegistryObject;
  * The LDynamiteItem is an important step in making a custom explosive projectile.
  * It can be thrown and spawns a {@link LExplosiveProjectile} similar to an egg or a snowball.
  * If a {@link DispenseItemBehavior} has been registered dispensers can also throw the dynamite.
- * All important variables can be customized through registering and in the {@link PrimedTNTEffect} of the dynamite.
  */
 public class LDynamiteItem extends Item{
 	
@@ -82,6 +80,6 @@ public class LDynamiteItem extends Item{
 			level.playSound(null, new BlockPos(x, y, z), SoundEvents.SNOWBALL_THROW, SoundSource.MASTER, 1, 0.5f);
 			return dyn;
 		}
-		throw new NullPointerException("Explosive projectile entity is null");
+		throw new NullPointerException("Explosive projectile entity type is null");
 	}
 }
