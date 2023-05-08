@@ -40,30 +40,83 @@ public class ImprovedExplosion extends Explosion{
 	public final double posX, posY, posZ;
 	public final float size;
 	public final ExplosionDamageCalculator damageCalculator;
-	List<BlockPos> affectedBlocks = new ArrayList<>();
+	List<Integer> affectedBlocks = new ArrayList<>();
 	
 	private static ImprovedExplosion dummyExplosion = new ImprovedExplosion(null, new Vec3(0, 0, 0), 0);
 	
+	/**
+	 * Creates a new ImprovedExplosion
+	 * @implNote size must not be greater than 511 in most cases. See the respective doBlockExplosion method
+	 * @param level  the level
+	 * @param position  the center position of the explosion
+	 * @param size  the rough size of the explosion, which must not be greater than 511 in most cases
+	 */
 	public ImprovedExplosion(Level level, Vec3 position, float size) {
 		this(level, null, null, position, size);
 	}
 	
+	/**
+	 * Creates a new ImprovedExplosion
+	 * @implNote size must not be greater than 511 in most cases. See the respective doBlockExplosion method
+	 * @param level  the level
+	 * @param source  the DamageSource this explosion uses
+	 * @param position  the center position of the explosion
+	 * @param size  the rough size of the explosion, which must not be greater than 511 in most cases
+	 */
 	public ImprovedExplosion(Level level, @Nullable DamageSource source, Vec3 position, float size) {
 		this(level, null, source, position, size);
 	}
 	
+	/**
+	 * Creates a new ImprovedExplosion
+	 * @implNote size must not be greater than 511 in most cases. See the respective doBlockExplosion method
+	 * @param level  the level
+	 * @param entity  the entity not affected by this explosion. Should be the entity causing the explosion and also an IExplosiveEntity
+	 * @param position  the center position of the explosion
+	 * @param size  the rough size of the explosion, which must not be greater than 511 in most cases
+	 */	
 	public ImprovedExplosion(Level level, @Nullable Entity explodingEntity, Vec3 position, float size) {
 		this(level, explodingEntity, null, position.x, position.y, position.z, size);
 	}
 	
+	/**
+	 * Creates a new ImprovedExplosion
+	 * @implNote size must not be greater than 511 in most cases. See the respective doBlockExplosion method
+	 * @param level  the level
+	 * @param entity  the entity not affected by this explosion. Should be the entity causing the explosion and also an IExplosiveEntity
+	 * @param source  the DamageSource this explosion uses
+	 * @param position  the center position of the explosion
+	 * @param size  the rough size of the explosion, which must not be greater than 511 in most cases
+	 */	
 	public ImprovedExplosion(Level level, @Nullable Entity explodingEntity, @Nullable DamageSource source, Vec3 position, float size) {
 		this(level, explodingEntity, source, position.x, position.y, position.z, size);
 	}
 	
+	/**
+	 * Creates a new ImprovedExplosion
+	 * @implNote size must not be greater than 511 in most cases. See the respective doBlockExplosion method
+	 * @param level  the level
+	 * @param entity  the entity not affected by this explosion. Should be the entity causing the explosion and also an IExplosiveEntity
+	 * @param x  the x center position
+	 * @param y  the y center position
+	 * @param z  the z center position
+	 * @param size  the rough size of the explosion, which must not be greater than 511 in most cases
+	 */	
 	public ImprovedExplosion(Level level, @Nullable Entity explodingEntity, double x, double y, double z, float size) {
 		this(level, explodingEntity, null, x, y, z, size);
 	}
 	
+	/**
+	 * Creates a new ImprovedExplosion
+	 * @implNote size must not be greater than 511 in most cases. See the respective doBlockExplosion method
+	 * @param level  the level
+	 * @param entity  the entity not affected by this explosion. Should be the entity causing the explosion and also an IExplosiveEntity
+	 * @param source  the DamageSource this explosion uses
+	 * @param x  the x center position
+	 * @param y  the y center position
+	 * @param z  the z center position
+	 * @param size  the rough size of the explosion, which must not be greater than 511 in most cases
+	 */	
 	public ImprovedExplosion(Level level, @Nullable Entity explodingEntity, @Nullable DamageSource source, double x, double y, double z, float size) {
 		super(level, explodingEntity, source, null, x, y, z, size, false, BlockInteraction.KEEP);
 		this.level = level;
@@ -75,7 +128,9 @@ public class ImprovedExplosion extends Explosion{
 	}
 	
 	/**
-	 * Gets all blocks in an area calculated by shooting vectors to the borders of a cube determined by the {@link ImprovedExplosion#size} and destroys them. 
+	 * Gets all blocks in an area calculated by shooting vectors to the borders of a cube determined by the {@link ImprovedExplosion#size} and destroys them.
+	 * If any of the relative coordinates of the affected block exceed 511 they will be clamped to that value.
+	 * Encodes block positions into a singular int, increasing performance.
 	 * @param xzStrength  a multiplier to the x and z vector addition, which makes the explosion more powerful. It should not be set to high, otherwise blocks might be skipped
 	 * @param yStrength  a multiplier to the y vector addition, which makes the explosion more powerful. It should not be set to high, otherwise blocks might be skipped
 	 * @param resistanceImpact  the relative impact that explosion resistance of blocks has on the penetration force of explosion
@@ -83,8 +138,8 @@ public class ImprovedExplosion extends Explosion{
 	 * @param fire  whether or not the explosion should spawn fire afterwards
 	 * @param isStrongExplosion  whether or not fluids should be ignored in the explosion resistance calculation. Very useful for large explosions
 	 */
-	public void doBlockExplosion(float xzStrength, float yStrength, float resistanceImpact, float randomVecLength, boolean fire, boolean isStrongExplosion) {
-		Set<BlockPos> blocks = new HashSet<>();
+	public void doBlockExplosion(float xzStrength, float yStrength, float resistanceImpact, float randomVecLength, boolean fire, boolean isStrongExplosion) {	
+		Set<Integer> blocks = new HashSet<>();
 		for(int offX = (int)-size; offX <= (int)size; offX++) {
 			for(int offY = (int)-size; offY <= (int)size; offY++) {
 				for(int offZ = (int)-size; offZ <= (int)size; offZ++) {
@@ -113,11 +168,11 @@ public class ImprovedExplosion extends Explosion{
 									vecLength -= (explosionResistance.get() + 0.3f) * 0.3f * resistanceImpact;
 								}
 								if(vecLength > 0 && damageCalculator.shouldBlockExplode(this, level, pos, blockState, vecLength) && blockState.getMaterial() != Material.AIR) {
-									blocks.add(pos);
+									blocks.add(encodeBlockPos((int)Math.round(blockX - posX), (int)Math.round(blockY - posY), (int)Math.round(blockZ - posZ)));
 								}
 							}
 							else {
-								blocks.add(pos);
+								blocks.add(encodeBlockPos((int)Math.round(blockX - posX), (int)Math.round(blockY - posY), (int)Math.round(blockZ - posZ)));
 							}
 						}
 					}
@@ -125,11 +180,13 @@ public class ImprovedExplosion extends Explosion{
 			}
 		}
 		affectedBlocks.addAll(blocks);
-		for(BlockPos pos : blocks) {
+		for(int intPos : blocks) {
+			BlockPos pos = new BlockPos(new Vec3(posX, posY, posZ).add(decodeBlockPos(intPos)));
 			level.getBlockState(pos).getBlock().onBlockExploded(level.getBlockState(pos), level, pos, this);
 		}
 		if(fire) {
-			for(BlockPos pos : blocks) {
+			for(int intPos : blocks) {
+				BlockPos pos = new BlockPos(new Vec3(posX, posY, posZ).add(decodeBlockPos(intPos)));
 				if(Math.random() > 0.75f && level.getBlockState(pos).isAir() && level.getBlockState(pos.below()).isSolidRender(level, pos)) {
 					level.setBlockAndUpdate(pos, BaseFireBlock.getState(level, pos));
 				}
@@ -140,6 +197,8 @@ public class ImprovedExplosion extends Explosion{
 	/**
 	 * Gets all blocks in an area calculated by shooting vectors to the borders of a cube determined by the {@link ImprovedExplosion#size} 
 	 * and does to them whatever specified in the {@link IForEachBlockExplosionEffect}. 
+	 * If any of the relative coordinates of the affected block exceed 511 they will be clamped to that value.
+	 * Encodes block positions into a singular int, increasing performance.
 	 * @param xzStrength  a multiplier to the x and z vector addition, which makes the explosion more powerful. It should not be set to high, otherwise blocks might be skipped
 	 * @param yStrength  a multiplier to the y vector addition, which makes the explosion more powerful. It should not be set to high, otherwise blocks might be skipped
 	 * @param resistanceImpact  the relative impact that explosion resistance of blocks has on the penetration force of explosion
@@ -149,7 +208,7 @@ public class ImprovedExplosion extends Explosion{
 	 * @param blockEffect  determines what should happen to the blocks gotten by this explosion
 	 */
 	public void doBlockExplosion(float xzStrength, float yStrength, float resistanceImpact, float randomVecLength, boolean isStrongExplosion, IForEachBlockExplosionEffect blockEffect) {
-		Set<BlockPos> blocks = new HashSet<>();
+		Set<Integer> blocks = new HashSet<>();
 		for(int offX = (int)-size; offX <= (int)size; offX++) {
 			for(int offY = (int)-size; offY <= (int)size; offY++) {
 				for(int offZ = (int)-size; offZ <= (int)size; offZ++) {
@@ -178,11 +237,11 @@ public class ImprovedExplosion extends Explosion{
 									vecLength -= (explosionResistance.get() + 0.3f) * 0.3f * resistanceImpact;
 								}
 								if(vecLength > 0 && damageCalculator.shouldBlockExplode(this, level, pos, blockState, vecLength) && blockState.getMaterial() != Material.AIR) {
-									blocks.add(pos);
+									blocks.add(encodeBlockPos((int)Math.round(blockX - posX), (int)Math.round(blockY - posY), (int)Math.round(blockZ - posZ)));
 								}
 							}
 							else {
-								blocks.add(pos);
+								blocks.add(encodeBlockPos((int)Math.round(blockX - posX), (int)Math.round(blockY - posY), (int)Math.round(blockZ - posZ)));
 							}
 						}
 					}
@@ -190,7 +249,8 @@ public class ImprovedExplosion extends Explosion{
 			}
 		}
 		affectedBlocks.addAll(blocks);
-		for(BlockPos pos : blocks) {
+		for(int intPos : blocks) {
+			BlockPos pos = new BlockPos(new Vec3(posX, posY, posZ).add(decodeBlockPos(intPos)));
 			double distance = Math.sqrt(pos.distToLowCornerSqr(posX, posY, posZ));
 			blockEffect.doBlockExplosion(level, pos, level.getBlockState(pos), distance);
 		}
@@ -198,7 +258,9 @@ public class ImprovedExplosion extends Explosion{
 	
 	/**
 	 * Gets blocks in an area calculated by shooting vectors to the borders of a cube determined by the {@link ImprovedExplosion#size} if the {@link IBlockExplosionCondition} is met 
-	 * and does to them whatever specified in the blockEffect. 
+	 * and does to them whatever specified in the blockEffect.
+	 * If any of the relative coordinates of the affected block exceed 511 they will be clamped to that value.
+	 * Encodes block positions into a singular int, increasing performance.
 	 * @param xzStrength  a multiplier to the x and z vector addition, which makes the explosion more powerful. It should not be set to high, otherwise blocks might be skipped
 	 * @param yStrength  a multiplier to the y vector addition, which makes the explosion more powerful. It should not be set to high, otherwise blocks might be skipped
 	 * @param resistanceImpact  the relative impact that explosion resistance of blocks has on the penetration force of explosion
@@ -209,7 +271,7 @@ public class ImprovedExplosion extends Explosion{
 	 * @param blockEffect  determines what should happen to the blocks gotten by this explosion
 	 */
 	public void doBlockExplosion(float xzStrength, float yStrength, float resistanceImpact, float randomVecLength, boolean isStrongExplosion, IBlockExplosionCondition condition, IForEachBlockExplosionEffect blockEffect) {
-		Set<BlockPos> blocks = new HashSet<>();
+		Set<Integer> blocks = new HashSet<>();
 		for(int offX = (int)-size; offX <= (int)size; offX++) {
 			for(int offY = (int)-size; offY <= (int)size; offY++) {
 				for(int offZ = (int)-size; offZ <= (int)size; offZ++) {
@@ -239,13 +301,13 @@ public class ImprovedExplosion extends Explosion{
 								}
 								if(vecLength > 0 && damageCalculator.shouldBlockExplode(this, level, pos, blockState, vecLength) && blockState.getMaterial() != Material.AIR) {
 									if(condition.conditionMet(level, pos, blockState, distance)) {
-										blocks.add(pos);
+										blocks.add(encodeBlockPos((int)Math.round(blockX - posX), (int)Math.round(blockY - posY), (int)Math.round(blockZ - posZ)));
 									}
 								}
 							}
 							else {
 								if(condition.conditionMet(level, pos, blockState, distance)) {
-									blocks.add(pos);
+									blocks.add(encodeBlockPos((int)Math.round(blockX - posX), (int)Math.round(blockY - posY), (int)Math.round(blockZ - posZ)));
 								}
 							}
 						}
@@ -254,7 +316,8 @@ public class ImprovedExplosion extends Explosion{
 			}
 		}
 		affectedBlocks.addAll(blocks);
-		for(BlockPos pos : blocks) {
+		for(int intPos : blocks) {
+			BlockPos pos = new BlockPos(new Vec3(posX, posY, posZ).add(decodeBlockPos(intPos)));
 			double distance = Math.sqrt(pos.distToLowCornerSqr(posX, posY, posZ));
 			blockEffect.doBlockExplosion(level, pos, level.getBlockState(pos), distance);
 		}
@@ -263,6 +326,7 @@ public class ImprovedExplosion extends Explosion{
 	/**
 	 * Executes {@link ImprovedExplosion#doBlockExplosion(float, float, float, float, boolean, boolean, blockEffect)} with default values.
 	 * @param blockEffect  determines what should happen to the blocks gotten by this explosion
+	 * 
 	 */
 	public void doBlockExplosion(IForEachBlockExplosionEffect blockEffect) {
 		doBlockExplosion(1f, 1f, 1f, 1f, false, blockEffect);
@@ -281,6 +345,125 @@ public class ImprovedExplosion extends Explosion{
 	 */
 	public void doBlockExplosion() {
 		doBlockExplosion(1f, 1f, 1f, 1f, false, false);
+	}
+	
+	/**
+	 * Gets all blocks in an area calculated by shooting vectors to the borders of a cube determined by the {@link ImprovedExplosion#size} and destroys them.
+	 * Values of the relative coordinates can exceed 511, allowing for bigger explosions at the cost of more ram usage and slower explosion time.
+	 * @param xzStrength  a multiplier to the x and z vector addition, which makes the explosion more powerful. It should not be set to high, otherwise blocks might be skipped
+	 * @param yStrength  a multiplier to the y vector addition, which makes the explosion more powerful. It should not be set to high, otherwise blocks might be skipped
+	 * @param resistanceImpact  the relative impact that explosion resistance of blocks has on the penetration force of explosion
+	 * @param randomVecLength  the greater this value, the more distributed the length of the explosion vectors will be. Large explosions should have a value less than 1
+	 * @param fire  whether or not the explosion should spawn fire afterwards
+	 * @param isStrongExplosion  whether or not fluids should be ignored in the explosion resistance calculation. Very useful for large explosions
+	 * @param saveBlockPos  whether or not affected blocks should be saved to be used externally
+	 */
+	public void doOldBlockExplosion(float xzStrength, float yStrength, float resistanceImpact, float randomVecLength, boolean fire, boolean isStrongExplosion, boolean saveBlockPos) {
+		Set<BlockPos> blocks = new HashSet<>();
+		for(int offX = (int)-size; offX <= (int)size; offX++) {
+			for(int offY = (int)-size; offY <= (int)size; offY++) {
+				for(int offZ = (int)-size; offZ <= (int)size; offZ++) {
+					if(offX == (int)-size || offX == (int)size || offY == (int)-size || offY == (int)size || offZ == (int)-size || offZ == (int)size) {
+						double distance = Math.sqrt(offX * offX + offY * offY + offZ * offZ);
+						double xStep = offX / distance;
+						double yStep = offY / distance;
+						double zStep = offZ / distance;
+						float vecLength = size * (0.7f + (float)Math.random() * 0.6f * randomVecLength);
+						double blockX = posX;
+						double blockY = posY;
+						double blockZ = posZ;
+						for(float vecStep = 0; vecStep < vecLength; vecStep += 0.225f) {
+							blockX += xStep * 0.3f * xzStrength;
+							blockY += yStep * 0.3f * yStrength;
+							blockZ += zStep * 0.3f * xzStrength;
+							BlockPos pos = new BlockPos(blockX, blockY, blockZ);
+							if(!level.isInWorldBounds(pos)) {
+								break;
+							}
+							BlockState blockState = level.getBlockState(pos);
+							FluidState fluidState = level.getFluidState(pos);
+							if(!(isStrongExplosion && blockState.getBlock() instanceof LiquidBlock)) {
+								Optional<Float> explosionResistance = damageCalculator.getBlockExplosionResistance(this, level, pos, blockState, fluidState);
+								if(explosionResistance.isPresent()) {
+									vecLength -= (explosionResistance.get() + 0.3f) * 0.3f * resistanceImpact;
+								}
+								if(vecLength > 0 && damageCalculator.shouldBlockExplode(this, level, pos, blockState, vecLength) && blockState.getMaterial() != Material.AIR) {
+									blocks.add(pos);
+								}
+							}
+							else {
+								blocks.add(pos);
+							}
+						}
+					}
+				}
+			}
+		}
+		if(saveBlockPos) {
+			for(BlockPos pos : blocks) {
+				affectedBlocks.add(encodeBlockPos((int)Math.round(pos.getX() - posX), (int)Math.round(pos.getY() - posY), (int)Math.round(pos.getZ() - posZ)));
+			}
+		}
+		for(BlockPos pos : blocks) {
+			level.getBlockState(pos).getBlock().onBlockExploded(level.getBlockState(pos), level, pos, this);
+		}
+		if(fire) {
+			for(BlockPos pos : blocks) {
+				if(Math.random() > 0.75f && level.getBlockState(pos).isAir() && level.getBlockState(pos.below()).isSolidRender(level, pos)) {
+					level.setBlockAndUpdate(pos, BaseFireBlock.getState(level, pos));
+				}
+			}
+		}
+	}
+	
+	/**
+	 * Encodes 3 coordinates into a singular int value. 
+	 * Coordinates greater than the absolute value of 511 will be clamped to 511.
+	 * @implNote coordinates given must be realtive coordinates to the center of the explosion
+	 * @param x  the x position of the block
+	 * @param y  the y position of the block
+	 * @param z  the z position of the block
+	 * @return encoded int containing information about x, y and z positions, all of which can have values between -511 and 511
+	 */
+	protected int encodeBlockPos(int x, int y, int z) {
+		int x0 = Integer.signum(x);
+		x = Math.abs(x) > 511 ? 511 : Math.abs(x);
+		x0 = x0 == -1 ? 0b1000000000 : 0;		
+		x += x0;
+		
+		x = x << 20;
+		
+		int y0 = Integer.signum(y);
+		y = Math.abs(y) > 511 ? 511 : Math.abs(y);
+		y0 = y0 == -1 ? 0b1000000000 : 0;
+		y += y0;
+
+		y = y << 10;
+		
+		int z0 = Integer.signum(z);
+		z = Math.abs(z) > 511 ? 511 : Math.abs(z);
+		z0 = z0 == -1 ? 0b1000000000 : 0;
+		z += z0;
+		
+		return (x + y + z);
+	}
+	
+	/**
+	 * Decodes an encoded value generated by {@link ImprovedExplosion#encodeBlockPos(int, int, int)} into a {@link Vec3}.
+	 * @param encodedVal  the position encoded by {@link ImprovedExplosion#encodeBlockPos(int, int, int)}
+	 * @return Vec3 with the relative x, y and z coordinates decoded again with an absolute max value of 511
+	 */
+	protected Vec3 decodeBlockPos(int encodedVal) {
+		int zRaw = (encodedVal & 0b00000000000000000000000111111111);
+		int zNeg = (encodedVal & 0b00000000000000000000001000000000) >> 9;
+		int yRaw = (encodedVal & 0b00000000000001111111110000000000) >> 10;
+		int yNeg = (encodedVal & 0b00000000000010000000000000000000) >> 19;
+		int xRaw = (encodedVal & 0b00011111111100000000000000000000) >> 20;
+		int xNeg = (encodedVal & 0b00100000000000000000000000000000) >> 29;
+		int xVal = xNeg == 1 ? -xRaw : xRaw;
+		int yVal = yNeg == 1 ? -yRaw : yRaw;
+		int zVal = zNeg == 1 ? -zRaw : zRaw;
+		return new Vec3(xVal, yVal, zVal);
 	}
 	
 	/**
@@ -371,6 +554,10 @@ public class ImprovedExplosion extends Explosion{
 	@Override
 	@Nullable
 	public List<BlockPos> getToBlow(){
-		return affectedBlocks;
+		List<BlockPos> blocks = new ArrayList<>();
+		for(int intPos : affectedBlocks) {
+			blocks.add(new BlockPos(new Vec3(posX, posY, posZ).add(decodeBlockPos(intPos))));
+		}
+		return blocks;
 	}
 }
