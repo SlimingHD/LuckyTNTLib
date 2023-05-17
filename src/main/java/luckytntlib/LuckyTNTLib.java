@@ -85,7 +85,7 @@ public class LuckyTNTLib
 					return stack;
 				}
 			};
-			DispenserBlock.registerBehavior(item, behaviour);;
+			DispenserBlock.registerBehavior(item, behaviour);
     	}
     	for(RegistryObject<LTNTMinecartItem> minecart : RegistryHelper.MINECART_DISPENSER_REGISTRY_LIST) {
     		LTNTMinecartItem item = minecart.get();
