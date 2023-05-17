@@ -71,7 +71,7 @@ public class TNTBlockRegistryData {
 		private boolean addDispenseBehavior = true;
 		private boolean randomizedFuseUponExploded = true;
 		private boolean addToTNTLists = true;
-		private TranslatableContents description = new TranslatableContents("");
+		private TranslatableContents description = new TranslatableContents("", "", new Object[0]);
 		private String tab = "none";
 		private MaterialColor color = MaterialColor.COLOR_RED;
 		

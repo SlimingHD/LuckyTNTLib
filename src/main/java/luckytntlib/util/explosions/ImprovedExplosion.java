@@ -158,7 +158,7 @@ public class ImprovedExplosion extends Explosion{
 							blockX += xStep * LuckyTNTLibConfigValues.EXPLOSION_PERFORMANCE_FACTOR.get() * xzStrength;
 							blockY += yStep * LuckyTNTLibConfigValues.EXPLOSION_PERFORMANCE_FACTOR.get() * yStrength;
 							blockZ += zStep * LuckyTNTLibConfigValues.EXPLOSION_PERFORMANCE_FACTOR.get() * xzStrength;
-							BlockPos pos = new BlockPos(blockX, blockY, blockZ);
+							BlockPos pos = new BlockPos((int)blockX, (int)blockY, (int)blockZ);
 							if (!level.isInWorldBounds(pos)) {
 								break;
 							}
@@ -182,12 +182,14 @@ public class ImprovedExplosion extends Explosion{
 		}
 		affectedBlocks.addAll(blocks);
 		for(int intPos : blocks) {
-			BlockPos pos = new BlockPos(new Vec3(posX, posY, posZ).add(decodeBlockPos(intPos)));
+			Vec3 vec = new Vec3(posX, posY, posZ).add(decodeBlockPos(intPos));
+			BlockPos pos = new BlockPos((int)vec.x, (int)vec.y, (int)vec.z);
 			level.getBlockState(pos).getBlock().onBlockExploded(level.getBlockState(pos), level, pos, this);
 		}
 		if(fire) {
 			for(int intPos : blocks) {
-				BlockPos pos = new BlockPos(new Vec3(posX, posY, posZ).add(decodeBlockPos(intPos)));
+				Vec3 vec = new Vec3(posX, posY, posZ).add(decodeBlockPos(intPos));
+				BlockPos pos = new BlockPos((int)vec.x, (int)vec.y, (int)vec.z);
 				if(Math.random() > 0.75f && level.getBlockState(pos).isAir() && level.getBlockState(pos.below()).isSolidRender(level, pos)) {
 					level.setBlockAndUpdate(pos, BaseFireBlock.getState(level, pos));
 				}
@@ -227,7 +229,7 @@ public class ImprovedExplosion extends Explosion{
 							blockX += xStep * LuckyTNTLibConfigValues.EXPLOSION_PERFORMANCE_FACTOR.get() * xzStrength;
 							blockY += yStep * LuckyTNTLibConfigValues.EXPLOSION_PERFORMANCE_FACTOR.get() * yStrength;
 							blockZ += zStep * LuckyTNTLibConfigValues.EXPLOSION_PERFORMANCE_FACTOR.get() * xzStrength;
-							BlockPos pos = new BlockPos(blockX, blockY, blockZ);
+							BlockPos pos = new BlockPos((int)blockX, (int)blockY, (int)blockZ);
 							if(!level.isInWorldBounds(pos)) {
 								break;
 							}
@@ -252,7 +254,8 @@ public class ImprovedExplosion extends Explosion{
 		}
 		affectedBlocks.addAll(blocks);
 		for(int intPos : blocks) {
-			BlockPos pos = new BlockPos(new Vec3(posX, posY, posZ).add(decodeBlockPos(intPos)));
+			Vec3 vec = new Vec3(posX, posY, posZ).add(decodeBlockPos(intPos));
+			BlockPos pos = new BlockPos((int)vec.x, (int)vec.y, (int)vec.z);
 			double distance = Math.sqrt(pos.distToLowCornerSqr(posX, posY, posZ));
 			blockEffect.doBlockExplosion(level, pos, level.getBlockState(pos), distance);
 		}
@@ -291,7 +294,7 @@ public class ImprovedExplosion extends Explosion{
 							blockX += xStep * LuckyTNTLibConfigValues.EXPLOSION_PERFORMANCE_FACTOR.get() * xzStrength;
 							blockY += yStep * LuckyTNTLibConfigValues.EXPLOSION_PERFORMANCE_FACTOR.get() * yStrength;
 							blockZ += zStep * LuckyTNTLibConfigValues.EXPLOSION_PERFORMANCE_FACTOR.get() * xzStrength;
-							BlockPos pos = new BlockPos(blockX, blockY, blockZ);
+							BlockPos pos = new BlockPos((int)blockX, (int)blockY, (int)blockZ);
 							if(!level.isInWorldBounds(pos)) {
 								break;
 							}
@@ -320,7 +323,8 @@ public class ImprovedExplosion extends Explosion{
 		}
 		affectedBlocks.addAll(blocks);
 		for(int intPos : blocks) {
-			BlockPos pos = new BlockPos(new Vec3(posX, posY, posZ).add(decodeBlockPos(intPos)));
+			Vec3 vec = new Vec3(posX, posY, posZ).add(decodeBlockPos(intPos));
+			BlockPos pos = new BlockPos((int)vec.x, (int)vec.y, (int)vec.z);
 			double distance = Math.sqrt(pos.distToLowCornerSqr(posX, posY, posZ));
 			blockEffect.doBlockExplosion(level, pos, level.getBlockState(pos), distance);
 		}
@@ -379,7 +383,7 @@ public class ImprovedExplosion extends Explosion{
 							blockX += xStep * LuckyTNTLibConfigValues.EXPLOSION_PERFORMANCE_FACTOR.get() * xzStrength;
 							blockY += yStep * LuckyTNTLibConfigValues.EXPLOSION_PERFORMANCE_FACTOR.get() * yStrength;
 							blockZ += zStep * LuckyTNTLibConfigValues.EXPLOSION_PERFORMANCE_FACTOR.get() * xzStrength;
-							BlockPos pos = new BlockPos(blockX, blockY, blockZ);
+							BlockPos pos = new BlockPos((int)blockX, (int)blockY, (int)blockZ);
 							if(!level.isInWorldBounds(pos)) {
 								break;
 							}
@@ -559,7 +563,8 @@ public class ImprovedExplosion extends Explosion{
 	public List<BlockPos> getToBlow(){
 		List<BlockPos> blocks = new ArrayList<>();
 		for(int intPos : affectedBlocks) {
-			blocks.add(new BlockPos(new Vec3(posX, posY, posZ).add(decodeBlockPos(intPos))));
+			Vec3 vec = new Vec3(posX, posY, posZ).add(decodeBlockPos(intPos));
+			blocks.add(new BlockPos((int)vec.x, (int)vec.y, (int)vec.z));
 		}
 		return blocks;
 	}

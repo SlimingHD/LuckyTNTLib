@@ -12,6 +12,7 @@ import net.minecraft.network.syncher.EntityDataSerializers;
 import net.minecraft.network.syncher.SynchedEntityData;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.world.damagesource.DamageSource;
+import net.minecraft.world.damagesource.DamageTypes;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.LivingEntity;
@@ -78,7 +79,7 @@ public class LTNTMinecart extends AbstractMinecart implements IExplosiveEntity{
 				fuse();
 			}
 		}
-		if(source.equals(DamageSource.LIGHTNING_BOLT) && getTNTFuse() >= 0) {
+		if(source.is(DamageTypes.LIGHTNING_BOLT) && getTNTFuse() >= 0) {
 			return false;
 		}
 		return super.hurt(source, amount);
@@ -87,7 +88,7 @@ public class LTNTMinecart extends AbstractMinecart implements IExplosiveEntity{
 	@Override
 	public void destroy(DamageSource source) {
 		double speed = getDeltaMovement().horizontalDistanceSqr();
-		if (!source.isFire() && !source.isExplosion() && !(speed >= 0.01f)) {
+		if (!source.is(DamageTypes.ON_FIRE) && !source.is(DamageTypes.EXPLOSION) && !(speed >= 0.01f)) {
 			super.destroy(source);
 		} else {
 			if(getTNTFuse() < 0) {
@@ -126,7 +127,7 @@ public class LTNTMinecart extends AbstractMinecart implements IExplosiveEntity{
 
 	public void fuse() {
 		setTNTFuse(getEffect().getDefaultFuse(this));	
-		level.playSound(null, new BlockPos(getPosition(1)), SoundEvents.TNT_PRIMED, getSoundSource(), 1f, 1f);
+		level.playSound(null, new BlockPos((int)getPosition(1).x, (int)getPosition(1).y, (int)getPosition(1).z), SoundEvents.TNT_PRIMED, getSoundSource(), 1f, 1f);
 	}
 	
 	@Override

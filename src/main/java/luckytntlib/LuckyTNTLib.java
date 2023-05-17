@@ -62,7 +62,8 @@ public class LuckyTNTLib
 				@Override
 				public ItemStack dispense(BlockSource source, ItemStack stack) {
 					Level level = source.getLevel();
-					BlockPos pos = new BlockPos(DispenserBlock.getDispensePosition(source));
+					Position p = DispenserBlock.getDispensePosition(source);
+					BlockPos pos = new BlockPos((int)p.x(), (int)p.y(), (int)p.z());
 					block.explode(level, false, pos.getX(), pos.getY(), pos.getZ(), null);
 					stack.shrink(1);
 					return stack;

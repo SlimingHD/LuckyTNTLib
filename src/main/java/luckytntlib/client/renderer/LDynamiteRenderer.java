@@ -6,7 +6,6 @@ import com.mojang.math.Axis;
 import luckytntlib.entity.LExplosiveProjectile;
 import luckytntlib.util.tnteffects.PrimedTNTEffect;
 import net.minecraft.client.renderer.MultiBufferSource;
-import net.minecraft.client.renderer.block.model.ItemTransforms;
 import net.minecraft.client.renderer.entity.EntityRenderer;
 import net.minecraft.client.renderer.entity.EntityRendererProvider;
 import net.minecraft.client.renderer.entity.ItemRenderer;
@@ -15,6 +14,7 @@ import net.minecraft.client.renderer.texture.OverlayTexture;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.projectile.ItemSupplier;
 import net.minecraft.world.inventory.InventoryMenu;
+import net.minecraft.world.item.ItemDisplayContext;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 
@@ -31,7 +31,7 @@ public class LDynamiteRenderer<T extends LExplosiveProjectile & ItemSupplier> ex
 	
 	public LDynamiteRenderer(EntityRendererProvider.Context context) {
 		super(context);
-		this.itemRenderer = context.getItemRenderer();
+		itemRenderer = context.getItemRenderer();
 	}
 	
 	@Override
@@ -41,7 +41,7 @@ public class LDynamiteRenderer<T extends LExplosiveProjectile & ItemSupplier> ex
 			poseStack.scale(entity.getEffect().getSize(entity), entity.getEffect().getSize(entity), entity.getEffect().getSize(entity));
 			poseStack.mulPose(this.entityRenderDispatcher.cameraOrientation());
 			poseStack.mulPose(Axis.YP.rotationDegrees(180.0F));
-			this.itemRenderer.renderStatic(entity.getItem(), ItemTransforms.TransformType.GROUND, light, OverlayTexture.NO_OVERLAY, poseStack, buffer, entity.getId());
+			itemRenderer.renderStatic(entity.getItem(), ItemDisplayContext.GROUND, light, OverlayTexture.NO_OVERLAY, poseStack, buffer, entity.level, entity.getId());
 			poseStack.popPose();
 			super.render(entity, yaw, partialTicks, poseStack, buffer, light);
 		}
