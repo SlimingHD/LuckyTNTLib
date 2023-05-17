@@ -1,0 +1,1 @@
+# LuckyTNTLib is agh
