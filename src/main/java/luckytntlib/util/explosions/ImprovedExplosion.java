@@ -39,11 +39,11 @@ public class ImprovedExplosion extends Explosion{
 
 	public final Level level;
 	public final double posX, posY, posZ;
-	public final float size;
+	public final int size;
 	public final ExplosionDamageCalculator damageCalculator;
 	List<Integer> affectedBlocks = new ArrayList<>();
 	
-	private static ImprovedExplosion dummyExplosion = new ImprovedExplosion(null, new Vec3(0, 0, 0), 0);
+	private static ImprovedExplosion dummyExplosion;
 	
 	/**
 	 * Creates a new ImprovedExplosion
@@ -52,7 +52,7 @@ public class ImprovedExplosion extends Explosion{
 	 * @param position  the center position of the explosion
 	 * @param size  the rough size of the explosion, which must not be greater than 511 in most cases
 	 */
-	public ImprovedExplosion(Level level, Vec3 position, float size) {
+	public ImprovedExplosion(Level level, Vec3 position, int size) {
 		this(level, null, null, position, size);
 	}
 	
@@ -64,7 +64,7 @@ public class ImprovedExplosion extends Explosion{
 	 * @param position  the center position of the explosion
 	 * @param size  the rough size of the explosion, which must not be greater than 511 in most cases
 	 */
-	public ImprovedExplosion(Level level, @Nullable DamageSource source, Vec3 position, float size) {
+	public ImprovedExplosion(Level level, @Nullable DamageSource source, Vec3 position, int size) {
 		this(level, null, source, position, size);
 	}
 	
@@ -76,7 +76,7 @@ public class ImprovedExplosion extends Explosion{
 	 * @param position  the center position of the explosion
 	 * @param size  the rough size of the explosion, which must not be greater than 511 in most cases
 	 */	
-	public ImprovedExplosion(Level level, @Nullable Entity explodingEntity, Vec3 position, float size) {
+	public ImprovedExplosion(Level level, @Nullable Entity explodingEntity, Vec3 position, int size) {
 		this(level, explodingEntity, null, position.x, position.y, position.z, size);
 	}
 	
@@ -89,7 +89,7 @@ public class ImprovedExplosion extends Explosion{
 	 * @param position  the center position of the explosion
 	 * @param size  the rough size of the explosion, which must not be greater than 511 in most cases
 	 */	
-	public ImprovedExplosion(Level level, @Nullable Entity explodingEntity, @Nullable DamageSource source, Vec3 position, float size) {
+	public ImprovedExplosion(Level level, @Nullable Entity explodingEntity, @Nullable DamageSource source, Vec3 position, int size) {
 		this(level, explodingEntity, source, position.x, position.y, position.z, size);
 	}
 	
@@ -103,7 +103,7 @@ public class ImprovedExplosion extends Explosion{
 	 * @param z  the z center position
 	 * @param size  the rough size of the explosion, which must not be greater than 511 in most cases
 	 */	
-	public ImprovedExplosion(Level level, @Nullable Entity explodingEntity, double x, double y, double z, float size) {
+	public ImprovedExplosion(Level level, @Nullable Entity explodingEntity, double x, double y, double z, int size) {
 		this(level, explodingEntity, null, x, y, z, size);
 	}
 	
@@ -118,7 +118,7 @@ public class ImprovedExplosion extends Explosion{
 	 * @param z  the z center position
 	 * @param size  the rough size of the explosion, which must not be greater than 511 in most cases
 	 */	
-	public ImprovedExplosion(Level level, @Nullable Entity explodingEntity, @Nullable DamageSource source, double x, double y, double z, float size) {
+	public ImprovedExplosion(Level level, @Nullable Entity explodingEntity, @Nullable DamageSource source, double x, double y, double z, int size) {
 		super(level, explodingEntity, source, null, x, y, z, size, false, BlockInteraction.KEEP);
 		this.level = level;
 		this.posX = x;
@@ -142,11 +142,11 @@ public class ImprovedExplosion extends Explosion{
 	 */
 	public void doBlockExplosion(float xzStrength, float yStrength, float resistanceImpact, float randomVecLength, boolean fire, boolean isStrongExplosion) {			
 		Set<Integer> blocks = new HashSet<>();
-		for (int offX = (int) -size; offX <= (int) size; offX++) {
-			for (int offY = (int) -size; offY <= (int) size; offY++) {
-				for (int offZ = (int) -size; offZ <= (int) size; offZ++) {
+		for (int offX = -size; offX <= size; offX++) {
+			for (int offY = -size; offY <= size; offY++) {
+				for (int offZ = -size; offZ <= size; offZ++) {
 					double distance = Math.sqrt(offX * offX + offY * offY + offZ * offZ);
-					if (((int) distance == (int) size && LuckyTNTLibConfigValues.PERFORMANT_EXPLOSION.get()) || (!LuckyTNTLibConfigValues.PERFORMANT_EXPLOSION.get() && (offX == (int) -size || offX == (int) size || offY == (int) -size || offY == (int) size || offZ == (int) -size || offZ == (int) size))) {
+					if (((int) distance == size && LuckyTNTLibConfigValues.PERFORMANT_EXPLOSION.get()) || (!LuckyTNTLibConfigValues.PERFORMANT_EXPLOSION.get() && (offX == -size || offX == size || offY == -size || offY == size || offZ == -size || offZ == size))) {
 						double xStep = offX / distance;
 						double yStep = offY / distance;
 						double zStep = offZ / distance;
@@ -544,8 +544,8 @@ public class ImprovedExplosion extends Explosion{
 	/** 
 	 * @return ImprovedExplosion with no {@link Level} and, no strength and position at (0, 0, 0)
 	 */
-	public static ImprovedExplosion dummyExplosion() {
-		return dummyExplosion;
+	public static ImprovedExplosion dummyExplosion(Level level) {
+		return dummyExplosion == null ? dummyExplosion = new ImprovedExplosion(level, new Vec3(0, 0, 0), 0) : dummyExplosion;
 	}
 
 	@Override
