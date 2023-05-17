@@ -1,12 +1,18 @@
 package luckytntlib;
 
+import java.util.function.BiFunction;
+
 import com.mojang.datafixers.util.Pair;
 
 import luckytntlib.block.LTNTBlock;
+import luckytntlib.client.gui.ConfigScreen;
+import luckytntlib.config.LuckyTNTLibConfigs;
 import luckytntlib.entity.LTNTMinecart;
 import luckytntlib.item.LDynamiteItem;
 import luckytntlib.item.LTNTMinecartItem;
 import luckytntlib.registry.RegistryHelper;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.BlockSource;
 import net.minecraft.core.Direction;
@@ -22,8 +28,10 @@ import net.minecraft.world.level.block.DispenserBlock;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.RailShape;
 import net.minecraft.world.phys.Vec3;
+import net.minecraftforge.client.ConfigScreenHandler;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.eventbus.api.IEventBus;
+import net.minecraftforge.fml.ModLoadingContext;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.event.lifecycle.FMLCommonSetupEvent;
 import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
@@ -37,6 +45,13 @@ public class LuckyTNTLib
         IEventBus bus = FMLJavaModLoadingContext.get().getModEventBus();
         bus.addListener(this::commonSetup);
         MinecraftForge.EVENT_BUS.register(this);
+        LuckyTNTLibConfigs.register();
+        ModLoadingContext.get().registerExtensionPoint(ConfigScreenHandler.ConfigScreenFactory.class, () -> new ConfigScreenHandler.ConfigScreenFactory(new BiFunction<Minecraft, Screen, Screen>() {		
+			@Override
+			public Screen apply(Minecraft mc, Screen screen) {
+				return new ConfigScreen();
+			}
+		}));
     }
     
     private void commonSetup(final FMLCommonSetupEvent event) {

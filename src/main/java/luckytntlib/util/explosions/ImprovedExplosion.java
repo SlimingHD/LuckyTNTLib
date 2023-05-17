@@ -8,6 +8,7 @@ import java.util.Set;
 
 import javax.annotation.Nullable;
 
+import luckytntlib.config.LuckyTNTLibConfigValues;
 import luckytntlib.util.IExplosiveEntity;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.damagesource.DamageSource;
@@ -131,48 +132,48 @@ public class ImprovedExplosion extends Explosion{
 	 * Gets all blocks in an area calculated by shooting vectors to the borders of a cube determined by the {@link ImprovedExplosion#size} and destroys them.
 	 * If any of the relative coordinates of the affected block exceed 511 they will be clamped to that value.
 	 * Encodes block positions into a singular int, increasing performance.
-	 * @param xzStrength  a multiplier to the x and z vector addition, which makes the explosion more powerful. It should not be set to high, otherwise blocks might be skipped
+	 * The shape the vectors orient to can either be a sphere or a cube, depending on the players config.
+	 * @param xzStrength  a multiplier to the x and z vector addition, which makes the explosion more powerful. It should not be set higher than 1.2, otherwise blocks might be skipped
 	 * @param yStrength  a multiplier to the y vector addition, which makes the explosion more powerful. It should not be set to high, otherwise blocks might be skipped
 	 * @param resistanceImpact  the relative impact that explosion resistance of blocks has on the penetration force of explosion
 	 * @param randomVecLength  the greater this value, the more distributed the length of the explosion vectors will be. Large explosions should have a value less than 1
 	 * @param fire  whether or not the explosion should spawn fire afterwards
 	 * @param isStrongExplosion  whether or not fluids should be ignored in the explosion resistance calculation. Very useful for large explosions
 	 */
-	public void doBlockExplosion(float xzStrength, float yStrength, float resistanceImpact, float randomVecLength, boolean fire, boolean isStrongExplosion) {	
+	public void doBlockExplosion(float xzStrength, float yStrength, float resistanceImpact, float randomVecLength, boolean fire, boolean isStrongExplosion) {			
 		Set<Integer> blocks = new HashSet<>();
-		for(int offX = (int)-size; offX <= (int)size; offX++) {
-			for(int offY = (int)-size; offY <= (int)size; offY++) {
-				for(int offZ = (int)-size; offZ <= (int)size; offZ++) {
-					if(offX == (int)-size || offX == (int)size || offY == (int)-size || offY == (int)size || offZ == (int)-size || offZ == (int)size) {
-						double distance = Math.sqrt(offX * offX + offY * offY + offZ * offZ);
+		for (int offX = (int) -size; offX <= (int) size; offX++) {
+			for (int offY = (int) -size; offY <= (int) size; offY++) {
+				for (int offZ = (int) -size; offZ <= (int) size; offZ++) {
+					double distance = Math.sqrt(offX * offX + offY * offY + offZ * offZ);
+					if (((int) distance == (int) size && LuckyTNTLibConfigValues.PERFORMANT_EXPLOSION.get()) || (!LuckyTNTLibConfigValues.PERFORMANT_EXPLOSION.get() && (offX == (int) -size || offX == (int) size || offY == (int) -size || offY == (int) size || offZ == (int) -size || offZ == (int) size))) {
 						double xStep = offX / distance;
 						double yStep = offY / distance;
 						double zStep = offZ / distance;
-						float vecLength = size * (0.7f + (float)Math.random() * 0.6f * randomVecLength);
+						float vecLength = size * (0.7f + (float) Math.random() * 0.6f * randomVecLength);
 						double blockX = posX;
 						double blockY = posY;
 						double blockZ = posZ;
-						for(float vecStep = 0; vecStep < vecLength; vecStep += 0.225f) {
-							blockX += xStep * 0.3f * xzStrength;
-							blockY += yStep * 0.3f * yStrength;
-							blockZ += zStep * 0.3f * xzStrength;
+						for (float vecStep = 0; vecStep < vecLength; vecStep += LuckyTNTLibConfigValues.EXPLOSION_PERFORMANCE_FACTOR.get() * 1.5f - 0.225f) {
+							blockX += xStep * LuckyTNTLibConfigValues.EXPLOSION_PERFORMANCE_FACTOR.get() * xzStrength;
+							blockY += yStep * LuckyTNTLibConfigValues.EXPLOSION_PERFORMANCE_FACTOR.get() * yStrength;
+							blockZ += zStep * LuckyTNTLibConfigValues.EXPLOSION_PERFORMANCE_FACTOR.get() * xzStrength;
 							BlockPos pos = new BlockPos(blockX, blockY, blockZ);
-							if(!level.isInWorldBounds(pos)) {
+							if (!level.isInWorldBounds(pos)) {
 								break;
 							}
 							BlockState blockState = level.getBlockState(pos);
 							FluidState fluidState = level.getFluidState(pos);
-							if(!(isStrongExplosion && blockState.getBlock() instanceof LiquidBlock)) {
+							if (!(isStrongExplosion && blockState.getBlock() instanceof LiquidBlock)) {
 								Optional<Float> explosionResistance = damageCalculator.getBlockExplosionResistance(this, level, pos, blockState, fluidState);
-								if(explosionResistance.isPresent()) {
+								if (explosionResistance.isPresent()) {
 									vecLength -= (explosionResistance.get() + 0.3f) * 0.3f * resistanceImpact;
 								}
-								if(vecLength > 0 && damageCalculator.shouldBlockExplode(this, level, pos, blockState, vecLength) && blockState.getMaterial() != Material.AIR) {
-									blocks.add(encodeBlockPos((int)Math.round(blockX - posX), (int)Math.round(blockY - posY), (int)Math.round(blockZ - posZ)));
+								if (vecLength > 0 && damageCalculator.shouldBlockExplode(this, level, pos, blockState, vecLength) && blockState.getMaterial() != Material.AIR) {
+									blocks.add(encodeBlockPos((int) Math.round(blockX - posX), (int) Math.round(blockY - posY), (int) Math.round(blockZ - posZ)));
 								}
-							}
-							else {
-								blocks.add(encodeBlockPos((int)Math.round(blockX - posX), (int)Math.round(blockY - posY), (int)Math.round(blockZ - posZ)));
+							} else {
+								blocks.add(encodeBlockPos((int) Math.round(blockX - posX), (int) Math.round(blockY - posY), (int) Math.round(blockZ - posZ)));
 							}
 						}
 					}
@@ -199,6 +200,7 @@ public class ImprovedExplosion extends Explosion{
 	 * and does to them whatever specified in the {@link IForEachBlockExplosionEffect}. 
 	 * If any of the relative coordinates of the affected block exceed 511 they will be clamped to that value.
 	 * Encodes block positions into a singular int, increasing performance.
+	 * The shape the vectors orient to can either be a sphere or a cube, depending on the players config.
 	 * @param xzStrength  a multiplier to the x and z vector addition, which makes the explosion more powerful. It should not be set to high, otherwise blocks might be skipped
 	 * @param yStrength  a multiplier to the y vector addition, which makes the explosion more powerful. It should not be set to high, otherwise blocks might be skipped
 	 * @param resistanceImpact  the relative impact that explosion resistance of blocks has on the penetration force of explosion
@@ -212,8 +214,8 @@ public class ImprovedExplosion extends Explosion{
 		for(int offX = (int)-size; offX <= (int)size; offX++) {
 			for(int offY = (int)-size; offY <= (int)size; offY++) {
 				for(int offZ = (int)-size; offZ <= (int)size; offZ++) {
-					if(offX == (int)-size || offX == (int)size || offY == (int)-size || offY == (int)size || offZ == (int)-size || offZ == (int)size) {
-						double distance = Math.sqrt(offX * offX + offY * offY + offZ * offZ);
+					double distance = Math.sqrt(offX * offX + offY * offY + offZ * offZ);
+					if(((int)distance == (int)size && LuckyTNTLibConfigValues.PERFORMANT_EXPLOSION.get()) || (!LuckyTNTLibConfigValues.PERFORMANT_EXPLOSION.get() && (offX == (int)-size || offX == (int)size || offY == (int)-size || offY == (int)size || offZ == (int)-size || offZ == (int)size))) {
 						double xStep = offX / distance;
 						double yStep = offY / distance;
 						double zStep = offZ / distance;
@@ -221,10 +223,10 @@ public class ImprovedExplosion extends Explosion{
 						double blockX = posX;
 						double blockY = posY;
 						double blockZ = posZ;
-						for(float vecStep = 0; vecStep < vecLength; vecStep += 0.225f) {
-							blockX += xStep * 0.3f * xzStrength;
-							blockY += yStep * 0.3f * yStrength;
-							blockZ += zStep * 0.3f * xzStrength;
+						for(float vecStep = 0; vecStep < vecLength; vecStep += LuckyTNTLibConfigValues.EXPLOSION_PERFORMANCE_FACTOR.get() * 1.5f - 0.225f) {
+							blockX += xStep * LuckyTNTLibConfigValues.EXPLOSION_PERFORMANCE_FACTOR.get() * xzStrength;
+							blockY += yStep * LuckyTNTLibConfigValues.EXPLOSION_PERFORMANCE_FACTOR.get() * yStrength;
+							blockZ += zStep * LuckyTNTLibConfigValues.EXPLOSION_PERFORMANCE_FACTOR.get() * xzStrength;
 							BlockPos pos = new BlockPos(blockX, blockY, blockZ);
 							if(!level.isInWorldBounds(pos)) {
 								break;
@@ -261,6 +263,7 @@ public class ImprovedExplosion extends Explosion{
 	 * and does to them whatever specified in the blockEffect.
 	 * If any of the relative coordinates of the affected block exceed 511 they will be clamped to that value.
 	 * Encodes block positions into a singular int, increasing performance.
+	 * The shape the vectors orient to can either be a sphere or a cube, depending on the players config.
 	 * @param xzStrength  a multiplier to the x and z vector addition, which makes the explosion more powerful. It should not be set to high, otherwise blocks might be skipped
 	 * @param yStrength  a multiplier to the y vector addition, which makes the explosion more powerful. It should not be set to high, otherwise blocks might be skipped
 	 * @param resistanceImpact  the relative impact that explosion resistance of blocks has on the penetration force of explosion
@@ -275,8 +278,8 @@ public class ImprovedExplosion extends Explosion{
 		for(int offX = (int)-size; offX <= (int)size; offX++) {
 			for(int offY = (int)-size; offY <= (int)size; offY++) {
 				for(int offZ = (int)-size; offZ <= (int)size; offZ++) {
-					if(offX == (int)-size || offX == (int)size || offY == (int)-size || offY == (int)size || offZ == (int)-size || offZ == (int)size) {
-						double distance = Math.sqrt(offX * offX + offY * offY + offZ * offZ);
+					double distance = Math.sqrt(offX * offX + offY * offY + offZ * offZ);
+					if(((int)distance == (int)size && LuckyTNTLibConfigValues.PERFORMANT_EXPLOSION.get()) || (!LuckyTNTLibConfigValues.PERFORMANT_EXPLOSION.get() && (offX == (int)-size || offX == (int)size || offY == (int)-size || offY == (int)size || offZ == (int)-size || offZ == (int)size))) {
 						double xStep = offX / distance;
 						double yStep = offY / distance;
 						double zStep = offZ / distance;
@@ -284,10 +287,10 @@ public class ImprovedExplosion extends Explosion{
 						double blockX = posX;
 						double blockY = posY;
 						double blockZ = posZ;
-						for(float vecStep = 0; vecStep < vecLength; vecStep += 0.225f) {
-							blockX += xStep * 0.3f * xzStrength;
-							blockY += yStep * 0.3f * yStrength;
-							blockZ += zStep * 0.3f * xzStrength;
+						for(float vecStep = 0; vecStep < vecLength; vecStep += LuckyTNTLibConfigValues.EXPLOSION_PERFORMANCE_FACTOR.get() * 1.5f - 0.225f) {
+							blockX += xStep * LuckyTNTLibConfigValues.EXPLOSION_PERFORMANCE_FACTOR.get() * xzStrength;
+							blockY += yStep * LuckyTNTLibConfigValues.EXPLOSION_PERFORMANCE_FACTOR.get() * yStrength;
+							blockZ += zStep * LuckyTNTLibConfigValues.EXPLOSION_PERFORMANCE_FACTOR.get() * xzStrength;
 							BlockPos pos = new BlockPos(blockX, blockY, blockZ);
 							if(!level.isInWorldBounds(pos)) {
 								break;
@@ -363,8 +366,8 @@ public class ImprovedExplosion extends Explosion{
 		for(int offX = (int)-size; offX <= (int)size; offX++) {
 			for(int offY = (int)-size; offY <= (int)size; offY++) {
 				for(int offZ = (int)-size; offZ <= (int)size; offZ++) {
-					if(offX == (int)-size || offX == (int)size || offY == (int)-size || offY == (int)size || offZ == (int)-size || offZ == (int)size) {
-						double distance = Math.sqrt(offX * offX + offY * offY + offZ * offZ);
+					double distance = Math.sqrt(offX * offX + offY * offY + offZ * offZ);
+					if(((int)distance == (int)size && LuckyTNTLibConfigValues.PERFORMANT_EXPLOSION.get()) || (!LuckyTNTLibConfigValues.PERFORMANT_EXPLOSION.get() && (offX == (int)-size || offX == (int)size || offY == (int)-size || offY == (int)size || offZ == (int)-size || offZ == (int)size))) {
 						double xStep = offX / distance;
 						double yStep = offY / distance;
 						double zStep = offZ / distance;
@@ -372,10 +375,10 @@ public class ImprovedExplosion extends Explosion{
 						double blockX = posX;
 						double blockY = posY;
 						double blockZ = posZ;
-						for(float vecStep = 0; vecStep < vecLength; vecStep += 0.225f) {
-							blockX += xStep * 0.3f * xzStrength;
-							blockY += yStep * 0.3f * yStrength;
-							blockZ += zStep * 0.3f * xzStrength;
+						for(float vecStep = 0; vecStep < vecLength; vecStep += LuckyTNTLibConfigValues.EXPLOSION_PERFORMANCE_FACTOR.get() * 1.5f - 0.225f) {
+							blockX += xStep * LuckyTNTLibConfigValues.EXPLOSION_PERFORMANCE_FACTOR.get() * xzStrength;
+							blockY += yStep * LuckyTNTLibConfigValues.EXPLOSION_PERFORMANCE_FACTOR.get() * yStrength;
+							blockZ += zStep * LuckyTNTLibConfigValues.EXPLOSION_PERFORMANCE_FACTOR.get() * xzStrength;
 							BlockPos pos = new BlockPos(blockX, blockY, blockZ);
 							if(!level.isInWorldBounds(pos)) {
 								break;
