@@ -183,12 +183,12 @@ public class ImprovedExplosion extends Explosion{
 		}
 		affectedBlocks.addAll(blocks);
 		for(int intPos : blocks) {
-			BlockPos pos = new BlockPos(decodeBlockPos(intPos)).offset(posTNT);
+			BlockPos pos = decodeBlockPos(intPos).offset(posTNT);
 			level.getBlockState(pos).getBlock().onBlockExploded(level.getBlockState(pos), level, pos, this);
 		}
 		if(fire) {
 			for(int intPos : blocks) {
-				BlockPos pos = new BlockPos(decodeBlockPos(intPos)).offset(posTNT);
+				BlockPos pos = decodeBlockPos(intPos).offset(posTNT);
 				if(Math.random() > 0.75f && level.getBlockState(pos).isAir() && level.getBlockState(pos.below()).isSolidRender(level, pos)) {
 					level.setBlockAndUpdate(pos, BaseFireBlock.getState(level, pos));
 				}
@@ -254,7 +254,7 @@ public class ImprovedExplosion extends Explosion{
 		}
 		affectedBlocks.addAll(blocks);
 		for(int intPos : blocks) {
-			BlockPos pos = new BlockPos(decodeBlockPos(intPos)).offset(posTNT);
+			BlockPos pos = decodeBlockPos(intPos).offset(posTNT);
 			double distance = Math.sqrt(pos.distToLowCornerSqr(posX, posY, posZ));
 			blockEffect.doBlockExplosion(level, pos, level.getBlockState(pos), distance);
 		}
@@ -323,7 +323,7 @@ public class ImprovedExplosion extends Explosion{
 		}
 		affectedBlocks.addAll(blocks);
 		for(int intPos : blocks) {
-			BlockPos pos = new BlockPos(decodeBlockPos(intPos)).offset(posTNT);
+			BlockPos pos = decodeBlockPos(intPos).offset(posTNT);
 			double distance = Math.sqrt(pos.distToLowCornerSqr(posX, posY, posZ));
 			blockEffect.doBlockExplosion(level, pos, level.getBlockState(pos), distance);
 		}
