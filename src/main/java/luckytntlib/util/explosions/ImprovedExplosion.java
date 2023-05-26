@@ -563,7 +563,7 @@ public class ImprovedExplosion extends Explosion{
 	public List<BlockPos> getToBlow(){
 		List<BlockPos> blocks = new ArrayList<>();
 		for(int intPos : affectedBlocks) {
-			blocks.add(new BlockPos(decodeBlockPos(intPos)).offset(Mth.floor(posX), Mth.floor(posY), Mth.floor(posZ)));
+			blocks.add(decodeBlockPos(intPos).offset(Mth.floor(posX), Mth.floor(posY), Mth.floor(posZ)));
 		}
 		return blocks;
 	}
