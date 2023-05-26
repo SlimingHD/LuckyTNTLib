@@ -1,0 +1,26 @@
+modLoader="javafml"
+loaderVersion="[44,)"
+license="All rights reserved"
+[[mods]]
+modId="luckytntlib"
+version="44.1.2.10"
+displayName="Lucky TNT Lib"
+logoFile="logo.png"
+credits="Created, updated and maintained by SlimingHD"
+authors="SlimingHD, Fleshcrafter"
+description='''
+This mod acts as a library for TNT mods usually associated with the word "Lucky".
+It allows for quick creation and easy maintenance of TNT mods and is a hard dependency.
+'''
+[[dependencies.luckytntlib]]
+    modId="forge"
+    mandatory=true
+    versionRange="[44,45)"
+    ordering="NONE"
+    side="BOTH"
+[[dependencies.luckytntlib]]
+    modId="minecraft"
+    mandatory=true
+    versionRange="[1.19.3,1.20)"
+    ordering="NONE"
+    side="BOTH"
