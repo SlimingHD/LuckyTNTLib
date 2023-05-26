@@ -11,6 +11,7 @@ import javax.annotation.Nullable;
 import luckytntlib.config.LuckyTNTLibConfigValues;
 import luckytntlib.util.IExplosiveEntity;
 import net.minecraft.core.BlockPos;
+import net.minecraft.util.Mth;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
@@ -30,7 +31,6 @@ import net.minecraft.world.phys.Vec3;
 import net.minecraftforge.event.ForgeEventFactory;
 
 /**
- * 
  * ImprovedExplosion is an extension of Minecraft's {@link Explosion}.
  * It is needed because the explosion of minecraft is rather limited in functionality and size,
  * while an ImprovedExplosion has no limit in its size and offers multiple and dynamic ways to interact with and customize the explosion.
@@ -141,6 +141,7 @@ public class ImprovedExplosion extends Explosion{
 	 * @param isStrongExplosion  whether or not fluids should be ignored in the explosion resistance calculation. Very useful for large explosions
 	 */
 	public void doBlockExplosion(float xzStrength, float yStrength, float resistanceImpact, float randomVecLength, boolean fire, boolean isStrongExplosion) {			
+		BlockPos posTNT = new BlockPos(Mth.floor(posX), Mth.floor(posY), Mth.floor(posZ));
 		Set<Integer> blocks = new HashSet<>();
 		for (int offX = -size; offX <= size; offX++) {
 			for (int offY = -size; offY <= size; offY++) {
@@ -170,10 +171,10 @@ public class ImprovedExplosion extends Explosion{
 									vecLength -= (explosionResistance.get() + 0.3f) * 0.3f * resistanceImpact;
 								}
 								if (vecLength > 0 && damageCalculator.shouldBlockExplode(this, level, pos, blockState, vecLength) && blockState.getMaterial() != Material.AIR) {
-									blocks.add(encodeBlockPos((int) Math.round(blockX - posX), (int) Math.round(blockY - posY), (int) Math.round(blockZ - posZ)));
+									blocks.add(encodeBlockPos(pos.subtract(posTNT).getX(), pos.subtract(posTNT).getY(), pos.subtract(posTNT).getZ()));
 								}
 							} else {
-								blocks.add(encodeBlockPos((int) Math.round(blockX - posX), (int) Math.round(blockY - posY), (int) Math.round(blockZ - posZ)));
+								blocks.add(encodeBlockPos(pos.subtract(posTNT).getX(), pos.subtract(posTNT).getY(), pos.subtract(posTNT).getZ()));
 							}
 						}
 					}
@@ -182,14 +183,12 @@ public class ImprovedExplosion extends Explosion{
 		}
 		affectedBlocks.addAll(blocks);
 		for(int intPos : blocks) {
-			Vec3 vec = new Vec3(posX, posY, posZ).add(decodeBlockPos(intPos));
-			BlockPos pos = new BlockPos((int)vec.x, (int)vec.y, (int)vec.z);
+			BlockPos pos = new BlockPos(decodeBlockPos(intPos)).offset(posTNT);
 			level.getBlockState(pos).getBlock().onBlockExploded(level.getBlockState(pos), level, pos, this);
 		}
 		if(fire) {
 			for(int intPos : blocks) {
-				Vec3 vec = new Vec3(posX, posY, posZ).add(decodeBlockPos(intPos));
-				BlockPos pos = new BlockPos((int)vec.x, (int)vec.y, (int)vec.z);
+				BlockPos pos = new BlockPos(decodeBlockPos(intPos)).offset(posTNT);
 				if(Math.random() > 0.75f && level.getBlockState(pos).isAir() && level.getBlockState(pos.below()).isSolidRender(level, pos)) {
 					level.setBlockAndUpdate(pos, BaseFireBlock.getState(level, pos));
 				}
@@ -212,6 +211,7 @@ public class ImprovedExplosion extends Explosion{
 	 * @param blockEffect  determines what should happen to the blocks gotten by this explosion
 	 */
 	public void doBlockExplosion(float xzStrength, float yStrength, float resistanceImpact, float randomVecLength, boolean isStrongExplosion, IForEachBlockExplosionEffect blockEffect) {
+		BlockPos posTNT = new BlockPos(Mth.floor(posX), Mth.floor(posY), Mth.floor(posZ));
 		Set<Integer> blocks = new HashSet<>();
 		for(int offX = (int)-size; offX <= (int)size; offX++) {
 			for(int offY = (int)-size; offY <= (int)size; offY++) {
@@ -241,11 +241,11 @@ public class ImprovedExplosion extends Explosion{
 									vecLength -= (explosionResistance.get() + 0.3f) * 0.3f * resistanceImpact;
 								}
 								if(vecLength > 0 && damageCalculator.shouldBlockExplode(this, level, pos, blockState, vecLength) && blockState.getMaterial() != Material.AIR) {
-									blocks.add(encodeBlockPos((int)Math.round(blockX - posX), (int)Math.round(blockY - posY), (int)Math.round(blockZ - posZ)));
+									blocks.add(encodeBlockPos(pos.subtract(posTNT).getX(), pos.subtract(posTNT).getY(), pos.subtract(posTNT).getZ()));
 								}
 							}
 							else {
-								blocks.add(encodeBlockPos((int)Math.round(blockX - posX), (int)Math.round(blockY - posY), (int)Math.round(blockZ - posZ)));
+								blocks.add(encodeBlockPos(pos.subtract(posTNT).getX(), pos.subtract(posTNT).getY(), pos.subtract(posTNT).getZ()));
 							}
 						}
 					}
@@ -254,8 +254,7 @@ public class ImprovedExplosion extends Explosion{
 		}
 		affectedBlocks.addAll(blocks);
 		for(int intPos : blocks) {
-			Vec3 vec = new Vec3(posX, posY, posZ).add(decodeBlockPos(intPos));
-			BlockPos pos = new BlockPos((int)vec.x, (int)vec.y, (int)vec.z);
+			BlockPos pos = new BlockPos(decodeBlockPos(intPos)).offset(posTNT);
 			double distance = Math.sqrt(pos.distToLowCornerSqr(posX, posY, posZ));
 			blockEffect.doBlockExplosion(level, pos, level.getBlockState(pos), distance);
 		}
@@ -277,6 +276,7 @@ public class ImprovedExplosion extends Explosion{
 	 * @param blockEffect  determines what should happen to the blocks gotten by this explosion
 	 */
 	public void doBlockExplosion(float xzStrength, float yStrength, float resistanceImpact, float randomVecLength, boolean isStrongExplosion, IBlockExplosionCondition condition, IForEachBlockExplosionEffect blockEffect) {
+		BlockPos posTNT = new BlockPos(Mth.floor(posX), Mth.floor(posY), Mth.floor(posZ));
 		Set<Integer> blocks = new HashSet<>();
 		for(int offX = (int)-size; offX <= (int)size; offX++) {
 			for(int offY = (int)-size; offY <= (int)size; offY++) {
@@ -307,13 +307,13 @@ public class ImprovedExplosion extends Explosion{
 								}
 								if(vecLength > 0 && damageCalculator.shouldBlockExplode(this, level, pos, blockState, vecLength) && blockState.getMaterial() != Material.AIR) {
 									if(condition.conditionMet(level, pos, blockState, distance)) {
-										blocks.add(encodeBlockPos((int)Math.round(blockX - posX), (int)Math.round(blockY - posY), (int)Math.round(blockZ - posZ)));
+										blocks.add(encodeBlockPos(pos.subtract(posTNT).getX(), pos.subtract(posTNT).getY(), pos.subtract(posTNT).getZ()));
 									}
 								}
 							}
 							else {
 								if(condition.conditionMet(level, pos, blockState, distance)) {
-									blocks.add(encodeBlockPos((int)Math.round(blockX - posX), (int)Math.round(blockY - posY), (int)Math.round(blockZ - posZ)));
+									blocks.add(encodeBlockPos(pos.subtract(posTNT).getX(), pos.subtract(posTNT).getY(), pos.subtract(posTNT).getZ()));
 								}
 							}
 						}
@@ -323,8 +323,7 @@ public class ImprovedExplosion extends Explosion{
 		}
 		affectedBlocks.addAll(blocks);
 		for(int intPos : blocks) {
-			Vec3 vec = new Vec3(posX, posY, posZ).add(decodeBlockPos(intPos));
-			BlockPos pos = new BlockPos((int)vec.x, (int)vec.y, (int)vec.z);
+			BlockPos pos = new BlockPos(decodeBlockPos(intPos)).offset(posTNT);
 			double distance = Math.sqrt(pos.distToLowCornerSqr(posX, posY, posZ));
 			blockEffect.doBlockExplosion(level, pos, level.getBlockState(pos), distance);
 		}
@@ -456,11 +455,11 @@ public class ImprovedExplosion extends Explosion{
 	}
 	
 	/**
-	 * Decodes an encoded value generated by {@link ImprovedExplosion#encodeBlockPos(int, int, int)} into a {@link Vec3}.
+	 * Decodes an encoded value generated by {@link ImprovedExplosion#encodeBlockPos(int, int, int)} into a {@link BlockPos}.
 	 * @param encodedVal  the position encoded by {@link ImprovedExplosion#encodeBlockPos(int, int, int)}
-	 * @return Vec3 with the relative x, y and z coordinates decoded again with an absolute max value of 511
+	 * @return BlockPos with the relative x, y and z coordinates decoded again with an absolute max value of 511
 	 */
-	protected Vec3 decodeBlockPos(int encodedVal) {
+	protected BlockPos decodeBlockPos(int encodedVal) {
 		int zRaw = (encodedVal & 0b00000000000000000000000111111111);
 		int zNeg = (encodedVal & 0b00000000000000000000001000000000) >> 9;
 		int yRaw = (encodedVal & 0b00000000000001111111110000000000) >> 10;
@@ -470,7 +469,7 @@ public class ImprovedExplosion extends Explosion{
 		int xVal = xNeg == 1 ? -xRaw : xRaw;
 		int yVal = yNeg == 1 ? -yRaw : yRaw;
 		int zVal = zNeg == 1 ? -zRaw : zRaw;
-		return new Vec3(xVal, yVal, zVal);
+		return new BlockPos(xVal, yVal, zVal);
 	}
 	
 	/**
@@ -542,7 +541,8 @@ public class ImprovedExplosion extends Explosion{
 	}
 	
 	/** 
-	 * @return ImprovedExplosion with no {@link Level} and, no strength and position at (0, 0, 0)
+	 * @implNote Must	 not be used to create an actual explosion!
+	 * @return ImprovedExplosion with no strength and position at (0, 0, 0)
 	 */
 	public static ImprovedExplosion dummyExplosion(Level level) {
 		return dummyExplosion == null ? dummyExplosion = new ImprovedExplosion(level, new Vec3(0, 0, 0), 0) : dummyExplosion;
@@ -563,8 +563,7 @@ public class ImprovedExplosion extends Explosion{
 	public List<BlockPos> getToBlow(){
 		List<BlockPos> blocks = new ArrayList<>();
 		for(int intPos : affectedBlocks) {
-			Vec3 vec = new Vec3(posX, posY, posZ).add(decodeBlockPos(intPos));
-			blocks.add(new BlockPos((int)vec.x, (int)vec.y, (int)vec.z));
+			blocks.add(new BlockPos(decodeBlockPos(intPos)).offset(Mth.floor(posX), Mth.floor(posY), Mth.floor(posZ)));
 		}
 		return blocks;
 	}
