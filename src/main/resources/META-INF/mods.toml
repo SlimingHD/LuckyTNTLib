@@ -15,7 +15,7 @@ It allows for quick creation and easy maintenance of TNT mods and is a hard depe
 [[dependencies.luckytntlib]]
     modId="forge"
     mandatory=true
-    versionRange="[44,45)"
+    versionRange="[44,)"
     ordering="NONE"
     side="BOTH"
 [[dependencies.luckytntlib]]
