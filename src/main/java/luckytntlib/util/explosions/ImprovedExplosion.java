@@ -184,12 +184,12 @@ public class ImprovedExplosion extends Explosion{
 		}
 		affectedBlocks.addAll(blocks);
 		for(int intPos : blocks) {
-			BlockPos pos = new BlockPos(decodeBlockPos(intPos)).offset(posTNT);
+			BlockPos pos = decodeBlockPos(intPos).offset(posTNT);
 			level.getBlockState(pos).getBlock().onBlockExploded(level.getBlockState(pos), level, pos, this);
 		}
 		if(fire) {
 			for(int intPos : blocks) {
-				BlockPos pos = new BlockPos(decodeBlockPos(intPos).add((int)Math.round(posX), (int)Math.round(posY), (int)Math.round(posZ)));
+				BlockPos pos = decodeBlockPos(intPos).offset(posTNT);
 				if(Math.random() > 0.75f && level.getBlockState(pos).isAir() && level.getBlockState(pos.below()).isSolidRender(level, pos)) {
 					level.setBlockAndUpdate(pos, BaseFireBlock.getState(level, pos));
 				}
@@ -255,7 +255,7 @@ public class ImprovedExplosion extends Explosion{
 		}
 		affectedBlocks.addAll(blocks);
 		for(int intPos : blocks) {
-			BlockPos pos = new BlockPos(decodeBlockPos(intPos)).offset(posTNT);
+			BlockPos pos = decodeBlockPos(intPos).offset(posTNT);
 			double distance = Math.sqrt(pos.distToLowCornerSqr(posX, posY, posZ));
 			blockEffect.doBlockExplosion(level, pos, level.getBlockState(pos), distance);
 		}
@@ -324,7 +324,7 @@ public class ImprovedExplosion extends Explosion{
 		}
 		affectedBlocks.addAll(blocks);
 		for(int intPos : blocks) {
-			BlockPos pos = new BlockPos(decodeBlockPos(intPos)).offset(posTNT);
+			BlockPos pos = decodeBlockPos(intPos).offset(posTNT);
 			double distance = Math.sqrt(pos.distToLowCornerSqr(posX, posY, posZ));
 			blockEffect.doBlockExplosion(level, pos, level.getBlockState(pos), distance);
 		}
@@ -407,8 +407,9 @@ public class ImprovedExplosion extends Explosion{
 			}
 		}
 		if(saveBlockPos) {
+			BlockPos posTNT = new BlockPos(posX, posY, posZ);
 			for(BlockPos pos : blocks) {
-				affectedBlocks.add(encodeBlockPos((int)Math.round(pos.getX() - posX), (int)Math.round(pos.getY() - posY), (int)Math.round(pos.getZ() - posZ)));
+				affectedBlocks.add(encodeBlockPos(pos.subtract(posTNT).getX(), pos.subtract(posTNT).getY(), pos.subtract(posTNT).getZ()));
 			}
 		}
 		for(BlockPos pos : blocks) {
@@ -460,7 +461,7 @@ public class ImprovedExplosion extends Explosion{
 	 * @param encodedVal  the position encoded by {@link ImprovedExplosion#encodeBlockPos(int, int, int)}
 	 * @return BlockPos with the relative x, y and z coordinates decoded again with an absolute max value of 511
 	 */
-	protected Vec3 decodeBlockPos(int encodedVal) {
+	protected BlockPos decodeBlockPos(int encodedVal) {
 		int zRaw = (encodedVal & 0b00000000000000000000000111111111);
 		int zNeg = (encodedVal & 0b00000000000000000000001000000000) >> 9;
 		int yRaw = (encodedVal & 0b00000000000001111111110000000000) >> 10;
@@ -470,7 +471,7 @@ public class ImprovedExplosion extends Explosion{
 		int xVal = xNeg == 1 ? -xRaw : xRaw;
 		int yVal = yNeg == 1 ? -yRaw : yRaw;
 		int zVal = zNeg == 1 ? -zRaw : zRaw;
-		return new Vec3(xVal, yVal, zVal);
+		return new BlockPos(xVal, yVal, zVal);
 	}
 	
 	/**
@@ -562,8 +563,9 @@ public class ImprovedExplosion extends Explosion{
 	@Nullable
 	public List<BlockPos> getToBlow(){
 		List<BlockPos> blocks = new ArrayList<>();
+		BlockPos posTNT = new BlockPos(posX, posY, posZ);
 		for(int intPos : affectedBlocks) {
-			blocks.add(new BlockPos(decodeBlockPos(intPos).add(posX, posY, posZ)));
+			blocks.add(decodeBlockPos(intPos).offset(posTNT));
 		}
 		return blocks;
 	}
