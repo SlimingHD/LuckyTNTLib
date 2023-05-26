@@ -43,7 +43,7 @@ public class ImprovedExplosion extends Explosion{
 	public final ExplosionDamageCalculator damageCalculator;
 	List<Integer> affectedBlocks = new ArrayList<>();
 	
-	private static ImprovedExplosion dummyExplosion = new ImprovedExplosion(null, new Vec3(0, 0, 0), 0);
+	private static ImprovedExplosion dummyExplosion;
 	
 	/**
 	 * Creates a new ImprovedExplosion
@@ -543,10 +543,11 @@ public class ImprovedExplosion extends Explosion{
 	}
 	
 	/** 
-	 * @return ImprovedExplosion with no {@link Level} and, no strength and position at (0, 0, 0)
+	 * @implNote Must	 not be used to create an actual explosion!
+	 * @return ImprovedExplosion with no strength and position at (0, 0, 0)
 	 */
-	public static ImprovedExplosion dummyExplosion() {
-		return dummyExplosion;
+	public static ImprovedExplosion dummyExplosion(Level level) {
+		return dummyExplosion == null ? dummyExplosion = new ImprovedExplosion(level, new Vec3(0, 0, 0), 0) : dummyExplosion;
 	}
 
 	@Override
