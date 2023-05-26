@@ -10,7 +10,6 @@ import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
-import net.minecraft.world.entity.Entity;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
@@ -46,7 +45,7 @@ public abstract class PrimedTNTEffect{
 			if(entity.getTNTFuse() <= 0) {
 				if(entity.level() instanceof ServerLevel) {
 					if(playsSound()) {
-						level.playSound((Entity)entity, new BlockPos(entity.getPos()), SoundEvents.GENERIC_EXPLODE, SoundSource.BLOCKS, 4f, (1f + (level.random.nextFloat() - level.random.nextFloat()) * 0.2f) * 0.7f);
+						level.playSound(null, new BlockPos(entity.getPos()), SoundEvents.GENERIC_EXPLODE, SoundSource.BLOCKS, 4f, (1f + (level.random.nextFloat() - level.random.nextFloat()) * 0.2f) * 0.7f);
 					}
 					serverExplosion(entity);
 				}
@@ -66,7 +65,7 @@ public abstract class PrimedTNTEffect{
 				if(ent.getTNTFuse() == 0) {
 					if(ent.level instanceof ServerLevel) {
 						if(playsSound()) {
-							level.playSound((Entity)entity, new BlockPos(entity.getPos()), SoundEvents.GENERIC_EXPLODE, SoundSource.BLOCKS, 4f, (1f + (level.random.nextFloat() - level.random.nextFloat()) * 0.2f) * 0.7f);
+							level.playSound(null, new BlockPos(entity.getPos()), SoundEvents.GENERIC_EXPLODE, SoundSource.BLOCKS, 4f, (1f + (level.random.nextFloat() - level.random.nextFloat()) * 0.2f) * 0.7f);
 						}
 						serverExplosion(entity);
 					}
@@ -76,7 +75,7 @@ public abstract class PrimedTNTEffect{
 			else if(airFuse() && entity.getTNTFuse() == 0) {
 				if(ent.level instanceof ServerLevel) {
 					if(playsSound()) {
-						level.playSound((Entity)entity, new BlockPos(entity.getPos()), SoundEvents.GENERIC_EXPLODE, SoundSource.BLOCKS, 4f, (1f + (level.random.nextFloat() - level.random.nextFloat()) * 0.2f) * 0.7f);
+						level.playSound(null, new BlockPos(entity.getPos()), SoundEvents.GENERIC_EXPLODE, SoundSource.BLOCKS, 4f, (1f + (level.random.nextFloat() - level.random.nextFloat()) * 0.2f) * 0.7f);
 					}
 					serverExplosion(entity);
 				}

@@ -1,9 +1,9 @@
 modLoader="javafml"
-loaderVersion="[44,)"
+loaderVersion="[43,)"
 license="All rights reserved"
 [[mods]]
 modId="luckytntlib"
-version="44.1.2.10"
+version="43.2.11.1"
 displayName="Lucky TNT Lib"
 logoFile="logo.png"
 credits="Created, updated and maintained by SlimingHD"
@@ -15,12 +15,12 @@ It allows for quick creation and easy maintenance of TNT mods and is a hard depe
 [[dependencies.luckytntlib]]
     modId="forge"
     mandatory=true
-    versionRange="[44,45)"
+    versionRange="[43,44)"
     ordering="NONE"
     side="BOTH"
 [[dependencies.luckytntlib]]
     modId="minecraft"
     mandatory=true
-    versionRange="[1.19.3,1.20)"
+    versionRange="[1.19.2,1.20)"
     ordering="NONE"
     side="BOTH"

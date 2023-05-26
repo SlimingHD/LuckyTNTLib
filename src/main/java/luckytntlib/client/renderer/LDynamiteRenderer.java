@@ -1,7 +1,7 @@
 package luckytntlib.client.renderer;
 
 import com.mojang.blaze3d.vertex.PoseStack;
-import com.mojang.math.Axis;
+import com.mojang.math.Vector3f;
 
 import luckytntlib.entity.LExplosiveProjectile;
 import luckytntlib.util.tnteffects.PrimedTNTEffect;
@@ -40,7 +40,7 @@ public class LDynamiteRenderer<T extends LExplosiveProjectile & ItemSupplier> ex
 			poseStack.pushPose();
 			poseStack.scale(entity.getEffect().getSize(entity), entity.getEffect().getSize(entity), entity.getEffect().getSize(entity));
 			poseStack.mulPose(this.entityRenderDispatcher.cameraOrientation());
-			poseStack.mulPose(Axis.YP.rotationDegrees(180.0F));
+			poseStack.mulPose(Vector3f.YP.rotationDegrees(180.0F));
 			this.itemRenderer.renderStatic(entity.getItem(), ItemTransforms.TransformType.GROUND, light, OverlayTexture.NO_OVERLAY, poseStack, buffer, entity.getId());
 			poseStack.popPose();
 			super.render(entity, yaw, partialTicks, poseStack, buffer, light);

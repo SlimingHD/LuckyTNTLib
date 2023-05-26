@@ -4,7 +4,6 @@ import com.mojang.blaze3d.vertex.PoseStack;
 
 import luckytntlib.config.LuckyTNTLibConfigValues;
 import net.minecraft.client.gui.components.Button;
-import net.minecraft.client.gui.components.Tooltip;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
@@ -28,11 +27,10 @@ public class ConfigScreen extends Screen{
 	
 	@Override
 	public void init() {
-		addRenderableWidget(new Button.Builder(Component.literal("Done"), button -> onClose()).bounds((width - 100) / 2, height - 30, 100, 20).build());
-		addRenderableWidget(performant_explosion = new Button.Builder(LuckyTNTLibConfigValues.PERFORMANT_EXPLOSION.get().booleanValue() ? Component.literal("True") : Component.literal("False"), button -> nextBooleanValue(LuckyTNTLibConfigValues.PERFORMANT_EXPLOSION, performant_explosion)).bounds(20, 40, 200, 20).tooltip(Tooltip.create(Component.literal("Replaces the standard explosion with an identical one that reduces loading time at the expense of some detail. If you host a server you will have to change this value in the server config instead"))).build());
+		addRenderableWidget(new Button((width - 100) / 2, height - 30, 100, 20, Component.literal("Done"), button -> onClose()));
 		addRenderableWidget(explosion_performance_factor_slider = new ForgeSlider(20, 60, 200, 20, MutableComponent.create(new LiteralContents("")), MutableComponent.create(new LiteralContents("")), 30d, 60d, LuckyTNTLibConfigValues.EXPLOSION_PERFORMANCE_FACTOR.get() * 100, true));
-		addRenderableWidget(new Button.Builder(Component.literal("Reset"), button -> resetDoubleValue(LuckyTNTLibConfigValues.EXPLOSION_PERFORMANCE_FACTOR, 0.3d, explosion_performance_factor_slider)).bounds(width - 220, 60, 200, 20).build());
-		explosion_performance_factor_slider.setTooltip(Tooltip.create(Component.literal("Lower values give more details while higher values give more performance. Has significant impact on the shape of the explosion. If you host a server you will have to change this value in the server config instead")));
+		addRenderableWidget(new Button(width - 220, 60, 200, 20, Component.literal("Reset"), button -> resetDoubleValue(LuckyTNTLibConfigValues.EXPLOSION_PERFORMANCE_FACTOR, 0.3d, explosion_performance_factor_slider)));
+		addRenderableWidget(performant_explosion = new Button(20, 40, 200, 20, LuckyTNTLibConfigValues.PERFORMANT_EXPLOSION.get().booleanValue() ? Component.literal("True") : Component.literal("False"), button -> nextBooleanValue(LuckyTNTLibConfigValues.PERFORMANT_EXPLOSION, performant_explosion)));
 	}
 	
 	@Override

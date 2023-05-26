@@ -119,7 +119,7 @@ public class ImprovedExplosion extends Explosion{
 	 * @param size  the rough size of the explosion, which must not be greater than 511 in most cases
 	 */	
 	public ImprovedExplosion(Level level, @Nullable Entity explodingEntity, @Nullable DamageSource source, double x, double y, double z, float size) {
-		super(level, explodingEntity, source, null, x, y, z, size, false, BlockInteraction.KEEP);
+		super(level, explodingEntity, source, null, x, y, z, size, false, BlockInteraction.BREAK);
 		this.level = level;
 		this.posX = x;
 		this.posY = y;
@@ -535,11 +535,11 @@ public class ImprovedExplosion extends Explosion{
 	
 	@Nullable
 	@Override
-	public LivingEntity getIndirectSourceEntity() {
+	public LivingEntity getSourceMob() {
 		if(getExploder() instanceof IExplosiveEntity ent) {
 			return ent.owner();
 		}
-		return super.getIndirectSourceEntity();
+		return super.getSourceMob();
 	}
 	
 	/** 
