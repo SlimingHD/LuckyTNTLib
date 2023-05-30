@@ -22,7 +22,6 @@ import net.minecraft.world.level.Explosion;
 import net.minecraft.world.level.ExplosionDamageCalculator;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.BaseFireBlock;
-import net.minecraft.world.level.block.LiquidBlock;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.material.FluidState;
 import net.minecraft.world.level.material.Material;
@@ -165,7 +164,7 @@ public class ImprovedExplosion extends Explosion{
 							}
 							BlockState blockState = level.getBlockState(pos);
 							FluidState fluidState = level.getFluidState(pos);
-							if (!(isStrongExplosion && blockState.getBlock() instanceof LiquidBlock)) {
+							if (!(isStrongExplosion && !fluidState.isEmpty())) {
 								Optional<Float> explosionResistance = damageCalculator.getBlockExplosionResistance(this, level, pos, blockState, fluidState);
 								if (explosionResistance.isPresent()) {
 									vecLength -= (explosionResistance.get() + 0.3f) * 0.3f * resistanceImpact;
@@ -235,7 +234,7 @@ public class ImprovedExplosion extends Explosion{
 							}
 							BlockState blockState = level.getBlockState(pos);
 							FluidState fluidState = level.getFluidState(pos);
-							if(!(isStrongExplosion && blockState.getBlock() instanceof LiquidBlock)) {
+							if(!(isStrongExplosion && !fluidState.isEmpty())) {
 								Optional<Float> explosionResistance = damageCalculator.getBlockExplosionResistance(this, level, pos, blockState, fluidState);
 								if(explosionResistance.isPresent()) {
 									vecLength -= (explosionResistance.get() + 0.3f) * 0.3f * resistanceImpact;
@@ -300,7 +299,7 @@ public class ImprovedExplosion extends Explosion{
 							}
 							BlockState blockState = level.getBlockState(pos);
 							FluidState fluidState = level.getFluidState(pos);
-							if(!(isStrongExplosion && blockState.getBlock() instanceof LiquidBlock)) {
+							if(!(isStrongExplosion && !fluidState.isEmpty())) {
 								Optional<Float> explosionResistance = damageCalculator.getBlockExplosionResistance(this, level, pos, blockState, fluidState);
 								if(explosionResistance.isPresent()) {
 									vecLength -= (explosionResistance.get() + 0.3f) * 0.3f * resistanceImpact;
@@ -388,7 +387,7 @@ public class ImprovedExplosion extends Explosion{
 							}
 							BlockState blockState = level.getBlockState(pos);
 							FluidState fluidState = level.getFluidState(pos);
-							if(!(isStrongExplosion && blockState.getBlock() instanceof LiquidBlock)) {
+							if(!(isStrongExplosion && !fluidState.isEmpty())) {
 								Optional<Float> explosionResistance = damageCalculator.getBlockExplosionResistance(this, level, pos, blockState, fluidState);
 								if(explosionResistance.isPresent()) {
 									vecLength -= (explosionResistance.get() + 0.3f) * 0.3f * resistanceImpact;
