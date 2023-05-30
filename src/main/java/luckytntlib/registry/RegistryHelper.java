@@ -27,6 +27,7 @@ import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.MobCategory;
 import net.minecraft.world.item.BlockItem;
+import net.minecraft.world.item.CreativeModeTab;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.TooltipFlag;
@@ -51,6 +52,7 @@ public class RegistryHelper {
 	private final DeferredRegister<Block> blockRegistry;
 	private final DeferredRegister<Item> itemRegistry;
 	private final DeferredRegister<EntityType<?>> entityRegistry;
+	private HashMap<String, CreativeModeTab> tabs;
 	
 	/**
 	 * {@link HashMap}, with strings as keys, of Lists of all registered TNT blocks.
@@ -97,6 +99,16 @@ public class RegistryHelper {
 		this.blockRegistry = blockRegistry;
 		this.itemRegistry = itemRegistry;
 		this.entityRegistry = entityRegistry;
+	}
+	
+	/**
+	 * Due to this version being a backport of the 1.19.3 version and for the reason of enabling easier portability this method allows for CreativeModeTabs to be identified with a String.
+	 * The registering of all Items will be the same as in version 1.19.3 and above unless this Helper is not used.
+	 * @implNote This void must be executed after your tabs have been registered but before any Items get registered
+	 * @param tabs  a HashMap containing every tab that can be used to register the item into
+	 */
+	public void setTabs(HashMap<String, CreativeModeTab> tabs) {
+		this.tabs = tabs;
 	}
 	
 	/**
@@ -156,7 +168,7 @@ public class RegistryHelper {
 	public RegistryObject<LTNTBlock> registerTNTBlock(DeferredRegister<Block> blockRegistry, @Nullable DeferredRegister<Item> itemRegistry, Supplier<LTNTBlock> TNTBlock, TNTBlockRegistryData blockData){
 		RegistryObject<LTNTBlock> block = blockRegistry.register(blockData.getRegistryName(), TNTBlock);
 		if(itemRegistry != null && blockData.makeItem()) {
-			RegistryObject<Item> item = itemRegistry.register(blockData.getRegistryName(), () -> new BlockItem(block.get(), new Item.Properties()) {
+			RegistryObject<Item> item = itemRegistry.register(blockData.getRegistryName(), () -> new BlockItem(block.get(), new Item.Properties().tab(tabs.get(blockData.getTab()))) {
 				
 				@Override
 				public void appendHoverText(ItemStack stack, @Nullable Level level, List<Component> components, TooltipFlag flag) {
@@ -243,7 +255,7 @@ public class RegistryHelper {
 	public RegistryObject<LTNTBlock> registerLivingTNTBlock(DeferredRegister<Block> blockRegistry, @Nullable DeferredRegister<Item> itemRegistry, Supplier<LivingLTNTBlock> TNTBlock, TNTBlockRegistryData blockData){
 		RegistryObject<LTNTBlock> block = blockRegistry.register(blockData.getRegistryName(), () -> ((LTNTBlock)TNTBlock.get()));
 		if(itemRegistry != null && blockData.makeItem()) {
-			RegistryObject<Item> item = itemRegistry.register(blockData.getRegistryName(), () -> new BlockItem(block.get(), new Item.Properties()) {
+			RegistryObject<Item> item = itemRegistry.register(blockData.getRegistryName(), () -> new BlockItem(block.get(), new Item.Properties().tab(tabs.get(blockData.getTab()))) {
 				
 				@Override
 				public void appendHoverText(ItemStack stack, @Nullable Level level, List<Component> components, TooltipFlag flag) {
@@ -304,7 +316,7 @@ public class RegistryHelper {
 	 * @return {@link RegistryObject} of a {@link LDynamiteItem}
 	 */
 	public RegistryObject<LDynamiteItem> registerDynamiteItem(String registryName, RegistryObject<EntityType<LExplosiveProjectile>> dynamite, String tab){
-		return registerDynamiteItem(registryName, () -> new LDynamiteItem(new Item.Properties(), dynamite), tab);
+		return registerDynamiteItem(registryName, () -> new LDynamiteItem(new Item.Properties().tab(tabs.get(tab)), dynamite), tab);
 	}
 	
 	/**
@@ -345,7 +357,7 @@ public class RegistryHelper {
 	 * @return {@link RegistryObject} of a {@link LTNTMinecartItem}
 	 */
 	public RegistryObject<LTNTMinecartItem> registerTNTMinecartItem(String registryName, Supplier<RegistryObject<EntityType<LTNTMinecart>>> TNT, String tab){
-		return registerTNTMinecartItem(registryName, () -> new LTNTMinecartItem(new Item.Properties(), TNT), tab, true, true);
+		return registerTNTMinecartItem(registryName, () -> new LTNTMinecartItem(new Item.Properties().tab(tabs.get(tab)), TNT), tab, true, true);
 	}
 	
 	/**
