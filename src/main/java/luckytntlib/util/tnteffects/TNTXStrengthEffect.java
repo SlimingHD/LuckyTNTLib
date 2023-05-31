@@ -27,7 +27,7 @@ public class TNTXStrengthEffect extends PrimedTNTEffect{
 	@Nullable private final Supplier<RegistryObject<LTNTBlock>> TNT;
 	@Nullable private final Supplier<RegistryObject<LDynamiteItem>> dynamite;
 	private final int fuse;
-	private final float strength;
+	private final int strength;
 	private final float xzStrength, yStrength;
 	private final float resistanceImpact;
 	private final float randomVecLength;
@@ -38,7 +38,7 @@ public class TNTXStrengthEffect extends PrimedTNTEffect{
 	private final boolean airFuse;
 	private final boolean explodesOnImpact;
 	
-	private TNTXStrengthEffect(@Nullable Supplier<RegistryObject<LTNTBlock>> TNT, @Nullable Supplier<RegistryObject<LDynamiteItem>> dynamite, int fuse, float strength, float xzStrength, float yStrength, float resistanceImpact, float randomVecLength, boolean fire, float knockbackStrength, boolean isStrongExplosion, float size, boolean airFuse, boolean explodesOnImpact) {
+	private TNTXStrengthEffect(@Nullable Supplier<RegistryObject<LTNTBlock>> TNT, @Nullable Supplier<RegistryObject<LDynamiteItem>> dynamite, int fuse, int strength, float xzStrength, float yStrength, float resistanceImpact, float randomVecLength, boolean fire, float knockbackStrength, boolean isStrongExplosion, float size, boolean airFuse, boolean explodesOnImpact) {
 		this.TNT = TNT;
 		this.dynamite = dynamite;
 		this.fuse = fuse;
@@ -95,7 +95,7 @@ public class TNTXStrengthEffect extends PrimedTNTEffect{
 	public static class Builder {
 		
 		private int fuse = 80;
-		private float strength = 4f;
+		private int strength = 4;
 		private float xzStrength = 1f, yStrength = 1f;
 		private float resistanceImpact = 1f;
 		private float randomVecLength = 1f;
@@ -109,7 +109,7 @@ public class TNTXStrengthEffect extends PrimedTNTEffect{
 		public Builder() {			
 		}
 		
-		private Builder(int fuse, float strength, float xzStrength, float yStrength, float resistanceImpact, float randomVecLength, boolean fire, float knockbackStrength, boolean isStrongExplosion, float size, boolean airFuse,  boolean explodesOnImpact) {
+		private Builder(int fuse, int strength, float xzStrength, float yStrength, float resistanceImpact, float randomVecLength, boolean fire, float knockbackStrength, boolean isStrongExplosion, float size, boolean airFuse,  boolean explodesOnImpact) {
 			this.fuse = fuse;
 			this.strength = strength;
 			this.xzStrength = xzStrength;
@@ -136,7 +136,7 @@ public class TNTXStrengthEffect extends PrimedTNTEffect{
 		 * This value decides the strength/size/base radius of this explosion
 		 * @param strength
 		 */
-		public Builder strength(float strength) {
+		public Builder strength(int strength) {
 			return new Builder(fuse, strength, xzStrength, yStrength, resistanceImpact, randomVecLength, fire, knockbackStrength, isStrongExplosion, size, airFuse, explodesOnImpact);
 		}
 		

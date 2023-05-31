@@ -11,6 +11,7 @@ import javax.annotation.Nullable;
 import luckytntlib.config.LuckyTNTLibConfigValues;
 import luckytntlib.util.IExplosiveEntity;
 import net.minecraft.core.BlockPos;
+import net.minecraft.util.Mth;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
@@ -29,7 +30,6 @@ import net.minecraft.world.phys.Vec3;
 import net.minecraftforge.event.ForgeEventFactory;
 
 /**
- * 
  * ImprovedExplosion is an extension of Minecraft's {@link Explosion}.
  * It is needed because the explosion of minecraft is rather limited in functionality and size,
  * while an ImprovedExplosion has no limit in its size and offers multiple and dynamic ways to interact with and customize the explosion.
@@ -38,7 +38,7 @@ public class ImprovedExplosion extends Explosion{
 
 	public final Level level;
 	public final double posX, posY, posZ;
-	public final float size;
+	public final int size;
 	public final ExplosionDamageCalculator damageCalculator;
 	List<Integer> affectedBlocks = new ArrayList<>();
 	
@@ -51,7 +51,7 @@ public class ImprovedExplosion extends Explosion{
 	 * @param position  the center position of the explosion
 	 * @param size  the rough size of the explosion, which must not be greater than 511 in most cases
 	 */
-	public ImprovedExplosion(Level level, Vec3 position, float size) {
+	public ImprovedExplosion(Level level, Vec3 position, int size) {
 		this(level, null, null, position, size);
 	}
 	
@@ -63,7 +63,7 @@ public class ImprovedExplosion extends Explosion{
 	 * @param position  the center position of the explosion
 	 * @param size  the rough size of the explosion, which must not be greater than 511 in most cases
 	 */
-	public ImprovedExplosion(Level level, @Nullable DamageSource source, Vec3 position, float size) {
+	public ImprovedExplosion(Level level, @Nullable DamageSource source, Vec3 position, int size) {
 		this(level, null, source, position, size);
 	}
 	
@@ -75,7 +75,7 @@ public class ImprovedExplosion extends Explosion{
 	 * @param position  the center position of the explosion
 	 * @param size  the rough size of the explosion, which must not be greater than 511 in most cases
 	 */	
-	public ImprovedExplosion(Level level, @Nullable Entity explodingEntity, Vec3 position, float size) {
+	public ImprovedExplosion(Level level, @Nullable Entity explodingEntity, Vec3 position, int size) {
 		this(level, explodingEntity, null, position.x, position.y, position.z, size);
 	}
 	
@@ -88,7 +88,7 @@ public class ImprovedExplosion extends Explosion{
 	 * @param position  the center position of the explosion
 	 * @param size  the rough size of the explosion, which must not be greater than 511 in most cases
 	 */	
-	public ImprovedExplosion(Level level, @Nullable Entity explodingEntity, @Nullable DamageSource source, Vec3 position, float size) {
+	public ImprovedExplosion(Level level, @Nullable Entity explodingEntity, @Nullable DamageSource source, Vec3 position, int size) {
 		this(level, explodingEntity, source, position.x, position.y, position.z, size);
 	}
 	
@@ -102,7 +102,7 @@ public class ImprovedExplosion extends Explosion{
 	 * @param z  the z center position
 	 * @param size  the rough size of the explosion, which must not be greater than 511 in most cases
 	 */	
-	public ImprovedExplosion(Level level, @Nullable Entity explodingEntity, double x, double y, double z, float size) {
+	public ImprovedExplosion(Level level, @Nullable Entity explodingEntity, double x, double y, double z, int size) {
 		this(level, explodingEntity, null, x, y, z, size);
 	}
 	
@@ -117,8 +117,8 @@ public class ImprovedExplosion extends Explosion{
 	 * @param z  the z center position
 	 * @param size  the rough size of the explosion, which must not be greater than 511 in most cases
 	 */	
-	public ImprovedExplosion(Level level, @Nullable Entity explodingEntity, @Nullable DamageSource source, double x, double y, double z, float size) {
-		super(level, explodingEntity, source, null, x, y, z, size, false, BlockInteraction.BREAK);
+	public ImprovedExplosion(Level level, @Nullable Entity explodingEntity, @Nullable DamageSource source, double x, double y, double z, int size) {
+		super(level, explodingEntity, source, null, x, y, z, size, false, BlockInteraction.KEEP);
 		this.level = level;
 		this.posX = x;
 		this.posY = y;
@@ -140,13 +140,13 @@ public class ImprovedExplosion extends Explosion{
 	 * @param isStrongExplosion  whether or not fluids should be ignored in the explosion resistance calculation. Very useful for large explosions
 	 */
 	public void doBlockExplosion(float xzStrength, float yStrength, float resistanceImpact, float randomVecLength, boolean fire, boolean isStrongExplosion) {			
-		BlockPos posTNT = new BlockPos(posX, posY, posZ);
+		BlockPos posTNT = new BlockPos(Mth.floor(posX), Mth.floor(posY), Mth.floor(posZ));
 		Set<Integer> blocks = new HashSet<>();
-		for (int offX = (int) -size; offX <= (int) size; offX++) {
-			for (int offY = (int) -size; offY <= (int) size; offY++) {
-				for (int offZ = (int) -size; offZ <= (int) size; offZ++) {
+		for (int offX = -size; offX <= size; offX++) {
+			for (int offY = -size; offY <= size; offY++) {
+				for (int offZ = -size; offZ <= size; offZ++) {
 					double distance = Math.sqrt(offX * offX + offY * offY + offZ * offZ);
-					if (((int) distance == (int) size && LuckyTNTLibConfigValues.PERFORMANT_EXPLOSION.get()) || (!LuckyTNTLibConfigValues.PERFORMANT_EXPLOSION.get() && (offX == (int) -size || offX == (int) size || offY == (int) -size || offY == (int) size || offZ == (int) -size || offZ == (int) size))) {
+					if (((int) distance == size && LuckyTNTLibConfigValues.PERFORMANT_EXPLOSION.get()) || (!LuckyTNTLibConfigValues.PERFORMANT_EXPLOSION.get() && (offX == -size || offX == size || offY == -size || offY == size || offZ == -size || offZ == size))) {
 						double xStep = offX / distance;
 						double yStep = offY / distance;
 						double zStep = offZ / distance;
@@ -158,7 +158,7 @@ public class ImprovedExplosion extends Explosion{
 							blockX += xStep * LuckyTNTLibConfigValues.EXPLOSION_PERFORMANCE_FACTOR.get() * xzStrength;
 							blockY += yStep * LuckyTNTLibConfigValues.EXPLOSION_PERFORMANCE_FACTOR.get() * yStrength;
 							blockZ += zStep * LuckyTNTLibConfigValues.EXPLOSION_PERFORMANCE_FACTOR.get() * xzStrength;
-							BlockPos pos = new BlockPos(blockX, blockY, blockZ);
+							BlockPos pos = new BlockPos((int)blockX, (int)blockY, (int)blockZ);
 							if (!level.isInWorldBounds(pos)) {
 								break;
 							}
@@ -172,8 +172,7 @@ public class ImprovedExplosion extends Explosion{
 								if (vecLength > 0 && damageCalculator.shouldBlockExplode(this, level, pos, blockState, vecLength) && blockState.getMaterial() != Material.AIR) {
 									blocks.add(encodeBlockPos(pos.subtract(posTNT).getX(), pos.subtract(posTNT).getY(), pos.subtract(posTNT).getZ()));
 								}
-							} 
-							else {
+							} else {
 								blocks.add(encodeBlockPos(pos.subtract(posTNT).getX(), pos.subtract(posTNT).getY(), pos.subtract(posTNT).getZ()));
 							}
 						}
@@ -211,7 +210,7 @@ public class ImprovedExplosion extends Explosion{
 	 * @param blockEffect  determines what should happen to the blocks gotten by this explosion
 	 */
 	public void doBlockExplosion(float xzStrength, float yStrength, float resistanceImpact, float randomVecLength, boolean isStrongExplosion, IForEachBlockExplosionEffect blockEffect) {
-		BlockPos posTNT = new BlockPos(posX, posY, posZ);
+		BlockPos posTNT = new BlockPos(Mth.floor(posX), Mth.floor(posY), Mth.floor(posZ));
 		Set<Integer> blocks = new HashSet<>();
 		for(int offX = (int)-size; offX <= (int)size; offX++) {
 			for(int offY = (int)-size; offY <= (int)size; offY++) {
@@ -229,7 +228,7 @@ public class ImprovedExplosion extends Explosion{
 							blockX += xStep * LuckyTNTLibConfigValues.EXPLOSION_PERFORMANCE_FACTOR.get() * xzStrength;
 							blockY += yStep * LuckyTNTLibConfigValues.EXPLOSION_PERFORMANCE_FACTOR.get() * yStrength;
 							blockZ += zStep * LuckyTNTLibConfigValues.EXPLOSION_PERFORMANCE_FACTOR.get() * xzStrength;
-							BlockPos pos = new BlockPos(blockX, blockY, blockZ);
+							BlockPos pos = new BlockPos((int)blockX, (int)blockY, (int)blockZ);
 							if(!level.isInWorldBounds(pos)) {
 								break;
 							}
@@ -276,7 +275,7 @@ public class ImprovedExplosion extends Explosion{
 	 * @param blockEffect  determines what should happen to the blocks gotten by this explosion
 	 */
 	public void doBlockExplosion(float xzStrength, float yStrength, float resistanceImpact, float randomVecLength, boolean isStrongExplosion, IBlockExplosionCondition condition, IForEachBlockExplosionEffect blockEffect) {
-		BlockPos posTNT = new BlockPos(posX, posY, posZ);
+		BlockPos posTNT = new BlockPos(Mth.floor(posX), Mth.floor(posY), Mth.floor(posZ));
 		Set<Integer> blocks = new HashSet<>();
 		for(int offX = (int)-size; offX <= (int)size; offX++) {
 			for(int offY = (int)-size; offY <= (int)size; offY++) {
@@ -294,7 +293,7 @@ public class ImprovedExplosion extends Explosion{
 							blockX += xStep * LuckyTNTLibConfigValues.EXPLOSION_PERFORMANCE_FACTOR.get() * xzStrength;
 							blockY += yStep * LuckyTNTLibConfigValues.EXPLOSION_PERFORMANCE_FACTOR.get() * yStrength;
 							blockZ += zStep * LuckyTNTLibConfigValues.EXPLOSION_PERFORMANCE_FACTOR.get() * xzStrength;
-							BlockPos pos = new BlockPos(blockX, blockY, blockZ);
+							BlockPos pos = new BlockPos((int)blockX, (int)blockY, (int)blockZ);
 							if(!level.isInWorldBounds(pos)) {
 								break;
 							}
@@ -382,7 +381,7 @@ public class ImprovedExplosion extends Explosion{
 							blockX += xStep * LuckyTNTLibConfigValues.EXPLOSION_PERFORMANCE_FACTOR.get() * xzStrength;
 							blockY += yStep * LuckyTNTLibConfigValues.EXPLOSION_PERFORMANCE_FACTOR.get() * yStrength;
 							blockZ += zStep * LuckyTNTLibConfigValues.EXPLOSION_PERFORMANCE_FACTOR.get() * xzStrength;
-							BlockPos pos = new BlockPos(blockX, blockY, blockZ);
+							BlockPos pos = new BlockPos((int)blockX, (int)blockY, (int)blockZ);
 							if(!level.isInWorldBounds(pos)) {
 								break;
 							}
@@ -565,7 +564,7 @@ public class ImprovedExplosion extends Explosion{
 		List<BlockPos> blocks = new ArrayList<>();
 		BlockPos posTNT = new BlockPos(posX, posY, posZ);
 		for(int intPos : affectedBlocks) {
-			blocks.add(decodeBlockPos(intPos).offset(posTNT));
+			blocks.add(decodeBlockPos(intPos).offset(Mth.floor(posX), Mth.floor(posY), Mth.floor(posZ)));
 		}
 		return blocks;
 	}

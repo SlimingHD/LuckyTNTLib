@@ -108,9 +108,9 @@ public class LivingLTNTBlock extends LTNTBlock{
 			tnt.setPos(x + 0.5f, y, z + 0.5f);
 			tnt.setOwner(igniter);
 			level.addFreshEntity(tnt);
-			level.playSound(null, new BlockPos(x, y, z), SoundEvents.TNT_PRIMED, SoundSource.MASTER, 1, 1);
-			if(level.getBlockState(new BlockPos(x, y, z)).getBlock() == this) {
-				level.setBlock(new BlockPos(x, y, z), Blocks.AIR.defaultBlockState(), 3);
+			level.playSound(null, new BlockPos((int)x, (int)y, (int)z), SoundEvents.TNT_PRIMED, SoundSource.MASTER, 1, 1);
+			if(level.getBlockState(new BlockPos((int)x, (int)y, (int)z)).getBlock() == this) {				
+				level.setBlock(new BlockPos((int)x, (int)y, (int)z), Blocks.AIR.defaultBlockState(), 3);
 			}
 			return tnt;
 		}

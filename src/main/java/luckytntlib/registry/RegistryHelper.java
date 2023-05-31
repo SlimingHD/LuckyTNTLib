@@ -23,7 +23,6 @@ import luckytntlib.item.LuckyDynamiteItem;
 import luckytntlib.util.tnteffects.PrimedTNTEffect;
 import net.minecraft.core.dispenser.DispenseItemBehavior;
 import net.minecraft.network.chat.Component;
-import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.MobCategory;
 import net.minecraft.world.item.BlockItem;
@@ -173,8 +172,8 @@ public class RegistryHelper {
 				@Override
 				public void appendHoverText(ItemStack stack, @Nullable Level level, List<Component> components, TooltipFlag flag) {
 					super.appendHoverText(stack, level, components, flag);
-					if(!blockData.getDescription().getKey().equals("")) {
-						components.add(MutableComponent.create(blockData.getDescription()));
+					if(!blockData.getDescription().getString().equals("")) {
+						components.add(blockData.getDescription());
 					}
 				}
 			});
@@ -260,8 +259,8 @@ public class RegistryHelper {
 				@Override
 				public void appendHoverText(ItemStack stack, @Nullable Level level, List<Component> components, TooltipFlag flag) {
 					super.appendHoverText(stack, level, components, flag);
-					if(!blockData.getDescription().getKey().equals("")) {
-						components.add(MutableComponent.create(blockData.getDescription()));
+					if(!blockData.getDescription().getString().equals("")) {
+						components.add(blockData.getDescription());
 					}
 				}
 			});

@@ -77,7 +77,7 @@ public class LDynamiteItem extends Item{
 			dyn.shoot(direction.x, direction.y, direction.z, power, 0);
 			dyn.setOwner(thrower);
 			level.addFreshEntity(dyn);
-			level.playSound(null, new BlockPos(x, y, z), SoundEvents.SNOWBALL_THROW, SoundSource.MASTER, 1, 0.5f);
+			level.playSound(null, new BlockPos((int)x, (int)y, (int)z), SoundEvents.SNOWBALL_THROW, SoundSource.MASTER, 1, 0.5f);
 			return dyn;
 		}
 		throw new NullPointerException("Explosive projectile entity type is null");
