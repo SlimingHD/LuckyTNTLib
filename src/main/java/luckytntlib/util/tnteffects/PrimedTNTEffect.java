@@ -6,11 +6,11 @@ import luckytntlib.entity.LivingPrimedLTNT;
 import luckytntlib.entity.PrimedLTNT;
 import luckytntlib.util.IExplosiveEntity;
 import net.minecraft.core.BlockPos;
-import net.minecraft.core.Vec3i;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
+import net.minecraft.util.Mth;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
@@ -48,7 +48,7 @@ public abstract class PrimedTNTEffect{
 			if(entity.getTNTFuse() <= 0) {
 				if(entity.level() instanceof ServerLevel) {
 					if(playsSound()) {
-						level.playSound((Entity)entity, new BlockPos(toVec3i(entity.getPos())), SoundEvents.GENERIC_EXPLODE, SoundSource.BLOCKS, 4f, (1f + (level.random.nextFloat() - level.random.nextFloat()) * 0.2f) * 0.7f);
+						level.playSound((Entity)entity, new BlockPos(toBlockPos(entity.getPos())), SoundEvents.GENERIC_EXPLODE, SoundSource.BLOCKS, 4f, (1f + (level.random.nextFloat() - level.random.nextFloat()) * 0.2f) * 0.7f);
 					}
 					serverExplosion(entity);
 				}
@@ -68,7 +68,7 @@ public abstract class PrimedTNTEffect{
 				if(ent.getTNTFuse() == 0) {
 					if(ent.level instanceof ServerLevel) {
 						if(playsSound()) {
-							level.playSound((Entity)entity, new BlockPos(toVec3i(entity.getPos())), SoundEvents.GENERIC_EXPLODE, SoundSource.BLOCKS, 4f, (1f + (level.random.nextFloat() - level.random.nextFloat()) * 0.2f) * 0.7f);
+							level.playSound((Entity)entity, new BlockPos(toBlockPos(entity.getPos())), SoundEvents.GENERIC_EXPLODE, SoundSource.BLOCKS, 4f, (1f + (level.random.nextFloat() - level.random.nextFloat()) * 0.2f) * 0.7f);
 						}
 						serverExplosion(entity);
 					}
@@ -78,7 +78,7 @@ public abstract class PrimedTNTEffect{
 			else if(airFuse() && entity.getTNTFuse() == 0) {
 				if(ent.level instanceof ServerLevel) {
 					if(playsSound()) {
-						level.playSound((Entity)entity, new BlockPos(toVec3i(entity.getPos())), SoundEvents.GENERIC_EXPLODE, SoundSource.BLOCKS, 4f, (1f + (level.random.nextFloat() - level.random.nextFloat()) * 0.2f) * 0.7f);
+						level.playSound((Entity)entity, new BlockPos(toBlockPos(entity.getPos())), SoundEvents.GENERIC_EXPLODE, SoundSource.BLOCKS, 4f, (1f + (level.random.nextFloat() - level.random.nextFloat()) * 0.2f) * 0.7f);
 					}
 					serverExplosion(entity);
 				}
@@ -197,7 +197,12 @@ public abstract class PrimedTNTEffect{
 		return Blocks.TNT;
 	}
 	
-	public Vec3i toVec3i(Vec3 vec) {
-		return new Vec3i((int)vec.x, (int)vec.y, (int)vec.z);
+	/**
+	 * Converts a vector, idealy the position vector to a BlockPos
+	 * @param vec  the vector converted
+	 * @return {@link BlockPos} 
+	 */
+	public BlockPos toBlockPos(Vec3 vec) {
+		return new BlockPos(Mth.floor(vec.x), Mth.floor(vec.y), Mth.floor(vec.z));
 	}
 }

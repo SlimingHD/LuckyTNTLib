@@ -1,6 +1,7 @@
 package luckytntlib.registry;
 
-import net.minecraft.network.chat.contents.TranslatableContents;
+import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.world.level.material.MaterialColor;
 
 /**
@@ -16,12 +17,12 @@ public class TNTBlockRegistryData {
 	private final boolean addDispenseBehavior;
 	private final boolean randomizedFuseUponExploded;
 	private final boolean addToTNTLists;
-	private final TranslatableContents description;
+	private final MutableComponent description;
 	private final String tab;
 	private final MaterialColor color;
 	
 	
-	private TNTBlockRegistryData(String registryName, boolean makeItem, boolean addDispenseBehavior, boolean randomizedFuseUponExploded, boolean addToTNTLists, TranslatableContents description, String tab, MaterialColor color) {
+	private TNTBlockRegistryData(String registryName, boolean makeItem, boolean addDispenseBehavior, boolean randomizedFuseUponExploded, boolean addToTNTLists, MutableComponent description, String tab, MaterialColor color) {
 		this.registryName = registryName;
 		this.makeItem = makeItem;
 		this.addDispenseBehavior = addDispenseBehavior;
@@ -52,7 +53,7 @@ public class TNTBlockRegistryData {
 		return addToTNTLists;
 	}
 	
-	public TranslatableContents getDescription() {
+	public MutableComponent getDescription() {
 		return description;
 	}
 
@@ -71,7 +72,7 @@ public class TNTBlockRegistryData {
 		private boolean addDispenseBehavior = true;
 		private boolean randomizedFuseUponExploded = true;
 		private boolean addToTNTLists = true;
-		private TranslatableContents description = new TranslatableContents("", "", new Object[0]);
+		private MutableComponent description = Component.translatable("");
 		private String tab = "none";
 		private MaterialColor color = MaterialColor.COLOR_RED;
 		
@@ -99,7 +100,7 @@ public class TNTBlockRegistryData {
 			return this;
 		}
 		
-		public Builder description(TranslatableContents description) {
+		public Builder description(MutableComponent description) {
 			this.description = description;
 			return this;
 		}
