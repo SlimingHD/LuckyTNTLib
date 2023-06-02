@@ -2,7 +2,6 @@ plugins {
     id 'eclipse'
     id 'maven-publish'
     id 'net.minecraftforge.gradle' version '5.1.+'
-    id "com.jfrog.artifactory" version "4.29.0"
 }
 
 version = '44.1.2.10'
@@ -116,9 +115,7 @@ task sourceJar(type: Jar) {
 
 
 jar.finalizedBy("reobfJar")
-
-//publish should always depend on this, but build not
-//publish.dependsOn("reobfJar")
+build.dependsOn("sourceJar")
 
 publishing {
     publications {
@@ -128,13 +125,6 @@ publishing {
         }
     }
     repositories {
-        maven{     	
-        	credentials {
-        		username "eliaskuehne@outlook.com"
-        		password "3Hallo284!"
-        	}
-			url "https://sliminglibs.jfrog.io/artifactory/ltnt-libs-release-local/"
-        }
     }
 }
 
