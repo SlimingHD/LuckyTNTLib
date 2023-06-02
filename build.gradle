@@ -2,7 +2,6 @@ plugins {
     id 'eclipse'
     id 'maven-publish'
     id 'net.minecraftforge.gradle' version '5.1.+'
-    id "com.jfrog.artifactory" version "4.29.0"
 }
 
 version = '43.2.11.1'
