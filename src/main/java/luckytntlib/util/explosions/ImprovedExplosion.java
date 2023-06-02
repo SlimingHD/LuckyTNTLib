@@ -405,9 +405,8 @@ public class ImprovedExplosion extends Explosion{
 			}
 		}
 		if(saveBlockPos) {
-			BlockPos posTNT = new BlockPos(posX, posY, posZ);
 			for(BlockPos pos : blocks) {
-				affectedBlocks.add(encodeBlockPos(pos.subtract(posTNT).getX(), pos.subtract(posTNT).getY(), pos.subtract(posTNT).getZ()));
+				affectedBlocks.add(encodeBlockPos((int)Math.round(pos.getX() - posX), (int)Math.round(pos.getY() - posY), (int)Math.round(pos.getZ() - posZ)));
 			}
 		}
 		for(BlockPos pos : blocks) {
@@ -533,11 +532,11 @@ public class ImprovedExplosion extends Explosion{
 	
 	@Nullable
 	@Override
-	public LivingEntity getSourceMob() {
+	public LivingEntity getIndirectSourceEntity() {
 		if(getExploder() instanceof IExplosiveEntity ent) {
 			return ent.owner();
 		}
-		return super.getSourceMob();
+		return super.getIndirectSourceEntity();
 	}
 	
 	/** 
@@ -562,7 +561,6 @@ public class ImprovedExplosion extends Explosion{
 	@Nullable
 	public List<BlockPos> getToBlow(){
 		List<BlockPos> blocks = new ArrayList<>();
-		BlockPos posTNT = new BlockPos(posX, posY, posZ);
 		for(int intPos : affectedBlocks) {
 			blocks.add(decodeBlockPos(intPos).offset(Mth.floor(posX), Mth.floor(posY), Mth.floor(posZ)));
 		}
