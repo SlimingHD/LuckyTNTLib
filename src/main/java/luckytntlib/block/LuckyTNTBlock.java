@@ -36,11 +36,15 @@ public class LuckyTNTBlock extends LTNTBlock{
 	 * @param y  the y position
 	 * @param z  the z position
 	 * @param igniter  the owner for the spawned TNT (used primarely for the {@link DamageSource})
-	 * @return {@link PrimedLTNT}
+	 * @return {@link PrimedLTNT} or null
+	 * @throws UnsupportedOperationException
 	 */
 	@Override
-	public PrimedLTNT explode(Level level, boolean exploded, double x, double y, double z, @Nullable LivingEntity igniter){
+	public PrimedLTNT explode(Level level, boolean exploded, double x, double y, double z, @Nullable LivingEntity igniter) throws UnsupportedOperationException{
 		int rand = random.nextInt(TNTs.size());
-		return TNTs.get(rand).get().explode(level, exploded, x, y, z, igniter);
+		if(!(TNTs.get(rand).get() instanceof LuckyTNTBlock)) {
+			return TNTs.get(rand).get().explode(level, exploded, x, y, z, igniter);
+		}
+		throw new UnsupportedOperationException("TNT block is a Lucky TNT itself");
 	}
 }

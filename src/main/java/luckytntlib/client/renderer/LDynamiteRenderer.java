@@ -1,7 +1,7 @@
 package luckytntlib.client.renderer;
 
 import com.mojang.blaze3d.vertex.PoseStack;
-import com.mojang.math.Vector3f;
+import com.mojang.math.Axis;
 
 import luckytntlib.entity.LExplosiveProjectile;
 import luckytntlib.util.tnteffects.PrimedTNTEffect;
