@@ -128,13 +128,6 @@ publishing {
         }
     }
     repositories {
-        maven{     	
-        	credentials {
-        		username "eliaskuehne@outlook.com"
-        		password "3Hallo284!"
-        	}
-			url "https://sliminglibs.jfrog.io/artifactory/ltnt-libs-release-local/"
-        }
     }
 }
 
