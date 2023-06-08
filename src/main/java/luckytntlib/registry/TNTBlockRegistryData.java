@@ -2,7 +2,7 @@ package luckytntlib.registry;
 
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
-import net.minecraft.world.level.material.MaterialColor;
+import net.minecraft.world.level.material.MapColor;
 
 /**
  * 
@@ -19,10 +19,10 @@ public class TNTBlockRegistryData {
 	private final boolean addToTNTLists;
 	private final MutableComponent description;
 	private final String tab;
-	private final MaterialColor color;
+	private final MapColor color;
 	
 	
-	private TNTBlockRegistryData(String registryName, boolean makeItem, boolean addDispenseBehavior, boolean randomizedFuseUponExploded, boolean addToTNTLists, MutableComponent description, String tab, MaterialColor color) {
+	private TNTBlockRegistryData(String registryName, boolean makeItem, boolean addDispenseBehavior, boolean randomizedFuseUponExploded, boolean addToTNTLists, MutableComponent description, String tab, MapColor color) {
 		this.registryName = registryName;
 		this.makeItem = makeItem;
 		this.addDispenseBehavior = addDispenseBehavior;
@@ -61,7 +61,7 @@ public class TNTBlockRegistryData {
 		return tab;
 	}
 
-	public MaterialColor getColor() {
+	public MapColor getColor() {
 		return color;
 	}
 	
@@ -74,7 +74,7 @@ public class TNTBlockRegistryData {
 		private boolean addToTNTLists = true;
 		private MutableComponent description = Component.translatable("");
 		private String tab = "none";
-		private MaterialColor color = MaterialColor.COLOR_RED;
+		private MapColor color = MapColor.COLOR_RED;
 		
 		public Builder(String registryName) {
 			this.registryName = registryName;
@@ -110,7 +110,7 @@ public class TNTBlockRegistryData {
 			return this;
 		}
 
-		public Builder color(MaterialColor color) {
+		public Builder color(MapColor color) {
 			this.color = color;
 			return this;
 		}

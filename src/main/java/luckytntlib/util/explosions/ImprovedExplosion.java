@@ -24,7 +24,6 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.BaseFireBlock;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.material.FluidState;
-import net.minecraft.world.level.material.Material;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
 import net.minecraftforge.event.ForgeEventFactory;
@@ -169,7 +168,7 @@ public class ImprovedExplosion extends Explosion{
 								if (explosionResistance.isPresent()) {
 									vecLength -= (explosionResistance.get() + 0.3f) * 0.3f * resistanceImpact;
 								}
-								if (vecLength > 0 && damageCalculator.shouldBlockExplode(this, level, pos, blockState, vecLength) && blockState.getMaterial() != Material.AIR) {
+								if (vecLength > 0 && damageCalculator.shouldBlockExplode(this, level, pos, blockState, vecLength) && !blockState.isAir()) {
 									blocks.add(encodeBlockPos(pos.subtract(posTNT).getX(), pos.subtract(posTNT).getY(), pos.subtract(posTNT).getZ()));
 								}
 							} else {
@@ -239,7 +238,7 @@ public class ImprovedExplosion extends Explosion{
 								if(explosionResistance.isPresent()) {
 									vecLength -= (explosionResistance.get() + 0.3f) * 0.3f * resistanceImpact;
 								}
-								if(vecLength > 0 && damageCalculator.shouldBlockExplode(this, level, pos, blockState, vecLength) && blockState.getMaterial() != Material.AIR) {
+								if(vecLength > 0 && damageCalculator.shouldBlockExplode(this, level, pos, blockState, vecLength) && !blockState.isAir()) {
 									blocks.add(encodeBlockPos(pos.subtract(posTNT).getX(), pos.subtract(posTNT).getY(), pos.subtract(posTNT).getZ()));
 								}
 							}
@@ -304,7 +303,7 @@ public class ImprovedExplosion extends Explosion{
 								if(explosionResistance.isPresent()) {
 									vecLength -= (explosionResistance.get() + 0.3f) * 0.3f * resistanceImpact;
 								}
-								if(vecLength > 0 && damageCalculator.shouldBlockExplode(this, level, pos, blockState, vecLength) && blockState.getMaterial() != Material.AIR) {
+								if(vecLength > 0 && damageCalculator.shouldBlockExplode(this, level, pos, blockState, vecLength) && !blockState.isAir()) {
 									if(condition.conditionMet(level, pos, blockState, distance)) {
 										blocks.add(encodeBlockPos(pos.subtract(posTNT).getX(), pos.subtract(posTNT).getY(), pos.subtract(posTNT).getZ()));
 									}
@@ -392,7 +391,7 @@ public class ImprovedExplosion extends Explosion{
 								if(explosionResistance.isPresent()) {
 									vecLength -= (explosionResistance.get() + 0.3f) * 0.3f * resistanceImpact;
 								}
-								if(vecLength > 0 && damageCalculator.shouldBlockExplode(this, level, pos, blockState, vecLength) && blockState.getMaterial() != Material.AIR) {
+								if(vecLength > 0 && damageCalculator.shouldBlockExplode(this, level, pos, blockState, vecLength) && !blockState.isAir()) {
 									blocks.add(pos);
 								}
 							}

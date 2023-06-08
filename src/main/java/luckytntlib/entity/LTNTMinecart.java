@@ -94,6 +94,7 @@ public class LTNTMinecart extends AbstractMinecart implements IExplosiveEntity{
 			if(getTNTFuse() < 0) {
 				if(explodesInstantly()) {
 					fuse();
+					Level level = level();
 					setTNTFuse(getEffect().getDefaultFuse(this) / 4 + level.random.nextInt(getEffect().getDefaultFuse(this)) / 4);
 				}
 				else {
@@ -127,7 +128,7 @@ public class LTNTMinecart extends AbstractMinecart implements IExplosiveEntity{
 
 	public void fuse() {
 		setTNTFuse(getEffect().getDefaultFuse(this));	
-		level.playSound(null, new BlockPos((int)getPosition(1).x, (int)getPosition(1).y, (int)getPosition(1).z), SoundEvents.TNT_PRIMED, getSoundSource(), 1f, 1f);
+		level().playSound(null, new BlockPos((int)getPosition(1).x, (int)getPosition(1).y, (int)getPosition(1).z), SoundEvents.TNT_PRIMED, getSoundSource(), 1f, 1f);
 	}
 	
 	@Override
@@ -171,7 +172,7 @@ public class LTNTMinecart extends AbstractMinecart implements IExplosiveEntity{
 	
 	@Override
 	public void readAdditionalSaveData(CompoundTag tag) {
-		if(level.getEntity(tag.getInt("placerID")) instanceof LivingEntity lEnt) {
+		if(level().getEntity(tag.getInt("placerID")) instanceof LivingEntity lEnt) {
 			placer = lEnt;
 		}
 		setTNTFuse(tag.getShort("Fuse"));
@@ -212,8 +213,8 @@ public class LTNTMinecart extends AbstractMinecart implements IExplosiveEntity{
 	}
 	
 	@Override
-	public Level level() {
-		return level;
+	public Level getLevel() {
+		return level();
 	}
 	
 	@Override

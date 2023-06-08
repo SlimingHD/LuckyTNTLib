@@ -29,8 +29,7 @@ public class LuckyDynamiteItem extends LDynamiteItem{
 	}
 	
 	@Override
-	public void onUsingTick(ItemStack stack, LivingEntity player, int count) {
-		Level level = player.level;
+	public void onUseTick(Level level, LivingEntity player, ItemStack stack, int count) {
 		if(player instanceof ServerPlayer sPlayer) {
 			shoot(level, player.getX(), player.getY() + player.getEyeHeight(), player.getZ(), player.getViewVector(1), 2, player);		
 			if(!sPlayer.isCreative()) {

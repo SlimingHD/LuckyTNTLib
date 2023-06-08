@@ -33,8 +33,7 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.SoundType;
 import net.minecraft.world.level.block.state.BlockBehaviour;
-import net.minecraft.world.level.material.Material;
-import net.minecraft.world.level.material.MaterialColor;
+import net.minecraft.world.level.material.MapColor;
 import net.minecraftforge.registries.DeferredRegister;
 import net.minecraftforge.registries.RegistryObject;
 
@@ -106,7 +105,7 @@ public class RegistryHelper {
 	 * @return {@link RegistryObject} of a {@link LTNTBlock}
 	 */
 	public RegistryObject<LTNTBlock> registerTNTBlock(String registryName, RegistryObject<EntityType<PrimedLTNT>> TNT, String tab){
-		return registerTNTBlock(registryName, TNT, tab, MaterialColor.COLOR_RED, true);
+		return registerTNTBlock(registryName, TNT, tab, MapColor.COLOR_RED, true);
 	}
 	
 	/**
@@ -118,7 +117,7 @@ public class RegistryHelper {
 	 * @return {@link RegistryObject} of a {@link LTNTBlock}
 	 */
 	public RegistryObject<LTNTBlock> registerTNTBlock(String registryName, RegistryObject<EntityType<PrimedLTNT>> TNT, String tab, boolean randomizedFuseUponExploded){
-		return registerTNTBlock(registryName, TNT, tab, MaterialColor.COLOR_RED, randomizedFuseUponExploded);
+		return registerTNTBlock(registryName, TNT, tab, MapColor.COLOR_RED, randomizedFuseUponExploded);
 	}
 	
 	/**
@@ -130,7 +129,7 @@ public class RegistryHelper {
 	 * @param randomizedFuseUponExploded  whether or not the TNT should have a random fuse based upon the default fuse when removed by another explosion
 	 * @return {@link RegistryObject} of a {@link LTNTBlock}
 	 */
-	public RegistryObject<LTNTBlock> registerTNTBlock(String registryName, RegistryObject<EntityType<PrimedLTNT>> TNT, String tab, MaterialColor color, boolean randomizedFuseUponExploded){
+	public RegistryObject<LTNTBlock> registerTNTBlock(String registryName, RegistryObject<EntityType<PrimedLTNT>> TNT, String tab, MapColor color, boolean randomizedFuseUponExploded){
 		return registerTNTBlock(TNT, new TNTBlockRegistryData.Builder(registryName).tab(tab).color(color).randomizedFuseUponExploded(randomizedFuseUponExploded).build());
 	}
 	
@@ -141,7 +140,7 @@ public class RegistryHelper {
 	 * @return {@link RegistryObject} of a {@link LTNTBlock}
 	 */
 	public RegistryObject<LTNTBlock> registerTNTBlock(RegistryObject<EntityType<PrimedLTNT>> TNT, TNTBlockRegistryData blockData){
-		return registerTNTBlock(blockRegistry, itemRegistry, () -> new LTNTBlock(BlockBehaviour.Properties.of(Material.EXPLOSIVE, blockData.getColor()).sound(SoundType.GRASS), TNT, blockData.randomizedFuseUponExploded()), blockData);
+		return registerTNTBlock(blockRegistry, itemRegistry, () -> new LTNTBlock(BlockBehaviour.Properties.of().mapColor(blockData.getColor()).sound(SoundType.GRASS), TNT, blockData.randomizedFuseUponExploded()), blockData);
 	}
 	
 	/**
@@ -193,7 +192,7 @@ public class RegistryHelper {
 	 * @return {@link RegistryObject} of a {@link LTNTBlock}
 	 */
 	public RegistryObject<LTNTBlock> registerLivingTNTBlock(String registryName, RegistryObject<EntityType<LivingPrimedLTNT>> TNT, String tab){
-		return registerLivingTNTBlock(registryName, TNT, tab, MaterialColor.COLOR_RED, true);
+		return registerLivingTNTBlock(registryName, TNT, tab, MapColor.COLOR_RED, true);
 	}
 	
 	/**
@@ -205,7 +204,7 @@ public class RegistryHelper {
 	 * @return {@link RegistryObject} of a {@link LTNTBlock}
 	 */
 	public RegistryObject<LTNTBlock> registerLivingTNTBlock(String registryName, RegistryObject<EntityType<LivingPrimedLTNT>> TNT, String tab, boolean randomizedFuseUponExploded){
-		return registerLivingTNTBlock(registryName, TNT, tab, MaterialColor.COLOR_RED, randomizedFuseUponExploded);
+		return registerLivingTNTBlock(registryName, TNT, tab, MapColor.COLOR_RED, randomizedFuseUponExploded);
 	}
 	
 	/**
@@ -217,7 +216,7 @@ public class RegistryHelper {
 	 * @param randomizedFuseUponExploded  whether or not the TNT should have a random fuse based upon the default fuse when removed by another explosion
 	 * @return {@link RegistryObject} of a {@link LTNTBlock}
 	 */
-	public RegistryObject<LTNTBlock> registerLivingTNTBlock(String registryName, RegistryObject<EntityType<LivingPrimedLTNT>> TNT, String tab, MaterialColor color, boolean randomizedFuseUponExploded){
+	public RegistryObject<LTNTBlock> registerLivingTNTBlock(String registryName, RegistryObject<EntityType<LivingPrimedLTNT>> TNT, String tab, MapColor color, boolean randomizedFuseUponExploded){
 		return registerLivingTNTBlock(TNT, new TNTBlockRegistryData.Builder(registryName).tab(tab).color(color).randomizedFuseUponExploded(randomizedFuseUponExploded).build());
 	}
 	
@@ -228,7 +227,7 @@ public class RegistryHelper {
 	 * @return {@link RegistryObject} of a {@link LTNTBlock}
 	 */
 	public RegistryObject<LTNTBlock> registerLivingTNTBlock(RegistryObject<EntityType<LivingPrimedLTNT>> TNT, TNTBlockRegistryData blockData){
-		return registerLivingTNTBlock(blockRegistry, itemRegistry, () -> new LivingLTNTBlock(BlockBehaviour.Properties.of(Material.EXPLOSIVE, blockData.getColor()).sound(SoundType.GRASS), TNT, blockData.randomizedFuseUponExploded()), blockData);
+		return registerLivingTNTBlock(blockRegistry, itemRegistry, () -> new LivingLTNTBlock(BlockBehaviour.Properties.of().mapColor(blockData.getColor()).sound(SoundType.GRASS), TNT, blockData.randomizedFuseUponExploded()), blockData);
 	}
 	
 	/**

@@ -66,7 +66,7 @@ public class PrimedLTNT extends PrimedTnt implements IExplosiveEntity{
 		}
 		move(MoverType.SELF, getDeltaMovement());
 		setDeltaMovement(getDeltaMovement().scale(0.98D));
-		if (onGround) {
+		if (onGround()) {
 			setDeltaMovement(getDeltaMovement().multiply(0.7D, -0.5D, 0.7D));
 		}
 		effect.baseTick(this);
@@ -82,7 +82,7 @@ public class PrimedLTNT extends PrimedTnt implements IExplosiveEntity{
 	
 	@Override
 	public void readAdditionalSaveData(CompoundTag tag) {
-		if(level.getEntity(tag.getInt("igniterID")) instanceof LivingEntity lEnt) {
+		if(level().getEntity(tag.getInt("igniterID")) instanceof LivingEntity lEnt) {
 			igniter = lEnt;
 		}
 		super.readAdditionalSaveData(tag);
@@ -109,8 +109,8 @@ public class PrimedLTNT extends PrimedTnt implements IExplosiveEntity{
 	}
 	
 	@Override
-	public Level level() {
-		return level;
+	public Level getLevel() {
+		return level();
 	}
 
 	@Override

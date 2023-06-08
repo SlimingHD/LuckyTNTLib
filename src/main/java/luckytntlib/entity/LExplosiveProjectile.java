@@ -88,7 +88,7 @@ public class LExplosiveProjectile extends AbstractArrow implements IExplosiveEnt
 	
 	@Override
 	public void readAdditionalSaveData(CompoundTag tag) {
-		if(level.getEntity(tag.getInt("throwerID")) instanceof LivingEntity lEnt) {
+		if(level().getEntity(tag.getInt("throwerID")) instanceof LivingEntity lEnt) {
 			thrower = lEnt;
 		}
 		setTNTFuse(tag.getShort("Fuse"));
@@ -148,8 +148,8 @@ public class LExplosiveProjectile extends AbstractArrow implements IExplosiveEnt
 	}
 	
 	@Override
-	public Level level() {
-		return level;
+	public Level getLevel() {
+		return level();
 	}
 	
 	@Override

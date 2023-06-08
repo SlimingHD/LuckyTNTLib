@@ -25,7 +25,7 @@ import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.TntBlock;
 import net.minecraft.world.level.block.state.BlockBehaviour;
 import net.minecraft.world.level.block.state.BlockState;
-import net.minecraft.world.level.storage.loot.LootContext;
+import net.minecraft.world.level.storage.loot.LootParams;
 import net.minecraftforge.registries.RegistryObject;
 
 /**
@@ -75,7 +75,7 @@ public class LTNTBlock extends TntBlock{
 	}
 	
 	@Override
-	public List<ItemStack> getDrops(BlockState state, LootContext.Builder lootBuilder) {
+	public List<ItemStack> getDrops(BlockState state, LootParams.Builder builder) {
 		return Collections.singletonList(new ItemStack(this));
 	}
 	
