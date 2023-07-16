@@ -449,7 +449,7 @@ public class RegistryHelper {
 	 * @param pickItem  the minecart item that is gotten when this minecart is middle-clicked
 	 * @return {@link RegistryObject} of an {@link EntityType} of a {@link LTNTMinecart}
 	 */
-	public RegistryObject<EntityType<LTNTMinecart>> registerTNTMinecart(String registryName, RegistryObject<EntityType<PrimedLTNT>> TNT, RegistryObject<LTNTMinecartItem> pickItem){
+	public RegistryObject<EntityType<LTNTMinecart>> registerTNTMinecart(String registryName, RegistryObject<EntityType<PrimedLTNT>> TNT, Supplier<RegistryObject<LTNTMinecartItem>> pickItem){
 		return registerTNTMinecart(registryName, TNT, pickItem, true);
 	}
 	
@@ -461,7 +461,7 @@ public class RegistryHelper {
 	 * @param explodesInstantly  whether or not this minecart will fuse or explode immediately
 	 * @return {@link RegistryObject} of an {@link EntityType} of a {@link LTNTMinecart}
 	 */
-	public RegistryObject<EntityType<LTNTMinecart>> registerTNTMinecart(String registryName, RegistryObject<EntityType<PrimedLTNT>> TNT, RegistryObject<LTNTMinecartItem> pickItem, boolean explodesInstantly){
+	public RegistryObject<EntityType<LTNTMinecart>> registerTNTMinecart(String registryName, RegistryObject<EntityType<PrimedLTNT>> TNT, Supplier<RegistryObject<LTNTMinecartItem>> pickItem, boolean explodesInstantly){
 		return registerTNTMinecart(entityRegistry, registryName, TNT, pickItem, explodesInstantly);
 	}
 	
@@ -474,7 +474,7 @@ public class RegistryHelper {
 	 * @param explodesInstantly  whether or not this minecart will fuse or explode immediately
 	 * @return {@link RegistryObject} of an {@link EntityType} of a {@link LTNTMinecart}
 	 */
-	public RegistryObject<EntityType<LTNTMinecart>> registerTNTMinecart(DeferredRegister<EntityType<?>> entityRegistry, String registryName, RegistryObject<EntityType<PrimedLTNT>> TNT, RegistryObject<LTNTMinecartItem> pickItem, boolean explodesInstantly){		
+	public RegistryObject<EntityType<LTNTMinecart>> registerTNTMinecart(DeferredRegister<EntityType<?>> entityRegistry, String registryName, RegistryObject<EntityType<PrimedLTNT>> TNT, Supplier<RegistryObject<LTNTMinecartItem>> pickItem, boolean explodesInstantly){		
 		return entityRegistry.register(registryName, () -> EntityType.Builder.<LTNTMinecart>of((EntityType<LTNTMinecart> type, Level level) -> new LTNTMinecart(type, level, TNT, pickItem, explodesInstantly), MobCategory.MISC).setShouldReceiveVelocityUpdates(true).setTrackingRange(64).sized(0.98f, 0.7f).build(registryName));
 	}
 	
