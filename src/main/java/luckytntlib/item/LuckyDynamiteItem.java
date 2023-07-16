@@ -48,15 +48,11 @@ public class LuckyDynamiteItem extends LDynamiteItem{
 	 * @param direction  the direction the projectile will be thrown in
 	 * @param power  the power with which the projectile is thrown
 	 * @param thrower  the owner for the spawned projectile (used primarely for the {@link DamageSource})
-	 * @return {@link LExplosiveProjectile} or null
-	 * @throws UnsupportedOperationException
+	 * @return {@link LExplosiveProjectile}
 	 */
 	@Override
-	public LExplosiveProjectile shoot(Level level, double x, double y, double z, Vec3 direction, float power, LivingEntity thrower) throws UnsupportedOperationException{
+	public LExplosiveProjectile shoot(Level level, double x, double y, double z, Vec3 direction, float power, LivingEntity thrower) {
 		int rand = random.nextInt(dynamites.size());
-		if(!(dynamites.get(rand).get() instanceof LuckyDynamiteItem)) {
-			return dynamites.get(rand).get().shoot(level, x, y, z, direction, power, thrower);
-		}
-		throw new UnsupportedOperationException("Dynamite item is a Lucky Dynamite itself");
+		return dynamites.get(rand).get().shoot(level, x, y, z, direction, power, thrower);
 	}
 }
