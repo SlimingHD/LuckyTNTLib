@@ -1,5 +1,7 @@
 package luckytntlib.entity;
 
+import java.util.function.Supplier;
+
 import javax.annotation.Nullable;
 
 import luckytntlib.item.LTNTMinecartItem;
@@ -36,10 +38,10 @@ public class LTNTMinecart extends AbstractMinecart implements IExplosiveEntity{
 	private static final EntityDataAccessor<Integer> DATA_FUSE_ID = SynchedEntityData.defineId(LTNTMinecart.class, EntityDataSerializers.INT);
 	private boolean explodeInstantly;
 	protected PrimedTNTEffect effect;
-	protected RegistryObject<LTNTMinecartItem> pickItem;
+	protected Supplier<RegistryObject<LTNTMinecartItem>> pickItem;
 	public LivingEntity placer;
 	
-	public LTNTMinecart(EntityType<LTNTMinecart> type, Level level, RegistryObject<EntityType<PrimedLTNT>> TNT, RegistryObject<LTNTMinecartItem> pickItem, boolean explodeInstantly) {
+	public LTNTMinecart(EntityType<LTNTMinecart> type, Level level, RegistryObject<EntityType<PrimedLTNT>> TNT, Supplier<RegistryObject<LTNTMinecartItem>> pickItem, boolean explodeInstantly) {
 		super(type, level);
 		if(TNT != null) {
 			PrimedLTNT tnt = TNT.get().create(level);
@@ -147,12 +149,12 @@ public class LTNTMinecart extends AbstractMinecart implements IExplosiveEntity{
 	
 	@Override
 	public ItemStack getPickResult() {
-		return new ItemStack(pickItem.get());
+		return new ItemStack(pickItem.get().get());
 	}
 	
 	@Override
 	protected Item getDropItem() {
-		return pickItem.get();
+		return pickItem.get().get();
 	}
 	
 	@Override
