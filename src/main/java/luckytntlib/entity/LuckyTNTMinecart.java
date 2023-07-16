@@ -2,6 +2,7 @@ package luckytntlib.entity;
 
 import java.util.List;
 import java.util.Random;
+import java.util.function.Supplier;
 
 import luckytntlib.block.LTNTBlock;
 import luckytntlib.item.LTNTMinecartItem;
@@ -20,7 +21,7 @@ public class LuckyTNTMinecart extends LTNTMinecart{
 
 	private List<RegistryObject<LTNTMinecartItem>> minecarts;
 	
-	public LuckyTNTMinecart(EntityType<LTNTMinecart> type, Level level, RegistryObject<LTNTBlock> defaultRender, RegistryObject<LTNTMinecartItem> pickItem, List<RegistryObject<LTNTMinecartItem>> minecarts) {
+	public LuckyTNTMinecart(EntityType<LTNTMinecart> type, Level level, RegistryObject<LTNTBlock> defaultRender, Supplier<RegistryObject<LTNTMinecartItem>> pickItem, List<RegistryObject<LTNTMinecartItem>> minecarts) {
 		super(type, level, null, pickItem, false);
 		effect = new PrimedTNTEffect() {
 			@Override
