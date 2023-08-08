@@ -20,6 +20,7 @@ import net.minecraft.core.Position;
 import net.minecraft.core.dispenser.DefaultDispenseItemBehavior;
 import net.minecraft.core.dispenser.DispenseItemBehavior;
 import net.minecraft.tags.BlockTags;
+import net.minecraft.util.Mth;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
@@ -63,7 +64,7 @@ public class LuckyTNTLib
 				public ItemStack dispense(BlockSource source, ItemStack stack) {
 					Level level = source.getLevel();
 					Position p = DispenserBlock.getDispensePosition(source);
-					BlockPos pos = new BlockPos((int)p.x(), (int)p.y(), (int)p.z());
+					BlockPos pos = new BlockPos(Mth.floor(p.x()), Mth.floor(p.y()), Mth.floor(p.z()));
 					block.explode(level, false, pos.getX(), pos.getY(), pos.getZ(), null);
 					stack.shrink(1);
 					return stack;
