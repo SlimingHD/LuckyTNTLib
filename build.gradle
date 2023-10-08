@@ -29,29 +29,29 @@ minecraft {
             property 'forge.logging.console.level', 'debug'
 
             mods {
-                "luckytntlib" {
+                luckytntlib {
                     source sourceSets.main
                 }
             }
         }
 
         client {
-            property 'forge.enabledGameTestNamespaces', luckytntlib
+            property 'forge.enabledGameTestNamespaces', "luckytntlib"
         }
 
         server {
-            property 'forge.enabledGameTestNamespaces', luckytntlib
+            property 'forge.enabledGameTestNamespaces', "luckytntlib"
             args '--nogui'
         }
 
         gameTestServer {
-            property 'forge.enabledGameTestNamespaces', luckytntlib
+            property 'forge.enabledGameTestNamespaces', "luckytntlib"
         }
 
         data {
             workingDirectory project.file('run-data')
 
-            args '--mod', luckytntlib, '--all', '--output', file('src/generated/resources/'), '--existing', file('src/main/resources/')
+            args '--mod', "luckytntlib", '--all', '--output', file('src/generated/resources/'), '--existing', file('src/main/resources/')
         }
     }
 }
@@ -102,7 +102,6 @@ publishing {
         }
     }
     repositories {
-		mavenLocal()
     }
 }
 
