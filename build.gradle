@@ -2,7 +2,6 @@ plugins {
     id 'eclipse'
     id 'maven-publish'
     id 'net.minecraftforge.gradle' version '[6.0,6.2)'
-    id 'org.gradle.toolchains.foojay-resolver-convention' version '0.4.0'
 }
 
 version = '48.0.19.0'
