@@ -14,9 +14,9 @@ import luckytntlib.registry.RegistryHelper;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.core.BlockPos;
-import net.minecraft.core.BlockSource;
 import net.minecraft.core.Direction;
 import net.minecraft.core.Position;
+import net.minecraft.core.dispenser.BlockSource;
 import net.minecraft.core.dispenser.DefaultDispenseItemBehavior;
 import net.minecraft.core.dispenser.DispenseItemBehavior;
 import net.minecraft.tags.BlockTags;
@@ -62,7 +62,7 @@ public class LuckyTNTLib
 			DispenseItemBehavior behaviour = new DispenseItemBehavior() {
 				@Override
 				public ItemStack dispense(BlockSource source, ItemStack stack) {
-					Level level = source.getLevel();
+					Level level = source.level();
 					Position p = DispenserBlock.getDispensePosition(source);
 					BlockPos pos = new BlockPos(Mth.floor(p.x()), Mth.floor(p.y()), Mth.floor(p.z()));
 					block.explode(level, false, pos.getX(), pos.getY(), pos.getZ(), null);
@@ -78,8 +78,8 @@ public class LuckyTNTLib
 				
 				@Override
 				public ItemStack dispense(BlockSource source, ItemStack stack) {
-					Level level = source.getLevel();
-					Vec3 dispenserPos = new Vec3(source.getPos().getX() + 0.5f, source.getPos().getY() + 0.5f, source.getPos().getZ() + 0.5f);
+					Level level = source.level();
+					Vec3 dispenserPos = new Vec3(source.pos().getX() + 0.5f, source.pos().getY() + 0.5f, source.pos().getZ() + 0.5f);
 					Position pos = DispenserBlock.getDispensePosition(source);
 					item.shoot(level, pos.x(), pos.y(), pos.z(), new Vec3(pos.x(), pos.y(), pos.z()).add(-dispenserPos.x(), -dispenserPos.y(), -dispenserPos.z()), 2, null);
 					stack.shrink(1);
@@ -93,12 +93,12 @@ public class LuckyTNTLib
 			DispenseItemBehavior behaviour = new DispenseItemBehavior() {
 				@Override
 				public ItemStack dispense(BlockSource source, ItemStack stack) {
-					Direction direction = source.getBlockState().getValue(DispenserBlock.FACING);
-					Level level = source.getLevel();
-					double x = source.x() + (double) direction.getStepX() * 1.125D;
-					double y = Math.floor(source.y()) + (double) direction.getStepY();
-					double z = source.z() + (double) direction.getStepZ() * 1.125D;
-					BlockPos pos = source.getPos().relative(direction);
+					Direction direction = source.state().getValue(DispenserBlock.FACING);
+					Level level = source.level();
+					double x = source.pos().getX() + (double) direction.getStepX() * 1.125D;
+					double y = Math.floor(source.pos().getY()) + (double) direction.getStepY();
+					double z = source.pos().getZ() + (double) direction.getStepZ() * 1.125D;
+					BlockPos pos = source.pos().relative(direction);
 					BlockState state = level.getBlockState(pos);
 					RailShape rail = state.getBlock() instanceof BaseRailBlock ? ((BaseRailBlock) state.getBlock()).getRailDirection(state, level, pos, null) : RailShape.NORTH_SOUTH;
 					double railHeight;

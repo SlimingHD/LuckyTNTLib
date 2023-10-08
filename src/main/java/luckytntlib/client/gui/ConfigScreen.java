@@ -36,7 +36,7 @@ public class ConfigScreen extends Screen{
 	
 	@Override
 	public void render(GuiGraphics graphics, int mouseX, int mouseY, float partialTicks) {
-		renderBackground(graphics);
+		renderBackground(graphics, mouseX, mouseY, partialTicks);
 		graphics.drawCenteredString(font, title, width / 2, 8, 0xFFFFFF);
 		graphics.drawCenteredString(font, Component.literal("Performant Explosion"), width / 2, 46, 0xFFFFFF);
 		graphics.drawCenteredString(font, Component.literal("Explosion Performance Factor"), width / 2, 66, 0xFFFFFF);
