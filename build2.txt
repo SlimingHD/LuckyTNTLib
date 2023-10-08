@@ -1,0 +1,111 @@
+plugins {
+    id 'eclipse'
+    id 'idea'
+    id 'maven-publish'
+    id 'net.minecraftforge.gradle' version '[6.0,6.2)'
+}
+
+version = '48.0.19.0'
+group = 'libs.luckytntlib'
+
+base {
+    archivesName = 'luckytntlib-1.20.2'
+}
+
+java.toolchain.languageVersion = JavaLanguageVersion.of(17)
+
+println "Java: ${System.getProperty 'java.version'}, JVM: ${System.getProperty 'java.vm.version'} (${System.getProperty 'java.vendor'}), Arch: ${System.getProperty 'os.arch'}"
+minecraft {
+
+    mappings channel: 'official', version: '1.20.2'
+
+    copyIdeResources = true
+    runs {
+        configureEach {
+            workingDirectory project.file('run')
+
+            property 'forge.logging.markers', 'REGISTRIES'
+
+            property 'forge.logging.console.level', 'debug'
+
+            mods {
+                "luckytntlib" {
+                    source sourceSets.main
+                }
+            }
+        }
+
+        client {
+            property 'forge.enabledGameTestNamespaces', luckytntlib
+        }
+
+        server {
+            property 'forge.enabledGameTestNamespaces', luckytntlib
+            args '--nogui'
+        }
+
+        gameTestServer {
+            property 'forge.enabledGameTestNamespaces', luckytntlib
+        }
+
+        data {
+            workingDirectory project.file('run-data')
+
+            args '--mod', luckytntlib, '--all', '--output', file('src/generated/resources/'), '--existing', file('src/main/resources/')
+        }
+    }
+}
+
+sourceSets.main.resources { srcDir 'src/generated/resources' }
+
+repositories {
+
+}
+
+dependencies {
+
+    minecraft "net.minecraftforge:forge:1.20.2-48.0.19"
+
+}
+
+tasks.named('processResources', ProcessResources).configure {
+
+}
+
+tasks.named('jar', Jar).configure {
+    manifest {
+        attributes([
+                'Specification-Title'     : "luckytntlib",
+                'Specification-Vendor'    : "SlimingHD & Fleshcrafter",
+                'Specification-Version'   : '1',
+                'Implementation-Title'    : project.name,
+                'Implementation-Version'  : project.jar.archiveVersion,
+                'Implementation-Vendor'   : "SlimingHD & Fleshcrafter",
+                'Implementation-Timestamp': new Date().format("yyyy-MM-dd'T'HH:mm:ssZ")
+        ])
+    }
+
+    finalizedBy 'reobfJar'
+}
+
+task sourceJar(type: Jar) {
+	archiveClassifier = 'sources'
+    from sourceSets.main.allJava
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+}
+
+publishing {
+    publications {
+        register('mavenJava', MavenPublication) {
+            artifact jar
+            artifact tasks.sourceJar
+        }
+    }
+    repositories {
+		mavenLocal()
+    }
+}
+
+tasks.withType(JavaCompile).configureEach {
+    options.encoding = 'UTF-8'
+}
