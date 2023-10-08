@@ -55,7 +55,7 @@ public class GeneralDynamiteEffect extends PrimedTNTEffect{
 	
 	@Override
 	public void spawnParticles(IExplosiveEntity entity) {
-		entity.level().addParticle(particles, entity.x(), entity.y(), entity.z(), 0, 0, 0);
+		entity.getLevel().addParticle(particles, entity.x(), entity.y(), entity.z(), 0, 0, 0);
 	}
 	
 	@Override

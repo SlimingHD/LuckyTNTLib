@@ -61,7 +61,7 @@ public class LivingPrimedLTNT extends PathfinderMob implements IExplosiveEntity{
 	
 	@Override
 	public void readAdditionalSaveData(CompoundTag tag) {
-		if(level.getEntity(tag.getInt("throwerID")) instanceof LivingEntity lEnt) {
+		if(level().getEntity(tag.getInt("throwerID")) instanceof LivingEntity lEnt) {
 			igniter = lEnt;
 		}
 		setTNTFuse(tag.getShort("Fuse"));
@@ -101,8 +101,8 @@ public class LivingPrimedLTNT extends PathfinderMob implements IExplosiveEntity{
 	}
 
 	@Override
-	public Level level() {
-		return getLevel();
+	public Level getLevel() {
+		return level();
 	}
 
 	@Override

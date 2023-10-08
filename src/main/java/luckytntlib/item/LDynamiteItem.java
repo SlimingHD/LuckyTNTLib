@@ -42,13 +42,12 @@ public class LDynamiteItem extends Item{
 	
 	@Override
 	public InteractionResultHolder<ItemStack> use(Level level, Player player, InteractionHand hand){
-		onUsingTick(player.getItemInHand(hand), player, player.getItemInHand(hand).getCount());
+		onUseTick(level, player, player.getItemInHand(hand) , player.getItemInHand(hand).getCount());
 		return new InteractionResultHolder<ItemStack>(InteractionResult.SUCCESS, player.getItemInHand(hand));
 	}
 	
 	@Override
-	public void onUsingTick(ItemStack stack, LivingEntity player, int count) {
-		Level level = player.level;
+	public void onUseTick(Level level, LivingEntity player, ItemStack stack, int count) {
 		if(player instanceof ServerPlayer sPlayer && dynamite != null) {
 			shoot(level, player.getX(), player.getY() + player.getEyeHeight(), player.getZ(), player.getViewVector(1), 2, player);		
 			if(!sPlayer.isCreative()) {

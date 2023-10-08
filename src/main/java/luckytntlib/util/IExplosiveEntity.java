@@ -39,7 +39,7 @@ public interface IExplosiveEntity extends IForgeEntity{
 	 * Gets the {@link Level} of this IExplosiveEntity
 	 * @return
 	 */
-	public Level level();
+	public Level getLevel();
 
 	/**
 	 * Gets the current position of this IExplosiveEntity

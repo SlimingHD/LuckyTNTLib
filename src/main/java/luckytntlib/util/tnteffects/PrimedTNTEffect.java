@@ -40,13 +40,13 @@ public abstract class PrimedTNTEffect{
 	 * @param entity  the {@link IExplosiveEntity} this PrimedTNTEffect belongs to.
 	 */
 	public void baseTick(IExplosiveEntity entity) {
-		Level level = entity.level();
+		Level level = entity.getLevel();
 		/**
 		 * Default logic implementation for TNT and TNT Minecarts
 		 */
 		if(entity instanceof PrimedLTNT || entity instanceof LivingPrimedLTNT || entity instanceof LTNTMinecart) {
 			if(entity.getTNTFuse() <= 0) {
-				if(entity.level() instanceof ServerLevel) {
+				if(entity.getLevel() instanceof ServerLevel) {
 					if(playsSound()) {
 						level.playSound((Entity)entity, new BlockPos(toBlockPos(entity.getPos())), SoundEvents.GENERIC_EXPLODE, SoundSource.BLOCKS, 4f, (1f + (level.random.nextFloat() - level.random.nextFloat()) * 0.2f) * 0.7f);
 					}
@@ -61,12 +61,12 @@ public abstract class PrimedTNTEffect{
 		 * Default logic implementation for Explosive Projectiles
 		 */
 		else if(entity instanceof LExplosiveProjectile ent) {
-			if((ent.inGround() || ent.hitEntity()) && entity.level() instanceof ServerLevel sLevel) {
+			if((ent.inGround() || ent.hitEntity()) && entity.getLevel() instanceof ServerLevel sLevel) {
 				if(explodesOnImpact()) {
 					ent.setTNTFuse(0);
 				}
 				if(ent.getTNTFuse() == 0) {
-					if(ent.level instanceof ServerLevel) {
+					if(ent.level() instanceof ServerLevel) {
 						if(playsSound()) {
 							level.playSound((Entity)entity, new BlockPos(toBlockPos(entity.getPos())), SoundEvents.GENERIC_EXPLODE, SoundSource.BLOCKS, 4f, (1f + (level.random.nextFloat() - level.random.nextFloat()) * 0.2f) * 0.7f);
 						}
@@ -76,7 +76,7 @@ public abstract class PrimedTNTEffect{
 				}
 			}
 			else if(airFuse() && entity.getTNTFuse() == 0) {
-				if(ent.level instanceof ServerLevel) {
+				if(ent.level() instanceof ServerLevel) {
 					if(playsSound()) {
 						level.playSound((Entity)entity, new BlockPos(toBlockPos(entity.getPos())), SoundEvents.GENERIC_EXPLODE, SoundSource.BLOCKS, 4f, (1f + (level.random.nextFloat() - level.random.nextFloat()) * 0.2f) * 0.7f);
 					}
@@ -102,7 +102,7 @@ public abstract class PrimedTNTEffect{
 	 * @param entity  the {@link IExplosiveEntity} this PrimedTNTEffect belongs to.
 	 */
 	public void spawnParticles(IExplosiveEntity entity) {
-		entity.level().addParticle(ParticleTypes.SMOKE, entity.x(), entity.y() + 0.5f, entity.z(), 0, 0, 0);
+		entity.getLevel().addParticle(ParticleTypes.SMOKE, entity.x(), entity.y() + 0.5f, entity.z(), 0, 0, 0);
 	}
 	
 	/**

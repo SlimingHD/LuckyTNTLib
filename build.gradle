@@ -4,15 +4,15 @@ plugins {
     id 'net.minecraftforge.gradle' version '5.1.+'
 }
 
-version = '45.0.64.1'
+version = '46.0.1.2'
 group = 'libs.luckytntlib'
-archivesBaseName = 'luckytntlib-1.19.4'
+archivesBaseName = 'luckytntlib-1.20'
 
 java.toolchain.languageVersion = JavaLanguageVersion.of(17)
 
 println "Java: ${System.getProperty 'java.version'}, JVM: ${System.getProperty 'java.vm.version'} (${System.getProperty 'java.vendor'}), Arch: ${System.getProperty 'os.arch'}"
 minecraft {
-    mappings channel: 'official', version: '1.19.4'
+    mappings channel: 'official', version: '1.20'
 
     runs {
         client {
@@ -89,7 +89,7 @@ repositories {
 
 dependencies {
 
-    minecraft 'net.minecraftforge:forge:1.19.4-45.0.64'
+    minecraft 'net.minecraftforge:forge:1.20-46.0.1'
 
 }
 

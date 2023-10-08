@@ -1,8 +1,7 @@
 package luckytntlib.client.gui;
 
-import com.mojang.blaze3d.vertex.PoseStack;
-
 import luckytntlib.config.LuckyTNTLibConfigValues;
+import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.Tooltip;
 import net.minecraft.client.gui.screens.Screen;
@@ -36,12 +35,12 @@ public class ConfigScreen extends Screen{
 	}
 	
 	@Override
-	public void render(PoseStack stack, int mouseX, int mouseY, float partialTicks) {
-		renderBackground(stack);
-		drawCenteredString(stack, font, title, width / 2, 8, 0xFFFFFF);
-		drawCenteredString(stack, font, Component.literal("Performant Explosion"), width / 2, 46, 0xFFFFFF);
-		drawCenteredString(stack, font, Component.literal("Explosion Performance Factor"), width / 2, 66, 0xFFFFFF);
-		super.render(stack, mouseX, mouseY, partialTicks);
+	public void render(GuiGraphics graphics, int mouseX, int mouseY, float partialTicks) {
+		renderBackground(graphics);
+		graphics.drawCenteredString(font, title, width / 2, 8, 0xFFFFFF);
+		graphics.drawCenteredString(font, Component.literal("Performant Explosion"), width / 2, 46, 0xFFFFFF);
+		graphics.drawCenteredString(font, Component.literal("Explosion Performance Factor"), width / 2, 66, 0xFFFFFF);
+		super.render(graphics, mouseX, mouseY, partialTicks);
 	}
 	
 	@Override
