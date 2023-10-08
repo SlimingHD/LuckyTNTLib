@@ -94,6 +94,8 @@ task sourceJar(type: Jar) {
     duplicatesStrategy = DuplicatesStrategy.EXCLUDE
 }
 
+build.dependsOn("sourceJar")
+
 publishing {
     publications {
         register('mavenJava', MavenPublication) {
