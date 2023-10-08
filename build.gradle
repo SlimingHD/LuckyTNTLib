@@ -118,7 +118,7 @@ build.dependsOn("sourceJar")
 
 publishing {
     publications {
-        mavenJava(MavenPublication) {
+        maven(MavenPublication) {
             artifact jar
             artifact tasks.sourceJar
         }
