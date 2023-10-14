@@ -211,9 +211,9 @@ public class ExplosionHelper {
 				topToBottom: for(int offY = radius; offY >= -radius; offY--) {
 					double distance = Math.sqrt(offX * offX + offY * offY + offZ * offZ);
 					if(distance <= radius) {
-						BlockPos pos = new BlockPos(position).offset(offX, offY, offZ);
+						BlockPos pos = new BlockPos((int)position.x, (int)position.y, (int)position.z).offset(offX, offY, offZ);
 						BlockState state = level.getBlockState(pos);
-						if((level.getBlockState(pos.below()).isCollisionShapeFullBlock(level, pos.below()) || level.getBlockState(pos.below()).isFaceSturdy(level, pos.below(), Direction.UP)) && (state.isAir() || state.canBeReplaced(new DirectionalPlaceContext(level, pos, Direction.DOWN, ItemStack.EMPTY, Direction.UP))  || !state.isCollisionShapeFullBlock(level, pos) || state.is(BlockTags.FLOWERS))) {
+						if((level.getBlockState(pos.below()).isCollisionShapeFullBlock(level, pos.below()) || level.getBlockState(pos.below()).isFaceSturdy(level, pos.below(), Direction.UP)) && (state.isAir() || state.canBeReplaced(new DirectionalPlaceContext(level, pos, Direction.DOWN, ItemStack.EMPTY, Direction.UP))  || (!state.isCollisionShapeFullBlock(level, pos) && state.getExplosionResistance(level, pos, ImprovedExplosion.dummyExplosion(level)) == 0) || state.is(BlockTags.FLOWERS))) {
 							blockEffect.doBlockExplosion(level, pos, state, distance);
 							break topToBottom;
 						}
@@ -239,7 +239,7 @@ public class ExplosionHelper {
 				topToBottom: for(int offY = radius; offY >= -radius; offY--) {
 					double distance = Math.sqrt(offX * offX + offY * offY + offZ * offZ);
 					if(distance <= radius) {
-						BlockPos pos = new BlockPos(position).offset(offX, offY, offZ);
+						BlockPos pos = new BlockPos((int)position.x, (int)position.y, (int)position.z).offset(offX, offY, offZ);
 						BlockState state = level.getBlockState(pos);
 						if(!level.getBlockState(pos.below()).isAir()) {
 							if(condition.conditionMet(level, pos.below(), level.getBlockState(pos.below()), Math.sqrt(offX * offX + (offY-1) * (offY-1) + offZ * offZ))) {
@@ -267,9 +267,9 @@ public class ExplosionHelper {
 				for(int offY = radius; offY >= -radius; offY--) {
 					double distance = Math.sqrt(offX * offX + offY * offY + offZ * offZ);
 					if(distance <= radius) {
-						BlockPos pos = new BlockPos(position).offset(offX, offY, offZ);
+						BlockPos pos = new BlockPos((int)position.x, (int)position.y, (int)position.z).offset(offX, offY, offZ);
 						BlockState state = level.getBlockState(pos);
-						if((level.getBlockState(pos.below()).isCollisionShapeFullBlock(level, pos.below()) || level.getBlockState(pos.below()).isFaceSturdy(level, pos.below(), Direction.UP)) && (state.isAir() || state.canBeReplaced(new DirectionalPlaceContext(level, pos, Direction.DOWN, ItemStack.EMPTY, Direction.UP)) || !state.isCollisionShapeFullBlock(level, pos) || state.is(BlockTags.FLOWERS))) {
+						if((level.getBlockState(pos.below()).isCollisionShapeFullBlock(level, pos.below()) || level.getBlockState(pos.below()).isFaceSturdy(level, pos.below(), Direction.UP)) && (state.isAir() || state.canBeReplaced(new DirectionalPlaceContext(level, pos, Direction.DOWN, ItemStack.EMPTY, Direction.UP)) || (!state.isCollisionShapeFullBlock(level, pos) && state.getExplosionResistance(level, pos, ImprovedExplosion.dummyExplosion(level)) == 0) || state.is(BlockTags.FLOWERS))) {
 							blockEffect.doBlockExplosion(level, pos, state, distance);
 						}
 					}
