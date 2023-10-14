@@ -3,7 +3,7 @@ loaderVersion="[43,)"
 license="All rights reserved"
 [[mods]]
 modId="luckytntlib"
-version="43.2.11.2"
+version="43.2.11.3"
 displayName="Lucky TNT Lib"
 logoFile="logo.png"
 credits="Created, updated and maintained by SlimingHD"
@@ -21,6 +21,6 @@ It allows for quick creation and easy maintenance of TNT mods and is a hard depe
 [[dependencies.luckytntlib]]
     modId="minecraft"
     mandatory=true
-    versionRange="[1.19.2,1.20)"
+    versionRange="[1.19.2,1.19.3)"
     ordering="NONE"
     side="BOTH"
