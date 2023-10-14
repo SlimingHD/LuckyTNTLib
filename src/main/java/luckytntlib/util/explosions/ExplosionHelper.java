@@ -213,7 +213,7 @@ public class ExplosionHelper {
 					if(distance <= radius) {
 						BlockPos pos = new BlockPos((int)position.x, (int)position.y, (int)position.z).offset(offX, offY, offZ);
 						BlockState state = level.getBlockState(pos);
-						if((level.getBlockState(pos.below()).isCollisionShapeFullBlock(level, pos.below()) || level.getBlockState(pos.below()).isFaceSturdy(level, pos.below(), Direction.UP)) && (state.isAir() || state.canBeReplaced(new DirectionalPlaceContext(level, pos, Direction.DOWN, ItemStack.EMPTY, Direction.UP))  || !state.isCollisionShapeFullBlock(level, pos) || state.is(BlockTags.FLOWERS))) {
+						if((level.getBlockState(pos.below()).isCollisionShapeFullBlock(level, pos.below()) || level.getBlockState(pos.below()).isFaceSturdy(level, pos.below(), Direction.UP)) && (state.isAir() || state.canBeReplaced(new DirectionalPlaceContext(level, pos, Direction.DOWN, ItemStack.EMPTY, Direction.UP))  || (!state.isCollisionShapeFullBlock(level, pos) && state.getExplosionResistance(level, pos, ImprovedExplosion.dummyExplosion(level)) == 0) || state.is(BlockTags.FLOWERS))) {
 							blockEffect.doBlockExplosion(level, pos, state, distance);
 							break topToBottom;
 						}
@@ -269,7 +269,7 @@ public class ExplosionHelper {
 					if(distance <= radius) {
 						BlockPos pos = new BlockPos((int)position.x, (int)position.y, (int)position.z).offset(offX, offY, offZ);
 						BlockState state = level.getBlockState(pos);
-						if((level.getBlockState(pos.below()).isCollisionShapeFullBlock(level, pos.below()) || level.getBlockState(pos.below()).isFaceSturdy(level, pos.below(), Direction.UP)) && (state.isAir() || state.canBeReplaced(new DirectionalPlaceContext(level, pos, Direction.DOWN, ItemStack.EMPTY, Direction.UP)) || !state.isCollisionShapeFullBlock(level, pos) || state.is(BlockTags.FLOWERS))) {
+						if((level.getBlockState(pos.below()).isCollisionShapeFullBlock(level, pos.below()) || level.getBlockState(pos.below()).isFaceSturdy(level, pos.below(), Direction.UP)) && (state.isAir() || state.canBeReplaced(new DirectionalPlaceContext(level, pos, Direction.DOWN, ItemStack.EMPTY, Direction.UP)) || (!state.isCollisionShapeFullBlock(level, pos) && state.getExplosionResistance(level, pos, ImprovedExplosion.dummyExplosion(level)) == 0) || state.is(BlockTags.FLOWERS))) {
 							blockEffect.doBlockExplosion(level, pos, state, distance);
 						}
 					}
