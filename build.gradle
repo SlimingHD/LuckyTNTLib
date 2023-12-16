@@ -4,11 +4,11 @@ plugins {
     id 'net.minecraftforge.gradle' version '[6.0,6.2)'
 }
 
-version = '48.0.19.1'
+version = '49.0.2.0'
 group = 'libs.luckytntlib'
 
 base {
-    archivesName = 'luckytntlib-1.20.2'
+    archivesName = 'luckytntlib-1.20.3'
 }
 
 java.toolchain.languageVersion = JavaLanguageVersion.of(17)
@@ -16,7 +16,7 @@ java.toolchain.languageVersion = JavaLanguageVersion.of(17)
 println "Java: ${System.getProperty 'java.version'}, JVM: ${System.getProperty 'java.vm.version'} (${System.getProperty 'java.vendor'}), Arch: ${System.getProperty 'os.arch'}"
 minecraft {
 
-    mappings channel: 'official', version: '1.20.2'
+    mappings channel: 'official', version: '1.20.3'
 
     copyIdeResources = true
     runs {
@@ -63,7 +63,7 @@ repositories {
 
 dependencies {
 
-    minecraft "net.minecraftforge:forge:1.20.2-48.0.19"
+    minecraft "net.minecraftforge:forge:1.20.3-49.0.2"
 
 }
 

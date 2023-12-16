@@ -13,13 +13,17 @@ import net.minecraft.network.syncher.EntityDataAccessor;
 import net.minecraft.network.syncher.EntityDataSerializers;
 import net.minecraft.network.syncher.SynchedEntityData;
 import net.minecraft.sounds.SoundEvents;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.InteractionResult;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.damagesource.DamageTypes;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.entity.projectile.AbstractArrow;
 import net.minecraft.world.entity.vehicle.AbstractMinecart;
+import net.minecraft.world.entity.vehicle.Minecart;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
@@ -33,7 +37,7 @@ import net.minecraftforge.registries.RegistryObject;
  * and can hold an already existing {@link PrimedLTNT} and its {@link PrimedTNTEffect}.
  * It implements {@link IExplosiveEntity}.
  */
-public class LTNTMinecart extends AbstractMinecart implements IExplosiveEntity{
+public class LTNTMinecart extends Minecart implements IExplosiveEntity{
 
 	private static final EntityDataAccessor<Integer> DATA_FUSE_ID = SynchedEntityData.defineId(LTNTMinecart.class, EntityDataSerializers.INT);
 	private boolean explodeInstantly;
@@ -71,6 +75,11 @@ public class LTNTMinecart extends AbstractMinecart implements IExplosiveEntity{
 				fuse();
 			}
 		}
+	}
+
+	@Override
+	public InteractionResult interact(Player p_38483_, InteractionHand p_38484_) {
+		return InteractionResult.PASS;
 	}
 	
 	@Override
