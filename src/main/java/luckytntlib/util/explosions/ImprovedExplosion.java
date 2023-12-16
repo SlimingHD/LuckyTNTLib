@@ -127,7 +127,7 @@ public class ImprovedExplosion extends Explosion{
 		this.posY = y;
 		this.posZ = z;
 		this.size = size;
-		this.damageSource = source;
+		this.damageSource = source == null ? level.damageSources().explosion(this) : source;
 		damageCalculator = explodingEntity == null ? new ExplosionDamageCalculator() : new EntityBasedExplosionDamageCalculator(explodingEntity);
 	}
 	
@@ -150,7 +150,7 @@ public class ImprovedExplosion extends Explosion{
 		this.posY = y;
 		this.posZ = z;
 		this.size = size;
-		this.damageSource = source;
+		this.damageSource = source == null ? level.damageSources().explosion(this) : source;
 		damageCalculator = explodingEntity == null ? new ExplosionDamageCalculator() : new EntityBasedExplosionDamageCalculator(explodingEntity);
 	}
 	
