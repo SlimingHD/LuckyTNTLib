@@ -357,7 +357,7 @@ public class RegistryHelper {
 	 * @return {@link RegistryObject} of a {@link LTNTMinecartItem}
 	 */
 	public RegistryObject<LTNTMinecartItem> registerTNTMinecartItem(String registryName, Supplier<RegistryObject<EntityType<LTNTMinecart>>> TNT, String tab){
-		return registerTNTMinecartItem(registryName, () -> new LTNTMinecartItem(new Item.Properties().tab(tabs.get(tab)), TNT), tab, true, true);
+		return registerTNTMinecartItem(registryName, () -> new LTNTMinecartItem(new Item.Properties().stacksTo(1).tab(tabs.get(tab)), TNT), tab, true, true);
 	}
 	
 	/**
