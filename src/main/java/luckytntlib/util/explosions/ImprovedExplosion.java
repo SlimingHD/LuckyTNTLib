@@ -11,6 +11,9 @@ import javax.annotation.Nullable;
 import luckytntlib.config.LuckyTNTLibConfigValues;
 import luckytntlib.util.IExplosiveEntity;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.particles.ParticleTypes;
+import net.minecraft.sounds.SoundEvent;
+import net.minecraft.sounds.SoundEvents;
 import net.minecraft.util.Mth;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.Entity;
@@ -39,6 +42,7 @@ public class ImprovedExplosion extends Explosion{
 	public final double posX, posY, posZ;
 	public final int size;
 	public final ExplosionDamageCalculator damageCalculator;
+	public final DamageSource damageSource;
 	List<Integer> affectedBlocks = new ArrayList<>();
 	
 	private static ImprovedExplosion dummyExplosion;
@@ -117,12 +121,36 @@ public class ImprovedExplosion extends Explosion{
 	 * @param size  the rough size of the explosion, which must not be greater than 511 in most cases
 	 */	
 	public ImprovedExplosion(Level level, @Nullable Entity explodingEntity, @Nullable DamageSource source, double x, double y, double z, int size) {
-		super(level, explodingEntity, source, null, x, y, z, size, false, BlockInteraction.KEEP);
+		super(level, explodingEntity, source, null, x, y, z, size, false, BlockInteraction.KEEP, ParticleTypes.EXPLOSION, ParticleTypes.EXPLOSION_EMITTER, SoundEvents.GENERIC_EXPLODE);
 		this.level = level;
 		this.posX = x;
 		this.posY = y;
 		this.posZ = z;
 		this.size = size;
+		this.damageSource = source;
+		damageCalculator = explodingEntity == null ? new ExplosionDamageCalculator() : new EntityBasedExplosionDamageCalculator(explodingEntity);
+	}
+	
+	/**
+	 * Creates a new ImprovedExplosion
+	 * @implNote size must not be greater than 511 in most cases. See the respective doBlockExplosion method
+	 * @param level  the level
+	 * @param entity  the entity not affected by this explosion. Should be the entity causing the explosion and also an IExplosiveEntity
+	 * @param source  the DamageSource this explosion uses
+	 * @param sound  the Sound this explosion will play
+	 * @param x  the x center position
+	 * @param y  the y center position
+	 * @param z  the z center position
+	 * @param size  the rough size of the explosion, which must not be greater than 511 in most cases
+	 */	
+	public ImprovedExplosion(Level level, @Nullable Entity explodingEntity, @Nullable DamageSource source, SoundEvent sound, double x, double y, double z, int size) {
+		super(level, explodingEntity, source, null, x, y, z, size, false, BlockInteraction.KEEP, ParticleTypes.EXPLOSION, ParticleTypes.EXPLOSION_EMITTER, sound);
+		this.level = level;
+		this.posX = x;
+		this.posY = y;
+		this.posZ = z;
+		this.size = size;
+		this.damageSource = source;
 		damageCalculator = explodingEntity == null ? new ExplosionDamageCalculator() : new EntityBasedExplosionDamageCalculator(explodingEntity);
 	}
 	
@@ -480,7 +508,7 @@ public class ImprovedExplosion extends Explosion{
 		List<Entity> entities = level.getEntities(getExploder(), new AABB(posX - size * 2, posY - size * 2, posZ - size * 2, posX + size * 2, posY + size * 2, posZ + size * 2));
 		ForgeEventFactory.onExplosionDetonate(level, this, entities, size * 2);
 		for(Entity entity : entities) {
-			if(!entity.ignoreExplosion()) {
+			if(!entity.ignoreExplosion(this)) {
 				double distance = Math.sqrt(entity.distanceToSqr(getPosition())) / (size * 2);
 				if(distance <= 1f) {
 					double offX = (entity.getX() - posX);
@@ -493,7 +521,7 @@ public class ImprovedExplosion extends Explosion{
 					double seenPercent = getSeenPercent(getPosition(), entity);
 					float damage = (1f - (float)distance) * (float)seenPercent;
 					if(damageEntities) {
-						entity.hurt(getDamageSource(), (damage * damage + damage) / 2f * 7 * size + 1f);
+						entity.hurt(damageSource, (damage * damage + damage) / 2f * 7 * size + 1f);
 					}
 					double knockback = damage;
 					if(entity instanceof LivingEntity lEnt) {
@@ -521,7 +549,7 @@ public class ImprovedExplosion extends Explosion{
 		List<Entity> entities = level.getEntities(getExploder(), new AABB(posX - size * 2, posY - size * 2, posZ - size * 2, posX + size * 2, posY + size * 2, posZ + size * 2));
 		ForgeEventFactory.onExplosionDetonate(level, this, entities, size * 2);
 		for(Entity entity : entities) {
-			if(!entity.ignoreExplosion()) {
+			if(!entity.ignoreExplosion(this)) {
 				double distance = Math.sqrt(entity.distanceToSqr(getPosition())) / (size * 2);
 				if(distance < 1f && distance != 0) {
 					entityEffect.doEntityExplosion(entity, distance);
