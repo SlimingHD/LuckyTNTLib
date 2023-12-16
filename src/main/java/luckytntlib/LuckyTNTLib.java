@@ -95,9 +95,9 @@ public class LuckyTNTLib
 				public ItemStack dispense(BlockSource source, ItemStack stack) {
 					Direction direction = source.state().getValue(DispenserBlock.FACING);
 					Level level = source.level();
-					double x = source.pos().getX() + (double) direction.getStepX() * 1.125D;
-					double y = Math.floor(source.pos().getY()) + (double) direction.getStepY();
-					double z = source.pos().getZ() + (double) direction.getStepZ() * 1.125D;
+					double x = source.center().x() + (double) direction.getStepX() * 1.125D;
+					double y = Math.floor(source.center().y()) + (double) direction.getStepY();
+					double z = source.center().z() + (double) direction.getStepZ() * 1.125D;
 					BlockPos pos = source.pos().relative(direction);
 					BlockState state = level.getBlockState(pos);
 					RailShape rail = state.getBlock() instanceof BaseRailBlock ? ((BaseRailBlock) state.getBlock()).getRailDirection(state, level, pos, null) : RailShape.NORTH_SOUTH;
