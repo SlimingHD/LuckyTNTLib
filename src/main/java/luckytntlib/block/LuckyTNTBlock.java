@@ -6,9 +6,11 @@ import javax.annotation.Nullable;
 
 import luckytntlib.entity.PrimedLTNT;
 import luckytntlib.registry.RegistryHelper;
+import net.minecraft.core.BlockPos;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockBehaviour;
 import net.minecraftforge.registries.RegistryObject;
 
@@ -41,6 +43,9 @@ public class LuckyTNTBlock extends LTNTBlock{
 	@Override
 	public PrimedLTNT explode(Level level, boolean exploded, double x, double y, double z, @Nullable LivingEntity igniter){
 		int rand = random.nextInt(TNTs.size());
+		if(level.getBlockState(new BlockPos(x, y, z)).getBlock() == this) {
+			level.setBlock(new BlockPos(x, y, z), Blocks.AIR.defaultBlockState(), 3);
+		}
 		return TNTs.get(rand).get().explode(level, exploded, x, y, z, igniter);
 	}
 }
