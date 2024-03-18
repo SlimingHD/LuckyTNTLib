@@ -87,6 +87,9 @@ public class LivingPrimedLTNT extends PathfinderMob implements IExplosiveEntity{
 
 	@Override
 	public boolean hurt(DamageSource source, float amount) {
+		if(source == DamageSource.OUT_OF_WORLD) {
+			return true;
+		}
 		return false;
 	}
 
