@@ -9,6 +9,7 @@ import net.minecraft.network.syncher.EntityDataAccessor;
 import net.minecraft.network.syncher.EntityDataSerializers;
 import net.minecraft.network.syncher.SynchedEntityData;
 import net.minecraft.world.damagesource.DamageSource;
+import net.minecraft.world.damagesource.DamageTypes;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.PathfinderMob;
@@ -87,6 +88,9 @@ public class LivingPrimedLTNT extends PathfinderMob implements IExplosiveEntity{
 
 	@Override
 	public boolean hurt(DamageSource source, float amount) {
+		if(source.is(DamageTypes.OUT_OF_WORLD)) {
+			return true;
+		}
 		return false;
 	}
 
