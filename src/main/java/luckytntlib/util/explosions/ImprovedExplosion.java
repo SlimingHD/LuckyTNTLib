@@ -11,6 +11,8 @@ import java.util.Set;
 
 import javax.annotation.Nullable;
 
+import org.joml.Vector3f;
+
 import luckytntlib.config.LuckyTNTLibConfigValues;
 import luckytntlib.network.ClientboundUpdateChunkSectionPacket;
 import luckytntlib.network.PacketHandler;
@@ -141,6 +143,29 @@ public class ImprovedExplosion extends Explosion{
 		this.size = size;
 		damageCalculator = explodingEntity == null ? new ExplosionDamageCalculator() : new EntityBasedExplosionDamageCalculator(explodingEntity);
 	}
+	
+	public void doImprovedBlockExplosionMultithreaded(float resistanceImpact, float randomVecLength, boolean ignoreFluidResistance, boolean fire, RandomSource random) {			
+		long time = System.currentTimeMillis();
+		float randomVecLengthFac = 0.6f * randomVecLength;
+		float resistanceFac = 0.3f * resistanceImpact * 2.25f;
+
+		List<Vector3f> vectors = new ArrayList<Vector3f>((int)(4 * size * size * Math.PI + 10));
+		
+		for (int offX = -size; offX <= size; offX++) {
+			for (int offY = -size; offY <= size; offY++) {
+				for (int offZ = -size; offZ <= size; offZ++) {
+					int distanceSqr = offX * offX + offY * offY + offZ * offZ;
+					if (distanceSqr >= size * size && distanceSqr < (size + 1) * (size + 1)) {
+						vectors.add(new Vector3f(offX, offY, offZ).mul(0.7f + random.nextFloat() * randomVecLengthFac));
+					}
+				}
+			}
+		}
+		System.out.println("Time for vector gathering: " + (System.currentTimeMillis() - time));
+		
+		MasterExplosionThread t = new MasterExplosionThread(this, resistanceFac, ignoreFluidResistance, vectors);
+		t.start();
+	}
 
 	
 	/**
@@ -171,7 +196,7 @@ public class ImprovedExplosion extends Explosion{
 		HashMap<SectionPos, BitSet> editedSections = new HashMap<SectionPos, BitSet>();
 		HashMap<Long, SectionPos> sectionsToRemove = new HashMap<Long, SectionPos>();
 		HashMap<Long, SectionPos> emptySections = new HashMap<Long, SectionPos>();
-		
+
 		for (int offX = -size; offX <= size; offX++) {
 			for (int offY = -size; offY <= size; offY++) {
 				for (int offZ = -size; offZ <= size; offZ++) {
@@ -189,7 +214,7 @@ public class ImprovedExplosion extends Explosion{
 						SectionPos lastSectionPos = null;
 						BitSet lastBitSet = null;
 						LevelChunkSection lastSection = null;
-						for (float vecStep = 0; vecStep < vectorLength; vecStep += 0.225f) {
+						for (float vecStep = 0f; vecStep < vectorLength; vecStep += 0.225f) {
 							blockX += xStep;
 							blockY += yStep;
 							blockZ += zStep;
@@ -264,6 +289,8 @@ public class ImprovedExplosion extends Explosion{
 				}
 			}
 		}
+		
+		System.out.println("Time for explosion gathering: " + (System.currentTimeMillis() - time));
 		
 		if(level instanceof ServerLevel server) {
 			finishImprovedExplosion(server, editedSections, sectionsToRemove);
