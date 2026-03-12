@@ -7,8 +7,11 @@ import java.util.List;
 
 import org.joml.Vector3f;
 
+import luckytntlib.network.ClientboundSetupExplosionPacket;
 import luckytntlib.network.ClientboundUpdateChunkSectionPacket;
 import luckytntlib.network.PacketHandler;
+import luckytntlib.util.explosions.rules.CraterExplosionRule;
+import luckytntlib.util.explosions.rules.ExplosionRule;
 import luckytntlib.util.light.LightUpdateHelper;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
@@ -21,7 +24,6 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.context.DirectionalPlaceContext;
 import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.Level;
-import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.chunk.LevelChunk;
 import net.minecraft.world.level.chunk.LevelChunkSection;
@@ -324,7 +326,7 @@ public class ExplosionHelper {
 	 */
 	public static void createModifiedSphericalCrater(Level level, Vec3 position, int radius, Vector3f scaling, int maxResistance) {
 		DistanceCalculator calc = (x, z, r, s) -> (int)(Math.sqrt(r * r - x * x / s.x - z * z / s.z) * Math.sqrt(s.y));
-		createCrater(level, position, radius, scaling, maxResistance, calc);
+		createCrater(level, position, radius, scaling, maxResistance, calc, new CraterExplosionRule());
 	}
 	
 	/**
@@ -355,7 +357,7 @@ public class ExplosionHelper {
 	 */
 	public static void createCuboidCrater(Level level, Vec3 position, int radius, Vector3f scaling, int maxResistance) {
 		DistanceCalculator calc = (x, z, r, s) -> Math.abs(x) <= r * s.x && Math.abs(z) <= r * s.z ? (int)(r * s.y) : 0;
-		createCrater(level, position, radius, scaling, maxResistance, calc);
+		createCrater(level, position, radius, scaling, maxResistance, calc, new CraterExplosionRule());
 	}
 	
 	/**
@@ -391,7 +393,7 @@ public class ExplosionHelper {
 	 */
 	public static void createModifiedCylindricalCrater(Level level, Vec3 position, int radiusXZ, int radiusY, Vector3f scaling, int maxResistance) {
 		DistanceCalculator calc = (x, z, r, s) -> Math.sqrt(x * x / s.x + z * z / s.z) <= radiusXZ ? (int)(radiusY * s.y) : 0;
-		createCrater(level, position, radiusXZ, scaling, maxResistance, calc);
+		createCrater(level, position, radiusXZ, scaling, maxResistance, calc, new CraterExplosionRule());
 	}
 	
 	/**
@@ -402,10 +404,11 @@ public class ExplosionHelper {
 	 * @param scaling  a {@link Vector3f} containing the scaling for all axes
 	 * @param maxResistance  blocks with an explosion resistance lower or equal to this value will be removed, all other blocks will be untouched
 	 * @param calculator  a {@link DistanceCalculator} that determines the shape of the crater as explained at {@link DistanceCalculator#getMaxYDistance(int, int, int, Vector3f)}
+	 * @param rule  a {@link ExplosionRule} that determines the {@link BlockState} that will replace any position affected by the explosion
 	 * 
 	 * <br> <br>
 	 * 
-	 * <i> Standard implementations for this method: </i>
+	 * @see <i> Standard implementations for this method: </i>
 	 * @see #createSphericalCrater(Level, Vec3, int, int)
 	 * @see #createModifiedSphericalCrater(Level, Vec3, int, Vector3f, int)
 	 * @see #createCubicalCrater(Level, Vec3, int, int)
@@ -416,13 +419,15 @@ public class ExplosionHelper {
 	 * @see DistanceCalculator
 	 */
 	@SuppressWarnings("deprecation")
-	public static void createCrater(Level level, Vec3 position, int radius, Vector3f scaling, int maxResistance, DistanceCalculator calculator) {
+	public static void createCrater(Level level, Vec3 position, int radius, Vector3f scaling, int maxResistance, DistanceCalculator calculator, ExplosionRule rule) {
 		long time = System.currentTimeMillis();
 		if (level instanceof ServerLevel server) {
 			ImprovedExplosion dummyExplosion = ImprovedExplosion.dummyExplosion(server);
 			HashMap<LevelChunk, BitSet> chunks = new HashMap<LevelChunk, BitSet>();
 			ChunkPos pos = new ChunkPos(Mth.floor(position.x) >> 4, Mth.floor(position.z) >> 4);
 			BlockPos center = new BlockPos(Mth.floor(position.x), Mth.floor(position.y), Mth.floor(position.z));
+			
+			PacketHandler.CHANNEL.send(PacketDistributor.DIMENSION.with(() -> server.dimension()), new ClientboundSetupExplosionPacket(rule, center));
 			
 			float scale = Math.max(scaling.x, scaling.z);
 			int chunkRadius = (int)Math.ceil((float)(radius * scale) / 16f) + 1;
@@ -432,13 +437,13 @@ public class ExplosionHelper {
 					LevelChunk chunk = server.getChunk(chunkPos.x, chunkPos.z);
 					
 					chunk.setLoaded(true);
-					//server.setChunkForced(chunkPos.x, chunkPos.z, true);
 
 					boolean chunkEdited = false;
 					int height = server.getMinBuildHeight();
 
 					for (LevelChunkSection section : chunk.getSections()) {
 						if (section.hasOnlyAir()) {
+							height += 16;
 							continue;
 						}
 
@@ -455,8 +460,8 @@ public class ExplosionHelper {
 									int dy = height + j - center.getY();
 									if (-dyMax < dy && dy < dyMax) {
 										BlockState state = states.get(i, j, k);
-										if (!state.isAir() && state.getBlock().getExplosionResistance() <= maxResistance) {
-											states.set(i, j, k, Blocks.AIR.defaultBlockState());
+										if (state.getBlock().getExplosionResistance() <= maxResistance && rule.shouldApply(level, state, position, dx, dy, dz)) {
+											states.set(i, j, k, rule.getState());
 
 											BlockPos blockpos = new BlockPos((chunkPos.x << 4) + i, height + j, (chunkPos.z << 4) + k);
 											state.getBlock().wasExploded(server, blockpos, dummyExplosion);
@@ -479,9 +484,9 @@ public class ExplosionHelper {
 						}
 						if (!changed.isEmpty()) {
 							if(changed.size() == 4096) {
-								PacketHandler.CHANNEL.send(PacketDistributor.ALL.noArg(), new ClientboundUpdateChunkSectionPacket(SectionPos.of(chunkPos, height / 16 - chunk.getMinSection()), new ArrayList<>(), true, false));
+								PacketHandler.CHANNEL.send(PacketDistributor.TRACKING_CHUNK.with(() -> chunk), new ClientboundUpdateChunkSectionPacket(SectionPos.of(chunkPos, height / 16 - chunk.getMinSection()), new ArrayList<>(0), true, false));
 							} else {
-								PacketHandler.CHANNEL.send(PacketDistributor.ALL.noArg(), new ClientboundUpdateChunkSectionPacket(SectionPos.of(chunkPos, height / 16 - chunk.getMinSection()), changed, false, false));
+								PacketHandler.CHANNEL.send(PacketDistributor.TRACKING_CHUNK.with(() -> chunk), new ClientboundUpdateChunkSectionPacket(SectionPos.of(chunkPos, height / 16 - chunk.getMinSection()), changed, false, false));
 							}
 						}
 
@@ -491,7 +496,6 @@ public class ExplosionHelper {
 
 						height += 16;
 					}
-					//server.setChunkForced(chunkPos.x, chunkPos.z, false);
 					chunk.setUnsaved(true);
 				}
 			}

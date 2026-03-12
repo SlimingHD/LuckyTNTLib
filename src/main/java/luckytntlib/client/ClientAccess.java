@@ -3,7 +3,9 @@ package luckytntlib.client;
 import java.lang.reflect.Field;
 import java.util.List;
 
+import luckytntlib.network.ClientboundSetupExplosionPacket;
 import luckytntlib.util.explosions.ExplosionHelper;
+import luckytntlib.util.explosions.rules.ExplosionRule;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.core.BlockPos;
@@ -17,10 +19,10 @@ import net.minecraft.world.level.chunk.LevelChunk;
 import net.minecraft.world.level.chunk.PalettedContainer;
 import net.minecraft.world.level.lighting.ChunkSkyLightSources;
 import net.minecraft.world.level.lighting.LevelLightEngine;
+import net.minecraft.world.phys.Vec3;
 
 public class ClientAccess {
 
-	@SuppressWarnings("resource")
 	public static void updateChunkSection(SectionPos pos, List<Short> changed, boolean empty, boolean updateLight) {
 		ClientLevel level = Minecraft.getInstance().level;
 		
@@ -43,27 +45,37 @@ public class ClientAccess {
 			engine.updateSectionStatus(SectionPos.of(pos.getX(), pos.getY() + level.getMinSection(), pos.getZ()), false);
 			engine.setLightEnabled(chunk.getPos(), true);
 		} else {
+			ExplosionRule rule = ClientboundSetupExplosionPacket.currentRule;
+			BlockPos center = ClientboundSetupExplosionPacket.currentCenter;
+			boolean useRule = rule != null && center != null;
 			if(empty) {
 				for(short s = 0; s < 4096; s++) {
 					Vec3i secpos = ExplosionHelper.decodeSectionPos(s);
-					states.set(secpos.getX(), secpos.getY(), secpos.getZ(), Blocks.AIR.defaultBlockState());
-					
 					BlockPos blockpos = new BlockPos((pos.getX() << 4) + secpos.getX(), ((pos.getY() + level.getMinSection()) << 4) + secpos.getY(), (pos.getZ() << 4) + secpos.getZ());
+					
+					if(useRule) {
+						rule.shouldApply(level, states.get(secpos.getX(), secpos.getY(), secpos.getZ()), Vec3.atCenterOf(center), pos.getX() - center.getX(), pos.getY() - center.getY(), pos.getZ() - center.getZ());
+					}
+					
+					states.set(secpos.getX(), secpos.getY(), secpos.getZ(), useRule ? rule.getState() : Blocks.AIR.defaultBlockState());
 					chunk.removeBlockEntity(blockpos);
 				}
 			} else {
 				for(Short s : changed) {
 					Vec3i secpos = ExplosionHelper.decodeSectionPos(s);
-					states.set(secpos.getX(), secpos.getY(), secpos.getZ(), Blocks.AIR.defaultBlockState());
-					
 					BlockPos blockpos = new BlockPos((pos.getX() << 4) + secpos.getX(), ((pos.getY() + level.getMinSection()) << 4) + secpos.getY(), (pos.getZ() << 4) + secpos.getZ());
+					
+					if(useRule) {
+						rule.shouldApply(level, states.get(secpos.getX(), secpos.getY(), secpos.getZ()), Vec3.atCenterOf(center), pos.getX() - center.getX(), pos.getY() - center.getY(), pos.getZ() - center.getZ());
+					}
+					
+					states.set(secpos.getX(), secpos.getY(), secpos.getZ(), useRule ? rule.getState() : Blocks.AIR.defaultBlockState());
 					chunk.removeBlockEntity(blockpos);
 				}
 			}
 		}
 	}
 	
-	@SuppressWarnings("resource")
 	public static void updateChunkSkyLightSources(ChunkPos pos, int[] data) {
 		ClientLevel level = Minecraft.getInstance().level;
 		
@@ -90,5 +102,10 @@ public class ClientAccess {
 				heightmap.set(i, data[i]);
 			}
 		}
+	}
+	
+	public static void setupExplosion(ExplosionRule rule, BlockPos center) {
+		ClientboundSetupExplosionPacket.currentRule = rule;
+		ClientboundSetupExplosionPacket.currentCenter = center;
 	}
 }

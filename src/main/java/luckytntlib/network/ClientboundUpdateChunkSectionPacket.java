@@ -34,14 +34,14 @@ public class ClientboundUpdateChunkSectionPacket {
 		updateLight = buffer.readBoolean();
 		
 		if(!empty) {
-			int length = buffer.readInt();
-			List<Short> list = new ArrayList<>();
+			int length = buffer.readShort();
+			List<Short> list = new ArrayList<>(length);
 			for(int i = 0; i < length; i++) {
 				list.add(buffer.readShort());
 			}
 			changed = list;
 		} else {
-			changed = new ArrayList<>();
+			changed = new ArrayList<>(0);
 		}
 	}
 	
@@ -51,8 +51,9 @@ public class ClientboundUpdateChunkSectionPacket {
 		buffer.writeInt(sectionZ);
 		buffer.writeBoolean(empty);
 		buffer.writeBoolean(updateLight);
+		
 		if(!empty) {
-			buffer.writeInt(changed.size());
+			buffer.writeShort(changed.size());
 			for(Short s : changed) {
 				buffer.writeShort(s);
 			}

@@ -189,7 +189,7 @@ public class ImprovedExplosion extends Explosion{
 		/**
 		 * Keeps track of removed blocks in a {@link LevelChunkSection} using a {@link BitSet} of the size 4096 (the amount of blocks in a Section, 12 bits used for indexing)
 		 * Each bit represents a block in a section, with (from left to right) bits 1-4 being the x index, bits 5-8 being the y index and bits 9-12 being the z index.
-		 * Adding these three coordinate indices together will result in the block index inside the {@link BitSet}, which can than later be decoded back into a position.
+		 * Adding these three coordinate indices together will result in the block index inside the {@link BitSet}, which can then later be decoded back into a position.
 		 * Once the whole of a section's blocks has been marked, the {@link BitSet} is removed and the Section is simply marked as "to remove", saving RAM.
 		 * If a section turns out to be empty, it will be marked as such and will be skipped by any calculations.
 		 */
@@ -379,11 +379,11 @@ public class ImprovedExplosion extends Explosion{
 	 * @param random  more efficient random number generator
 	 */
 	public void placeFire(float randomVecLengthFac, RandomSource random) {
-		for(int offX = -size / 2; offX <= size / 2; offX++) {
-			for(int offY = -size / 2; offY <= size / 2; offY++) {
-				for(int offZ = -size / 2; offZ <= size / 2; offZ++) {
+		for(int offX = -size / 4; offX <= size / 4; offX++) {
+			for(int offY = -size / 4; offY <= size / 4; offY++) {
+				for(int offZ = -size / 4; offZ <= size / 4; offZ++) {
 					double distance = Math.sqrt(offX * offX + offY * offY + offZ * offZ);
-					if ((int)distance == size / 2 && random.nextFloat() < 0.2f) {
+					if ((int)distance == size / 4 && random.nextFloat() < 0.2f) {
 						double xStep = offX / distance * 0.3f;
 						double yStep = offY / distance * 0.3f;
 						double zStep = offZ / distance * 0.3f;
@@ -840,7 +840,7 @@ public class ImprovedExplosion extends Explosion{
 	}
 	
 	/** 
-	 * @implNote Must	 not be used to create an actual explosion!
+	 * @implNote Must not be used to create an actual explosion!
 	 * @return ImprovedExplosion with no strength and position at (0, 0, 0)
 	 */
 	public static ImprovedExplosion dummyExplosion(Level level) {

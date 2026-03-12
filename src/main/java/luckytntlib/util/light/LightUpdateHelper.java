@@ -55,7 +55,7 @@ public class LightUpdateHelper {
 	 * Calculates the updates to the direct light after explosions. <br>
 	 * Should always be called before {@link #updateIndirectSkyLight(ServerLevel, HashMap)}!
 	 * @param server  the current {@link ServerLevel}
-	 * @param chunks  a {@link HashMap} containing {@link BitSet}s linked to a {@link LevelChunk} with bits set to true according to the {@link LevelChunkSection}s in the chubk that have been edited
+	 * @param chunks  a {@link HashMap} containing {@link BitSet}s linked to a {@link LevelChunk} with bits set to true according to the {@link LevelChunkSection}s in the chunk that have been edited
 	 * 
 	 * @see #updateIndirectSkyLight(ServerLevel, HashMap)
 	 */
@@ -208,7 +208,7 @@ public class LightUpdateHelper {
 	 * Calculates the updates to the indirect light after explosions. <br>
 	 * Should always be called after {@link #updateDirectSkyLight(ServerLevel, HashMap)}!
 	 * @param server  the current {@link ServerLevel}
-	 * @param chunks  a {@link HashMap} containing {@link BitSet}s linked to a {@link LevelChunk} with bits set to true according to the {@link LevelChunkSection}s in the chubk that have been edited
+	 * @param chunks  a {@link HashMap} containing {@link BitSet}s linked to a {@link LevelChunk} with bits set to true according to the {@link LevelChunkSection}s in the chunk that have been edited
 	 * 
 	 * @see #updateDirectSkyLight(ServerLevel, HashMap)
 	 */
@@ -243,6 +243,10 @@ public class LightUpdateHelper {
 						}
 						if(getLightBlockAtPos(server, pos, x, y, z + 1) < 15 && getLightAtPos(server, pos, x, y, z + 1) < 15) {
 							queuePosForLightUpdate(packetData, pos, x, y, z + 1);
+						}
+						
+						if(y == lowestLightY && getLightBlockAtPos(server, pos, x, y - 1, z) < 15 && getLightAtPos(server, pos, x, y - 1, z) < 15) {
+							queuePosForLightUpdate(packetData, pos, x, y - 1, z);
 						}
 					}
 				}
@@ -304,6 +308,10 @@ public class LightUpdateHelper {
 		ChunkPos chunk = shiftChunkPos(pos, x, z);
 		int realX = shiftCoordinate(x);
 		int realZ = shiftCoordinate(z);
+		
+		if(y < server.getMinBuildHeight()) {
+			return 15;
+		}
 		
 		return server.getChunk(chunk.x, chunk.z).getSection(server.getSectionIndexFromSectionY(y >> 4)).getStates().get(realX, y & 15, realZ).getLightBlock(server, BlockPos.ZERO);
 	}

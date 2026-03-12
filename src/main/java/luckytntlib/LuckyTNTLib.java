@@ -12,6 +12,7 @@ import luckytntlib.item.LDynamiteItem;
 import luckytntlib.item.LTNTMinecartItem;
 import luckytntlib.network.PacketHandler;
 import luckytntlib.registry.RegistryHelper;
+import luckytntlib.registry.TempRegistry;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.core.BlockPos;
@@ -56,6 +57,11 @@ public class LuckyTNTLib {
         IEventBus bus = FMLJavaModLoadingContext.get().getModEventBus();
         bus.addListener(this::commonSetup);
         MinecraftForge.EVENT_BUS.register(this);
+        
+        TempRegistry.entityRegistry.register(bus);
+        TempRegistry.blockRegistry.register(bus);
+        TempRegistry.itemRegistry.register(bus);
+        
         LuckyTNTLibConfigs.register();
         ModLoadingContext.get().registerExtensionPoint(ConfigScreenHandler.ConfigScreenFactory.class, () -> new ConfigScreenHandler.ConfigScreenFactory(new BiFunction<Minecraft, Screen, Screen>() {		
 			@Override
