@@ -16,6 +16,13 @@ import luckytntlib.util.explosions.rules.ExplosionRule;
 import net.minecraft.core.SectionPos;
 import net.minecraft.server.level.ServerLevel;
 
+/**
+ * Handles the of a multithreaded explosion.
+ * This is done in its own thread, as blocking the main thread will lead to a deadlock.
+ * The threading itself is done using a {@link ForkJoinPool}, with the number of tasks being chosen dynamically based on the available processors and a minimum size.
+ * This thread is started and its explosion is finalized in {@link MultithreadExplosionHandler}.
+ * Only the gathering of blocks to explode is handled in multiple threads. Both the collection of vectors and the finalization is running in a single thread.
+ */
 public class ExplosionThread extends Thread {
 
 	private static final int minVectorsPerThread = 50000;
@@ -28,13 +35,14 @@ public class ExplosionThread extends Thread {
 	private final boolean placeFire;
 	@Nullable
 	private final ExplosionRule rule;
-	public final List<Vector3f> vectors;
+	private final List<Vector3f> vectors;
+	
 	public final Set<Long> emptySections = ConcurrentHashMap.newKeySet();
-	public final Set<Long> sectionsToRemove = ConcurrentHashMap.newKeySet();
+	public final Set<Long> fullSections = ConcurrentHashMap.newKeySet();
 	public final ConcurrentHashMap<Long, float[]> sectionResistances = new ConcurrentHashMap<Long, float[]>();
 	
 	private final HashMap<SectionPos, BitSet> editedSections = new HashMap<SectionPos, BitSet>();
-	private final HashMap<Long, SectionPos> sectionsToRemoveMapped = new HashMap<Long, SectionPos>();
+	private final HashMap<Long, SectionPos> fullSectionsMapped = new HashMap<Long, SectionPos>();
 	
 	public ExplosionThread(ImprovedExplosion explosion, float resistanceFac, float randomVecLengthFac, boolean ignoreFluids, boolean placeFire, @Nullable ExplosionRule rule, List<Vector3f> vectors) {
 		this.explosion = explosion;
@@ -56,8 +64,8 @@ public class ExplosionThread extends Thread {
 		for (long key : result.keySet()) {
 			editedSections.put(SectionPos.of(key), result.get(key));
 		}
-		for (long key : sectionsToRemove) {
-			sectionsToRemoveMapped.put(key, SectionPos.of(key));
+		for (long key : fullSections) {
+			fullSectionsMapped.put(key, SectionPos.of(key));
 		}
 	}
 	
@@ -66,7 +74,7 @@ public class ExplosionThread extends Thread {
 	}
 	
 	public HashMap<Long, SectionPos> getSectionsToRemove() {
-		return sectionsToRemoveMapped;
+		return fullSectionsMapped;
 	}
 	
 	public ImprovedExplosion getExplosion() {

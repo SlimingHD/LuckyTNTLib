@@ -43,6 +43,10 @@ public class ExplosionTask extends RecursiveTask<Long2ObjectMap<BitSet>> {
 		this.vectors = vectors;
 	}
 	
+	/**
+	 * Splits itself into two smaller tasks if too many vectors have been supplied.
+	 * Amount of vectors per task is determined to be either 50000 or the total amount of vectors divided by the available processor count.
+	 */
 	@Override
 	protected Long2ObjectMap<BitSet> compute() {
 		if (vectors.size() > allowedSize) {
@@ -57,7 +61,7 @@ public class ExplosionTask extends RecursiveTask<Long2ObjectMap<BitSet>> {
 					resultBitSets.get(key).or(toMergeBitSets.get(key));
 					if (resultBitSets.get(key).cardinality() == 4096) {
 						resultBitSets.remove(key);
-						explosionThread.sectionsToRemove.add(key);
+						explosionThread.fullSections.add(key);
 					}
 				} else {
 					resultBitSets.put(key, toMergeBitSets.get(key));
@@ -68,6 +72,9 @@ public class ExplosionTask extends RecursiveTask<Long2ObjectMap<BitSet>> {
 		return calculate();
 	}
 
+	/**
+	 * Functionally equivalent to the singlethreaded method.
+	 */
 	private Long2ObjectMap<BitSet> calculate() {
 		Long2ObjectMap<BitSet> editedSections = new Long2ObjectOpenHashMap<BitSet>();
 
@@ -104,9 +111,6 @@ public class ExplosionTask extends RecursiveTask<Long2ObjectMap<BitSet>> {
 				lastPosY = pos.getY();
 				lastPosZ = pos.getZ();
 				sectionPos = SectionPos.asLong(pos);
-				/**
-				 * If the section is empty, we can skip to the next step
-				 */
 				if (explosionThread.emptySections.contains(sectionPos)) {
 					vectorLength -= 0.3f * resistanceFac;
 					continue;
@@ -150,12 +154,9 @@ public class ExplosionTask extends RecursiveTask<Long2ObjectMap<BitSet>> {
 				if (vectorLength > 0) {
 					bitSet.set(((pos.getX() & 15) << 8) | ((pos.getY() & 15) << 4) | (pos.getZ() & 15));
 				}
-				/**
-				 * If all bits are set to true, we can mark the section as "to remove"
-				 */
 				if (bitSet.cardinality() == 4096) {
 					editedSections.remove(sectionPos);
-					explosionThread.sectionsToRemove.add(sectionPos);
+					explosionThread.fullSections.add(sectionPos);
 				}
 				lastSectionPos = sectionPos;
 				lastExplosionResistances = currentExplosionResistances;

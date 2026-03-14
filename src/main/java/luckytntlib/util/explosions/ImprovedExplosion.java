@@ -59,8 +59,8 @@ public class ImprovedExplosion extends Explosion{
 	public final double posX, posY, posZ;
 	public final int size;
 	public final ExplosionDamageCalculator damageCalculator;
+	@Deprecated(forRemoval = true)
 	List<Integer> affectedBlocks = new ArrayList<>();
-	List<Long> vectors = new ArrayList<Long>();
 	
 	private static ImprovedExplosion dummyExplosion;
 	
@@ -158,13 +158,13 @@ public class ImprovedExplosion extends Explosion{
 	 * @param rule  optional rule for causing effects other than just destruction. Leave as null for an efficient explosion that destroys blocks
 	 */
 	public void doImprovedBlockExplosion(float resistanceImpact, float randomVecLength, boolean ignoreFluidResistance, boolean fire, RandomSource random, @Nullable ExplosionRule rule) {
-		if (!level.isClientSide()) {
+		if (level.isClientSide()) {
 			return;
 		}
 		if (LuckyTNTLibConfigValues.MULTITHREADED_EXPLOSIONS.get() && size >= 30) {
 			doImprovedBlockExplosionMultithreaded(resistanceImpact, randomVecLength, ignoreFluidResistance, fire, random, rule);
 		} else {
-			doImprovedBlockExplosion(resistanceImpact, randomVecLength, ignoreFluidResistance, fire, random, rule);
+			doImprovedBlockExplosionSinglethreaded(resistanceImpact, randomVecLength, ignoreFluidResistance, fire, random, rule);
 		}
 	}
 	
@@ -222,8 +222,13 @@ public class ImprovedExplosion extends Explosion{
 				}
 			}
 		}
+		/*
+		 * We use BitSets to only take up 1 bit per block, also making sure a singular chunk section is utilizing cache locality.
+		 * Sections that are empty are marked to be skipped.
+		 * Sections that have every block marked are saved more efficiently.
+		 */
 		HashMap<SectionPos, BitSet> editedSections = new HashMap<SectionPos, BitSet>();
-		HashMap<Long, SectionPos> sectionsToRemove = new HashMap<Long, SectionPos>();
+		HashMap<Long, SectionPos> fullSections = new HashMap<Long, SectionPos>();
 		Set<Long> emptySections = new HashSet<Long>();
 		HashMap<Long, float[]> sectionResistances = new HashMap<Long, float[]>();
 		
@@ -261,9 +266,6 @@ public class ImprovedExplosion extends Explosion{
 				lastPosY = pos.getY();
 				lastPosZ = pos.getZ();
 				sectionPosL = SectionPos.asLong(pos);
-				/**
-				 * If the section is empty, we can skip to the next step
-				 */
 				if (emptySections.contains(sectionPosL)) {
 					vectorLength -= 0.3f * resistanceFac;
 					continue;
@@ -308,12 +310,9 @@ public class ImprovedExplosion extends Explosion{
 				if (vectorLength > 0) {
 					bitSet.set(((pos.getX() & 15) << 8) | ((pos.getY() & 15) << 4) | (pos.getZ() & 15));
 				}
-				/**
-				 * If all bits are set to true, we can mark the section as "to remove"
-				 */
 				if (bitSet.cardinality() == 4096) {
 					editedSections.remove(sectionPos);
-					sectionsToRemove.put(sectionPosL, SectionPos.of(pos));
+					fullSections.put(sectionPosL, SectionPos.of(pos));
 				}
 				lastSectionPosL = sectionPosL;
 				lastExplosionResistances = currentExplosionResistances;
@@ -321,7 +320,7 @@ public class ImprovedExplosion extends Explosion{
 		}
 		
 		if(level instanceof ServerLevel server) {
-			finishImprovedExplosion(server, editedSections, sectionsToRemove, rule);
+			finishImprovedExplosion(server, editedSections, fullSections, rule);
 			if(fire) {
 				placeFire(randomVecLengthFac, random);
 			}
@@ -330,49 +329,49 @@ public class ImprovedExplosion extends Explosion{
 		System.out.println(System.currentTimeMillis() - time);
 	}
 	
-	protected void finishImprovedExplosion(ServerLevel server, HashMap<SectionPos, BitSet> editedSections, HashMap<Long, SectionPos> sectionsToRemove, @Nullable ExplosionRule rule) {
-		if (!level.isClientSide()) {
-			return;
-		}
+	/**
+	 * Finishes an explosion, both multithreaded and singlethreaded, by applying an optional rule to all marked blocks or simply removing them if null is given.
+	 * @param serverLevel  the level that is being affected by the explosion
+	 * @param editedSections  the chunk sections which were only partially affected by the explosion
+	 * @param fullSections  the chunk sections which are fully affected by the explosion
+	 * @param rule  an optional rule for applying effects other than just destroying all marked blocks
+	 */
+	protected void finishImprovedExplosion(ServerLevel serverLevel, HashMap<SectionPos, BitSet> editedSections, HashMap<Long, SectionPos> fullSections, @Nullable ExplosionRule rule) {
 		if (rule == null) {
-			finishImprovedExplosionWithouRule(server, editedSections, sectionsToRemove);
+			finishImprovedExplosionWithoutRule(serverLevel, editedSections, fullSections);
 		} else {
-			finishImprovedExplosionWithRule(server, editedSections, sectionsToRemove, rule);
+			finishImprovedExplosionWithRule(serverLevel, editedSections, fullSections, rule);
 		}
 	}
 	
 	/**
-	 * Takes the data collected by {@link #doImprovedBlockExplosion(float, float, boolean, boolean, RandomSource)}
-	 * and removes the blocks inside the {@link PalettedContainer} directly instead of using {@link Level#setBlock(BlockPos, BlockState, int)}
-	 * as well as updating both indirect and direct skylight afterwards.
-	 * This greatly improves performance, as millions of update calls are stopped.
-	 * @param server  level
-	 * @param editedSections  sections that do not get cleared completely
-	 * @param sectionsToRemove  sections that should be cleared completely
+	 * Removes all blocks that are given, having a high level of performance.
+	 * For this reason, block updates are omitted.
+	 * Sky light is automatically updated, block light is not.
 	 */
-	private void finishImprovedExplosionWithouRule(ServerLevel server, HashMap<SectionPos, BitSet> editedSections, HashMap<Long, SectionPos> sectionsToRemove) {
+	private void finishImprovedExplosionWithoutRule(ServerLevel serverLevel, HashMap<SectionPos, BitSet> editedSections, HashMap<Long, SectionPos> fullSections) {
 		HashMap<LevelChunk, BitSet> chunks = new HashMap<>();
 		
-		for(SectionPos pos : sectionsToRemove.values()) {
-			LevelChunk chunk = server.getChunk(pos.x(), pos.z());
-			LevelChunkSection section = chunk.getSection(server.getSectionIndexFromSectionY(pos.y()));
+		for(SectionPos pos : fullSections.values()) {
+			LevelChunk chunk = serverLevel.getChunk(pos.x(), pos.z());
+			LevelChunkSection section = chunk.getSection(serverLevel.getSectionIndexFromSectionY(pos.y()));
 			PalettedContainer<BlockState> states = section.getStates();
 			
 			chunk.setLoaded(true);
 			
 			for(short s = 0; s < 4096; s++) {
 				BlockState state = states.getAndSet((s >> 8) & 15, (s >> 4) & 15, s & 15, Blocks.AIR.defaultBlockState());
-				state.getBlock().wasExploded(server, new BlockPos((pos.x() << 4) + ((s >> 8) & 15), (pos.y() << 4) + ((s >> 4) & 15), (pos.z() << 4) + (s & 15)), this);
+				state.getBlock().wasExploded(serverLevel, new BlockPos((pos.x() << 4) + ((s >> 8) & 15), (pos.y() << 4) + ((s >> 4) & 15), (pos.z() << 4) + (s & 15)), this);
 			}
 			
 			section.recalcBlockCounts();
 			
-			PacketHandler.CHANNEL.send(PacketDistributor.ALL.noArg(), new ClientboundUpdateChunkSectionPacket(SectionPos.of(pos.x(), server.getSectionIndexFromSectionY(pos.y()), pos.z()), new BitSet(0), true, false));
+			PacketHandler.CHANNEL.send(PacketDistributor.ALL.noArg(), new ClientboundUpdateChunkSectionPacket(SectionPos.of(pos.x(), serverLevel.getSectionIndexFromSectionY(pos.y()), pos.z()), new BitSet(0), true, false));
 			
 			if(!chunks.containsKey(chunk)) {
 				chunks.put(chunk, new BitSet());
 			}
-			chunks.get(chunk).set(pos.y() - (server.getMinSection() - 1));
+			chunks.get(chunk).set(pos.y() - (serverLevel.getMinSection() - 1));
 			
 			chunk.setUnsaved(true);
 		}
@@ -380,8 +379,8 @@ public class ImprovedExplosion extends Explosion{
 		for(Entry<SectionPos, BitSet> entry : editedSections.entrySet()) {
 			SectionPos pos = entry.getKey();
 			BitSet removedBlocks = entry.getValue();
-			LevelChunk chunk = server.getChunk(pos.x(), pos.z());
-			LevelChunkSection section = chunk.getSection(server.getSectionIndexFromSectionY(pos.y()));
+			LevelChunk chunk = serverLevel.getChunk(pos.x(), pos.z());
+			LevelChunkSection section = chunk.getSection(serverLevel.getSectionIndexFromSectionY(pos.y()));
 			PalettedContainer<BlockState> states = section.getStates();
 			
 			chunk.setLoaded(true);
@@ -389,31 +388,36 @@ public class ImprovedExplosion extends Explosion{
 			for(short s = 0; s < 4096; s++) {
 				if(removedBlocks.get(s)) {
 					BlockState state = states.getAndSet((s >> 8) & 15, (s >> 4) & 15, s & 15, Blocks.AIR.defaultBlockState());
-					state.getBlock().wasExploded(server, new BlockPos((pos.x() << 4) + ((s >> 8) & 15), (pos.y() << 4) + ((s >> 4) & 15), (pos.z() << 4) + (s & 15)), this);
+					state.getBlock().wasExploded(serverLevel, new BlockPos((pos.x() << 4) + ((s >> 8) & 15), (pos.y() << 4) + ((s >> 4) & 15), (pos.z() << 4) + (s & 15)), this);
 				}
 			}
 			
 			section.recalcBlockCounts();
 			
-			PacketHandler.CHANNEL.send(PacketDistributor.ALL.noArg(), new ClientboundUpdateChunkSectionPacket(SectionPos.of(pos.x(), server.getSectionIndexFromSectionY(pos.y()), pos.z()), removedBlocks, false, false));
+			PacketHandler.CHANNEL.send(PacketDistributor.ALL.noArg(), new ClientboundUpdateChunkSectionPacket(SectionPos.of(pos.x(), serverLevel.getSectionIndexFromSectionY(pos.y()), pos.z()), removedBlocks, false, false));
 			
 			if(!chunks.containsKey(chunk)) {
 				chunks.put(chunk, new BitSet());
 			}
-			chunks.get(chunk).set(pos.y() - (server.getMinSection() - 1));
+			chunks.get(chunk).set(pos.y() - (serverLevel.getMinSection() - 1));
 			
 			chunk.setUnsaved(true);
 		}
 		
-		LightUpdateHelper.updateDirectSkyLight(server, chunks);
-		LightUpdateHelper.updateIndirectSkyLight(server, chunks);
+		LightUpdateHelper.updateDirectSkyLight(serverLevel, chunks);
+		LightUpdateHelper.updateIndirectSkyLight(serverLevel, chunks);
 	}
 	
-	private void finishImprovedExplosionWithRule(ServerLevel server, HashMap<SectionPos, BitSet> editedSections, HashMap<Long, SectionPos> sectionsToRemove, ExplosionRule rule) {
+	/**
+	 * Affects all blocks that are given using the provided explosion rule.
+	 * Block updates are omitted to save performance.
+	 * Sky light is automatically updated, block light is not.
+	 */
+	private void finishImprovedExplosionWithRule(ServerLevel server, HashMap<SectionPos, BitSet> editedSections, HashMap<Long, SectionPos> fullSections, ExplosionRule rule) {
 		HashMap<LevelChunk, BitSet> chunks = new HashMap<>();
 		PacketHandler.CHANNEL.send(PacketDistributor.ALL.noArg(), new ClientboundSetupExplosionPacket(rule, BlockPos.containing(posX, posY, posZ)));
 	
-		for(SectionPos pos : sectionsToRemove.values()) {
+		for(SectionPos pos : fullSections.values()) {
 			LevelChunk chunk = server.getChunk(pos.x(), pos.z());
 			LevelChunkSection section = chunk.getSection(server.getSectionIndexFromSectionY(pos.y()));
 			PalettedContainer<BlockState> states = section.getStates();
@@ -545,7 +549,7 @@ public class ImprovedExplosion extends Explosion{
 	 * @param fire  whether or not the explosion should spawn fire afterwards
 	 * @param isStrongExplosion  whether or not fluids should be ignored in the explosion resistance calculation. Very useful for large explosions
 	 */
-	@Deprecated
+	@Deprecated(forRemoval = true)
 	public void doBlockExplosion(float xzStrength, float yStrength, float resistanceImpact, float randomVecLength, boolean fire, boolean isStrongExplosion) {			
 		long time = System.currentTimeMillis();
 		BlockPos posTNT = new BlockPos(Mth.floor(posX), Mth.floor(posY), Mth.floor(posZ));
@@ -619,7 +623,7 @@ public class ImprovedExplosion extends Explosion{
 	 * @param isStrongExplosion  whether or not fluids should be ignored in the explosion resistance calculation. Very useful for large explosions
 	 * @param blockEffect  determines what should happen to the blocks gotten by this explosion
 	 */
-	@Deprecated
+	@Deprecated(forRemoval = true)
 	public void doBlockExplosion(float xzStrength, float yStrength, float resistanceImpact, float randomVecLength, boolean isStrongExplosion, IForEachBlockExplosionEffect blockEffect) {
 		BlockPos posTNT = new BlockPos(Mth.floor(posX), Mth.floor(posY), Mth.floor(posZ));
 		Set<Integer> blocks = new HashSet<>();
@@ -685,7 +689,7 @@ public class ImprovedExplosion extends Explosion{
 	 * @param condition  the condition on which a block is added to the {@link Set} of blocks
 	 * @param blockEffect  determines what should happen to the blocks gotten by this explosion
 	 */
-	@Deprecated
+	@Deprecated(forRemoval = true)
 	public void doBlockExplosion(float xzStrength, float yStrength, float resistanceImpact, float randomVecLength, boolean isStrongExplosion, IBlockExplosionCondition condition, IForEachBlockExplosionEffect blockEffect) {
 		BlockPos posTNT = new BlockPos(Mth.floor(posX), Mth.floor(posY), Mth.floor(posZ));
 		Set<Integer> blocks = new HashSet<>();
@@ -778,7 +782,7 @@ public class ImprovedExplosion extends Explosion{
 	 * @param isStrongExplosion  whether or not fluids should be ignored in the explosion resistance calculation. Very useful for large explosions
 	 * @param saveBlockPos  whether or not affected blocks should be saved to be used externally
 	 */
-	@Deprecated
+	@Deprecated(forRemoval = true)
 	public void doOldBlockExplosion(float xzStrength, float yStrength, float resistanceImpact, float randomVecLength, boolean fire, boolean isStrongExplosion, boolean saveBlockPos) {
 		Set<BlockPos> blocks = new HashSet<>();
 		for(int offX = -size; offX <= size; offX++) {
@@ -847,7 +851,7 @@ public class ImprovedExplosion extends Explosion{
 	 * @param z  the z position of the block
 	 * @return encoded int containing information about x, y and z positions, all of which can have values between -511 and 511
 	 */
-	@Deprecated
+	@Deprecated(forRemoval = true)
 	protected int encodeBlockPos(int x, int y, int z) {
 		int x0 = Integer.signum(x);
 		x = Math.abs(x) > 511 ? 511 : Math.abs(x);
@@ -876,7 +880,7 @@ public class ImprovedExplosion extends Explosion{
 	 * @param encodedVal  the position encoded by {@link ImprovedExplosion#encodeBlockPos(int, int, int)}
 	 * @return BlockPos with the relative x, y and z coordinates decoded again with an absolute max value of 511
 	 */
-	@Deprecated
+	@Deprecated(forRemoval = true)
 	protected BlockPos decodeBlockPos(int encodedVal) {
 		int zRaw = (encodedVal & 0b00000000000000000000000111111111);
 		int zNeg = (encodedVal & 0b00000000000000000000001000000000) >> 9;
@@ -949,13 +953,18 @@ public class ImprovedExplosion extends Explosion{
 		}
 	}
 	
+	/**
+	 * Spawns particles on the server side.
+	 * Particle count, distribution, speed, and whether or not poof particles are spawned, is determined by the size of this explosion.
+	 */
 	public void spawnExplosionParticlesServer() {
-		if (!level.isClientSide()) {
-			ServerLevel server = (ServerLevel)level;
-			server.sendParticles(ParticleTypes.EXPLOSION, posX, posY + 0.5d, posZ, Math.min(size * size / 4, 5000), Math.min(size / 4d, 6d), Math.min(size / 4d, 6d), Math.min(size / 4d, 6d), 0d);
-			if (size > 4) {
-				server.sendParticles(ParticleTypes.POOF, posX, posY, posZ, Math.min(size * size, 10000), 0d, 0d, 0d, Math.min(size / 8d, 1.5d));
-			}
+		if (level.isClientSide()) {
+			return;
+		}
+		ServerLevel server = (ServerLevel)level;
+		server.sendParticles(ParticleTypes.EXPLOSION, posX, posY + 0.5d, posZ, Math.min(size * size / 4, 5000), Math.min(size / 4d, 6d), Math.min(size / 4d, 6d), Math.min(size / 4d, 6d), 0d);
+		if (size > 2) {
+			server.sendParticles(ParticleTypes.POOF, posX, posY, posZ, Math.min(size * size, 10000), 0d, 0d, 0d, Math.min(size / 8d, 1.5d));
 		}
 	}
 	
@@ -987,6 +996,7 @@ public class ImprovedExplosion extends Explosion{
 	}
 	
 	@Override
+	@Deprecated
 	public List<BlockPos> getToBlow(){
 		List<BlockPos> blocks = new ArrayList<>();
 		for(int intPos : affectedBlocks) {

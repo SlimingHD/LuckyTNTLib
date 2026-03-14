@@ -9,6 +9,15 @@ import net.minecraftforge.event.TickEvent.ServerTickEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
 
+/**
+ * Handles multiple multithreaded explosions, as they are forced to be non-blocking.
+ * This class handles queueing of explosions to make sure not too many explosions are run in parallel.
+ * The maximum number of simultaneous explosions is decided by the user in their config.
+ * Finalization of an explosion needs to be singlethreaded, as it needs to write into chunks.
+ * Only one explosion is finalized per tick.
+ * Extra explosion threads are queued and only started once space has been made in the explosion queue.
+ * This is done to save on CPU and RAM usage and make sure the game doesn't just crash.
+ */
 @Mod.EventBusSubscriber
 public class MultithreadExplosionHandler {
 
