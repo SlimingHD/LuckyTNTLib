@@ -1,7 +1,6 @@
 package luckytntlib.util.light;
 
 import java.lang.reflect.Field;
-import java.util.ArrayList;
 import java.util.BitSet;
 import java.util.HashMap;
 import java.util.List;
@@ -49,6 +48,11 @@ public class LightUpdateHelper {
 	 * A byte array of the length 2048 filled with the value 0. Used to replace the block light data of empty sections that can see the sky.
 	 */
 	private static final byte[] blockData = new byte[2048];
+	
+	/**
+	 * Cached {@link Field} for less reflection
+	 */
+	private static Field heightmapField;
 
 	
 	/**
@@ -72,14 +76,18 @@ public class LightUpdateHelper {
 			List<byte[]> blockUpdates = lightData.getBlockUpdates();
 			BitStorage heightmap = null;
 			
-			try {
-				for(Field f : ChunkSkyLightSources.class.getDeclaredFields()) {
+			if (heightmapField == null) {
+				for (Field f : ChunkSkyLightSources.class.getDeclaredFields()) {
 					f.setAccessible(true);
-					if(f.get(chunk.getSkyLightSources()) instanceof BitStorage storage) {
-						heightmap = storage;
+					if (f.getType() == BitStorage.class) {
+						heightmapField = f;
 						break;
 					}
 				}
+			}
+			
+			try {
+				heightmap = (BitStorage)heightmapField.get(server.getChunk(pos.x, pos.z).getSkyLightSources());
 			} catch(IllegalAccessException e) {
 				e.printStackTrace();
 			}
@@ -214,7 +222,7 @@ public class LightUpdateHelper {
 	 */
 	public static void updateIndirectSkyLight(ServerLevel server, HashMap<LevelChunk, BitSet> chunks) {
 		LevelLightEngine engine = server.getLightEngine();
-		HashMap<ChunkPos, HashMap<Integer, List<Short>>> packetData = new HashMap<>();
+		HashMap<ChunkPos, HashMap<Integer, BitSet>> packetData = new HashMap<>();
 		
 		for(Entry<LevelChunk, BitSet> entry : chunks.entrySet()) {
 			LevelChunk chunk = entry.getKey();
@@ -253,12 +261,15 @@ public class LightUpdateHelper {
 			}
 		}
 		
-		for(Entry<ChunkPos, HashMap<Integer, List<Short>>> entry : packetData.entrySet()) {
+		for(Entry<ChunkPos, HashMap<Integer, BitSet>> entry : packetData.entrySet()) {
 			ChunkPos pos = entry.getKey();
-			for(Entry<Integer, List<Short>> e : entry.getValue().entrySet()) {
+			for(Entry<Integer, BitSet> e : entry.getValue().entrySet()) {
 				PacketHandler.CHANNEL.send(PacketDistributor.ALL.noArg(), new ClientboundUpdateChunkSectionPacket(SectionPos.of(pos, e.getKey() - server.getMinSection()), e.getValue(), false, true));
 				
-				for(Short s : e.getValue()) {
+				for (short s = 0; s < 4096; ++s) {
+					if (!e.getValue().get(s)) {
+						continue;
+					}
 					Vec3i vec = ExplosionHelper.decodeSectionPos(s);
 					engine.checkBlock(new BlockPos((pos.x << 4) + vec.getX(), (e.getKey() << 4) + vec.getY(), (pos.z << 4) + vec.getZ()));
 				}
@@ -278,7 +289,7 @@ public class LightUpdateHelper {
 	 * 
 	 * @see #updateIndirectSkyLight(ServerLevel, HashMap)
 	 */
-	private static void queuePosForLightUpdate(HashMap<ChunkPos, HashMap<Integer, List<Short>>> packetData, ChunkPos pos, int x, int y, int z) {
+	private static void queuePosForLightUpdate(HashMap<ChunkPos, HashMap<Integer, BitSet>> packetData, ChunkPos pos, int x, int y, int z) {
 		ChunkPos chunk = shiftChunkPos(pos, x, z);
 		int realX = shiftCoordinate(x);
 		int realZ = shiftCoordinate(z);
@@ -288,10 +299,10 @@ public class LightUpdateHelper {
 			packetData.put(chunk, new HashMap<>());
 		}
 		if(packetData.get(chunk).get(sectionY) == null) {
-			packetData.get(chunk).put(sectionY, new ArrayList<>());
+			packetData.get(chunk).put(sectionY, new BitSet(4096));
 		}
 		
-		packetData.get(chunk).get(sectionY).add(ExplosionHelper.encodeSectionPos((short)realX, (short)(y & 15), (short)realZ));
+		packetData.get(chunk).get(sectionY).set(ExplosionHelper.encodeSectionPos((short)realX, (short)(y & 15), (short)realZ));
 	}
 	
 	/**

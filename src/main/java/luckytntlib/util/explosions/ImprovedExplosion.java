@@ -367,7 +367,7 @@ public class ImprovedExplosion extends Explosion{
 			
 			section.recalcBlockCounts();
 			
-			PacketHandler.CHANNEL.send(PacketDistributor.ALL.noArg(), new ClientboundUpdateChunkSectionPacket(SectionPos.of(pos.x(), server.getSectionIndexFromSectionY(pos.y()), pos.z()), new ArrayList<>(), true, false));
+			PacketHandler.CHANNEL.send(PacketDistributor.ALL.noArg(), new ClientboundUpdateChunkSectionPacket(SectionPos.of(pos.x(), server.getSectionIndexFromSectionY(pos.y()), pos.z()), new BitSet(0), true, false));
 			
 			if(!chunks.containsKey(chunk)) {
 				chunks.put(chunk, new BitSet());
@@ -383,7 +383,6 @@ public class ImprovedExplosion extends Explosion{
 			LevelChunk chunk = server.getChunk(pos.x(), pos.z());
 			LevelChunkSection section = chunk.getSection(server.getSectionIndexFromSectionY(pos.y()));
 			PalettedContainer<BlockState> states = section.getStates();
-			List<Short> changed = new ArrayList<>();
 			
 			chunk.setLoaded(true);
 			
@@ -391,13 +390,12 @@ public class ImprovedExplosion extends Explosion{
 				if(removedBlocks.get(s)) {
 					BlockState state = states.getAndSet((s >> 8) & 15, (s >> 4) & 15, s & 15, Blocks.AIR.defaultBlockState());
 					state.getBlock().wasExploded(server, new BlockPos((pos.x() << 4) + ((s >> 8) & 15), (pos.y() << 4) + ((s >> 4) & 15), (pos.z() << 4) + (s & 15)), this);
-					changed.add(s);
 				}
 			}
 			
 			section.recalcBlockCounts();
 			
-			PacketHandler.CHANNEL.send(PacketDistributor.ALL.noArg(), new ClientboundUpdateChunkSectionPacket(SectionPos.of(pos.x(), server.getSectionIndexFromSectionY(pos.y()), pos.z()), changed, false, false));
+			PacketHandler.CHANNEL.send(PacketDistributor.ALL.noArg(), new ClientboundUpdateChunkSectionPacket(SectionPos.of(pos.x(), server.getSectionIndexFromSectionY(pos.y()), pos.z()), removedBlocks, false, false));
 			
 			if(!chunks.containsKey(chunk)) {
 				chunks.put(chunk, new BitSet());
@@ -438,7 +436,7 @@ public class ImprovedExplosion extends Explosion{
 			
 			section.recalcBlockCounts();
 			
-			PacketHandler.CHANNEL.send(PacketDistributor.ALL.noArg(), new ClientboundUpdateChunkSectionPacket(SectionPos.of(pos.x(), server.getSectionIndexFromSectionY(pos.y()), pos.z()), new ArrayList<>(), true, false));
+			PacketHandler.CHANNEL.send(PacketDistributor.ALL.noArg(), new ClientboundUpdateChunkSectionPacket(SectionPos.of(pos.x(), server.getSectionIndexFromSectionY(pos.y()), pos.z()), new BitSet(0), true, false));
 			
 			if(!chunks.containsKey(chunk)) {
 				chunks.put(chunk, new BitSet());
@@ -454,7 +452,6 @@ public class ImprovedExplosion extends Explosion{
 			LevelChunk chunk = server.getChunk(pos.x(), pos.z());
 			LevelChunkSection section = chunk.getSection(server.getSectionIndexFromSectionY(pos.y()));
 			PalettedContainer<BlockState> states = section.getStates();
-			List<Short> changed = new ArrayList<>();
 			
 			chunk.setLoaded(true);
 			
@@ -470,14 +467,13 @@ public class ImprovedExplosion extends Explosion{
 					if (rule.shouldApply(server, state, new Vec3(posX, posY, posZ), (int)(x - posX), (int)(y - posY), (int)(z - posZ))) {
 						state.getBlock().wasExploded(server, new BlockPos(x, y, z), this);
 						states.set(xl, yl, zl, rule.getState());
-						changed.add(s);
 					}
 				}
 			}
 			
 			section.recalcBlockCounts();
 			
-			PacketHandler.CHANNEL.send(PacketDistributor.ALL.noArg(), new ClientboundUpdateChunkSectionPacket(SectionPos.of(pos.x(), server.getSectionIndexFromSectionY(pos.y()), pos.z()), changed, false, false));
+			PacketHandler.CHANNEL.send(PacketDistributor.ALL.noArg(), new ClientboundUpdateChunkSectionPacket(SectionPos.of(pos.x(), server.getSectionIndexFromSectionY(pos.y()), pos.z()), removedBlocks, false, false));
 			
 			if(!chunks.containsKey(chunk)) {
 				chunks.put(chunk, new BitSet());

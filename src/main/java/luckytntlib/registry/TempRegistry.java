@@ -1,7 +1,5 @@
 package luckytntlib.registry;
 
-import org.joml.Vector3f;
-
 import luckytntlib.LuckyTNTLib;
 import luckytntlib.block.LTNTBlock;
 import luckytntlib.entity.PrimedLTNT;
@@ -15,6 +13,7 @@ import luckytntlib.util.explosions.rules.DistanceExplosionRule.SmallerAndGreater
 import luckytntlib.util.explosions.rules.DistanceExplosionRule.SmallerThanDistanceComparator;
 import luckytntlib.util.explosions.rules.ExplosionRule;
 import luckytntlib.util.explosions.rules.FilterAirExplosionRule;
+import luckytntlib.util.explosions.rules.NotExplosionRule;
 import luckytntlib.util.explosions.rules.RandomBlockExplosionRule;
 import luckytntlib.util.explosions.rules.StackedExplosionRule;
 import luckytntlib.util.tnteffects.PrimedTNTEffect;
@@ -44,10 +43,12 @@ public class TempRegistry {
 
 	//ENTITIES
 	public static final RegistryObject<EntityType<PrimedLTNT>> ENT_TNT_X10000 = RH.registerTNTEntity("tnt_x10000", /*TNT_X10000_EFFECT.fuse(80).buildTNT(() -> TempRegistry.BLOCK_TNT_X10000)*/new TestEffectSingleThreaded());
+	public static final RegistryObject<EntityType<PrimedLTNT>> ENT_TNT_X10000_MULTI = RH.registerTNTEntity("tnt_x10000_multi", TNT_X10000_EFFECT.fuse(80).buildTNT(() -> TempRegistry.BLOCK_TNT_X10000_MULTI));
 	public static final RegistryObject<EntityType<PrimedLTNT>> ENT_SUPERNOVA = RH.registerTNTEntity("supernova", new TestEffect());
 	
 	//BLOCKS
 	public static final RegistryObject<LTNTBlock> BLOCK_TNT_X10000 = RH.registerTNTBlock("tnt_x10000", TempRegistry.ENT_TNT_X10000, "d", MapColor.COLOR_PINK, true);
+	public static final RegistryObject<LTNTBlock> BLOCK_TNT_X10000_MULTI = RH.registerTNTBlock("tnt_x10000_multi", TempRegistry.ENT_TNT_X10000_MULTI, "d", MapColor.COLOR_PINK, true);
 	public static final RegistryObject<LTNTBlock> BLOCK_SUPERNOVA = RH.registerTNTBlock("supernova", TempRegistry.ENT_SUPERNOVA, "d", MapColor.COLOR_RED, true);
 	
 	
@@ -56,9 +57,9 @@ public class TempRegistry {
 		@Override
 		public void serverExplosion(IExplosiveEntity ent) {
 			DistanceCalculator calc = (x, z, r, s) -> (int)(Math.sqrt(r * r - x * x / s.x - z * z / s.z) * Math.sqrt(s.y));
-			ExplosionRule rule = new FilterAirExplosionRule(new StackedExplosionRule(new DistanceExplosionRule(new RandomBlockExplosionRule(RandomList.<BlockState>floatBuilder().addEntry(Blocks.RED_WOOL.defaultBlockState(), 0.95f).addEntry(Blocks.LIME_WOOL.defaultBlockState(), 0.05f).build()), new SmallerThanDistanceComparator(75)), new DistanceExplosionRule(new RandomBlockExplosionRule(RandomList.ofEqualProbability(Blocks.YELLOW_WOOL.defaultBlockState(), Blocks.PURPLE_WOOL.defaultBlockState())), new SmallerAndGreaterThanDistanceComparator(85, 120))));
-			ExplosionHelper.createCrater(ent.getLevel(), ent.getPos(), 150, new Vector3f(1f, 1f, 1f), 5000, calc, rule);
-			//ExplosionHelper.createSphericalCrater(ent.getLevel(), ent.getPos(), 300, 5000);
+			ExplosionRule rule = new NotExplosionRule(new FilterAirExplosionRule(new StackedExplosionRule(new DistanceExplosionRule(new RandomBlockExplosionRule(RandomList.<BlockState>floatBuilder().addEntry(Blocks.RED_WOOL.defaultBlockState(), 0.95f).addEntry(Blocks.LIME_WOOL.defaultBlockState(), 0.05f).build()), new SmallerThanDistanceComparator(75)), new DistanceExplosionRule(new RandomBlockExplosionRule(RandomList.ofEqualProbability(Blocks.YELLOW_WOOL.defaultBlockState(), Blocks.PURPLE_WOOL.defaultBlockState())), new SmallerAndGreaterThanDistanceComparator(85, 120)))));
+			//ExplosionHelper.createCrater(ent.getLevel(), ent.getPos(), 150, new Vector3f(1f, 1f, 1f), 5000, calc, rule);
+			ExplosionHelper.createCubicalCrater(ent.getLevel(), ent.getPos(), 300, 5000);
 		}
 	}
 	

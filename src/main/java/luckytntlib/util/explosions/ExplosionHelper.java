@@ -1,9 +1,7 @@
 package luckytntlib.util.explosions;
 
-import java.util.ArrayList;
 import java.util.BitSet;
 import java.util.HashMap;
-import java.util.List;
 
 import org.joml.Vector3f;
 
@@ -325,7 +323,7 @@ public class ExplosionHelper {
 	 * @see #doModifiedSphericalExplosion(Level, Vec3, int, Vec3, IForEachBlockExplosionEffect)
 	 */
 	public static void createModifiedSphericalCrater(Level level, Vec3 position, int radius, Vector3f scaling, int maxResistance) {
-		DistanceCalculator calc = (x, z, r, s) -> (int)(Math.sqrt(r * r - x * x / s.x - z * z / s.z) * Math.sqrt(s.y));
+		DistanceCalculator calc = (x, z, r, s) -> (int)((r * r - x * x / s.x - z * z / s.z) * s.y);
 		createCrater(level, position, radius, scaling, maxResistance, calc, new CraterExplosionRule());
 	}
 	
@@ -356,7 +354,7 @@ public class ExplosionHelper {
 	 * @see #doCuboidExplosion(Level, Vec3, Vec3, IForEachBlockExplosionEffect)
 	 */
 	public static void createCuboidCrater(Level level, Vec3 position, int radius, Vector3f scaling, int maxResistance) {
-		DistanceCalculator calc = (x, z, r, s) -> Math.abs(x) <= r * s.x && Math.abs(z) <= r * s.z ? (int)(r * s.y) : 0;
+		DistanceCalculator calc = (x, z, r, s) -> Math.abs(x) <= r * s.x && Math.abs(z) <= r * s.z ? (int)(r * s.y) : -1;
 		createCrater(level, position, radius, scaling, maxResistance, calc, new CraterExplosionRule());
 	}
 	
@@ -392,7 +390,7 @@ public class ExplosionHelper {
 	 * @see #doCylindricalExplosion(Level, Vec3, int, int, IForEachBlockExplosionEffect)
 	 */
 	public static void createModifiedCylindricalCrater(Level level, Vec3 position, int radiusXZ, int radiusY, Vector3f scaling, int maxResistance) {
-		DistanceCalculator calc = (x, z, r, s) -> Math.sqrt(x * x / s.x + z * z / s.z) <= radiusXZ ? (int)(radiusY * s.y) : 0;
+		DistanceCalculator calc = (x, z, r, s) -> Math.sqrt(x * x / s.x + z * z / s.z) <= radiusXZ ? (int)(radiusY * s.y) : -1;
 		createCrater(level, position, radiusXZ, scaling, maxResistance, calc, new CraterExplosionRule());
 	}
 	
@@ -421,6 +419,7 @@ public class ExplosionHelper {
 	@SuppressWarnings("deprecation")
 	public static void createCrater(Level level, Vec3 position, int radius, Vector3f scaling, int maxResistance, DistanceCalculator calculator, ExplosionRule rule) {
 		long time = System.currentTimeMillis();
+		int editedBlocks = 0;
 		if (level instanceof ServerLevel server) {
 			ImprovedExplosion dummyExplosion = ImprovedExplosion.dummyExplosion(server);
 			HashMap<LevelChunk, BitSet> chunks = new HashMap<LevelChunk, BitSet>();
@@ -448,7 +447,7 @@ public class ExplosionHelper {
 						}
 
 						PalettedContainer<BlockState> states = section.getStates();
-						List<Short> changed = new ArrayList<>();
+						BitSet changed = new BitSet(4096);
 						boolean sectionChanged = false;
 
 						for (byte i = 0; i < 16; i++) {
@@ -458,7 +457,7 @@ public class ExplosionHelper {
 								int dyMax = calculator.getMaxYDistance(dx, dz, radius, scaling);
 								for (byte j = 0; j < 16; j++) {
 									int dy = height + j - center.getY();
-									if (-dyMax < dy && dy < dyMax) {
+									if (-dyMax <= dy && dy <= dyMax) {
 										BlockState state = states.get(i, j, k);
 										if (state.getBlock().getExplosionResistance() <= maxResistance && rule.shouldApply(level, state, position, dx, dy, dz)) {
 											states.set(i, j, k, rule.getState());
@@ -467,7 +466,8 @@ public class ExplosionHelper {
 											state.getBlock().wasExploded(server, blockpos, dummyExplosion);
 											chunk.removeBlockEntity(blockpos);
 
-											changed.add(encodeSectionPos(i, j, k));
+											changed.set(encodeSectionPos(i, j, k));
+											++editedBlocks;
 
 											if (!chunkEdited) {
 												chunkEdited = true;
@@ -483,8 +483,8 @@ public class ExplosionHelper {
 							}
 						}
 						if (!changed.isEmpty()) {
-							if(changed.size() == 4096) {
-								PacketHandler.CHANNEL.send(PacketDistributor.TRACKING_CHUNK.with(() -> chunk), new ClientboundUpdateChunkSectionPacket(SectionPos.of(chunkPos, height / 16 - chunk.getMinSection()), new ArrayList<>(0), true, false));
+							if (changed.cardinality() == 4096) {
+								PacketHandler.CHANNEL.send(PacketDistributor.TRACKING_CHUNK.with(() -> chunk), new ClientboundUpdateChunkSectionPacket(SectionPos.of(chunkPos, height / 16 - chunk.getMinSection()), new BitSet(0), true, false));
 							} else {
 								PacketHandler.CHANNEL.send(PacketDistributor.TRACKING_CHUNK.with(() -> chunk), new ClientboundUpdateChunkSectionPacket(SectionPos.of(chunkPos, height / 16 - chunk.getMinSection()), changed, false, false));
 							}
@@ -506,6 +506,7 @@ public class ExplosionHelper {
 			server.save(null, false, false);
 			
 			System.out.println("total time: " + (System.currentTimeMillis() - time));
+			System.out.println("total affected blocks: " + editedBlocks);
 		}
 	}
 	

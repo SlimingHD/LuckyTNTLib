@@ -20,7 +20,7 @@ public class StackedExplosionRule implements ExplosionRule {
 	private int applyingRuleIndex = 0;
 	
 	public StackedExplosionRule(Collection<ExplosionRule> rules) {
-		this.rules = rules.toArray(new ExplosionRule[]{});
+		this.rules = rules.toArray(new ExplosionRule[0]);
 	}
 	
 	public StackedExplosionRule(ExplosionRule... rules) {

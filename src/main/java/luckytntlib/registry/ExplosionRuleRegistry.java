@@ -6,17 +6,8 @@ import java.util.function.Supplier;
 import com.google.gson.JsonObject;
 
 import luckytntlib.LuckyTNTLib;
-import luckytntlib.util.explosions.rules.CraterExplosionRule;
-import luckytntlib.util.explosions.rules.DistanceExplosionRule;
-import luckytntlib.util.explosions.rules.DistanceExplosionRule.DistanceComparator;
-import luckytntlib.util.explosions.rules.DistanceExplosionRule.GreaterThanDistanceComparator;
-import luckytntlib.util.explosions.rules.DistanceExplosionRule.SmallerAndGreaterThanDistanceComparator;
-import luckytntlib.util.explosions.rules.DistanceExplosionRule.SmallerThanDistanceComparator;
-import luckytntlib.util.explosions.rules.ExplosionRule;
-import luckytntlib.util.explosions.rules.FilterAirExplosionRule;
-import luckytntlib.util.explosions.rules.RandomBlockExplosionRule;
-import luckytntlib.util.explosions.rules.SimpleExplosionRule;
-import luckytntlib.util.explosions.rules.StackedExplosionRule;
+import luckytntlib.util.explosions.rules.*;
+import luckytntlib.util.explosions.rules.DistanceExplosionRule.*;
 import net.minecraft.core.Registry;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
@@ -50,6 +41,9 @@ public class ExplosionRuleRegistry {
 		event.register(EXPLOSION_RULES_KEY, FilterAirExplosionRule.RESOURCE_LOCATION, () -> FilterAirExplosionRule::decode);
 		event.register(EXPLOSION_RULES_KEY, CraterExplosionRule.RESOURCE_LOCATION, () -> CraterExplosionRule::decode);
 		event.register(EXPLOSION_RULES_KEY, RandomBlockExplosionRule.RESOURCE_LOCATION, () -> RandomBlockExplosionRule::decode);
+		event.register(EXPLOSION_RULES_KEY, NotExplosionRule.RESOURCE_LOCATION, () -> NotExplosionRule::decode);
+		event.register(EXPLOSION_RULES_KEY, FilterBlastResistanceExplosionRule.RESOURCE_LOCATION, () -> FilterBlastResistanceExplosionRule::decode);
+		event.register(EXPLOSION_RULES_KEY, FilterBlockExplosionRule.RESOURCE_LOCATION, () -> FilterBlockExplosionRule::decode);
 		
 		event.register(DISTANCE_COMPARATORS_KEY, GreaterThanDistanceComparator.RESOURCE_LOCATION, () -> GreaterThanDistanceComparator::decode);
 		event.register(DISTANCE_COMPARATORS_KEY, SmallerThanDistanceComparator.RESOURCE_LOCATION, () -> SmallerThanDistanceComparator::decode);

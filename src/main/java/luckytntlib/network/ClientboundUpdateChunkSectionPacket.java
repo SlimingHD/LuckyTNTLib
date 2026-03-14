@@ -1,7 +1,6 @@
 package luckytntlib.network;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.BitSet;
 import java.util.function.Supplier;
 
 import luckytntlib.client.ClientAccess;
@@ -13,11 +12,11 @@ import net.minecraftforge.network.NetworkEvent;
 
 public class ClientboundUpdateChunkSectionPacket {
 
-	private final List<Short> changed;
+	private final BitSet changed;
 	private final boolean updateLight, empty;
 	private final int sectionX, sectionY, sectionZ;
 	
-	public ClientboundUpdateChunkSectionPacket(SectionPos pos, List<Short> changed, boolean empty, boolean updateLight) {
+	public ClientboundUpdateChunkSectionPacket(SectionPos pos, BitSet changed, boolean empty, boolean updateLight) {
 		this.sectionX = pos.getX();
 		this.sectionY = pos.getY();
 		this.sectionZ = pos.getZ();
@@ -34,14 +33,9 @@ public class ClientboundUpdateChunkSectionPacket {
 		updateLight = buffer.readBoolean();
 		
 		if(!empty) {
-			int length = buffer.readShort();
-			List<Short> list = new ArrayList<>(length);
-			for(int i = 0; i < length; i++) {
-				list.add(buffer.readShort());
-			}
-			changed = list;
+			changed = buffer.readBitSet();
 		} else {
-			changed = new ArrayList<>(0);
+			changed = new BitSet(0);
 		}
 	}
 	
@@ -53,10 +47,7 @@ public class ClientboundUpdateChunkSectionPacket {
 		buffer.writeBoolean(updateLight);
 		
 		if(!empty) {
-			buffer.writeShort(changed.size());
-			for(Short s : changed) {
-				buffer.writeShort(s);
-			}
+			buffer.writeBitSet(changed);
 		}
 	}
 	

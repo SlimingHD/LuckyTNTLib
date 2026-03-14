@@ -1,7 +1,7 @@
 package luckytntlib.client;
 
 import java.lang.reflect.Field;
-import java.util.List;
+import java.util.BitSet;
 
 import luckytntlib.network.ClientboundSetupExplosionPacket;
 import luckytntlib.util.explosions.ExplosionHelper;
@@ -23,9 +23,10 @@ import net.minecraft.world.phys.Vec3;
 
 public class ClientAccess {
 
-	public static void updateChunkSection(SectionPos pos, List<Short> changed, boolean empty, boolean updateLight) {
-		Minecraft minecraft = Minecraft.getInstance();
-		ClientLevel level = minecraft.level;
+	private static Field heightmapField;
+	
+	public static void updateChunkSection(SectionPos pos, BitSet changed, boolean empty, boolean updateLight) {
+		ClientLevel level = Minecraft.getInstance().level;
 		
 		if(level == null) {
 			return;
@@ -37,7 +38,10 @@ public class ClientAccess {
 		chunk.setLoaded(true);
 		
 		if(updateLight) {
-			for(Short s : changed) {
+			for (short s = 0; s < 4096; ++s) {
+				if (!changed.get(s)) {
+					continue;
+				}
 				Vec3i secpos = ExplosionHelper.decodeSectionPos(s);
 				BlockPos blockpos = new BlockPos((pos.getX() << 4) + secpos.getX(), ((pos.getY() + level.getMinSection()) << 4) + secpos.getY(), (pos.getZ() << 4) + secpos.getZ());
 				engine.checkBlock(blockpos);
@@ -50,7 +54,7 @@ public class ClientAccess {
 			BlockPos center = ClientboundSetupExplosionPacket.currentCenter;
 			boolean useRule = rule != null && center != null;
 			if(empty) {
-				for(short s = 0; s < 4096; s++) {
+				for (short s = 0; s < 4096; s++) {
 					Vec3i secpos = ExplosionHelper.decodeSectionPos(s);
 					BlockPos blockpos = new BlockPos((pos.getX() << 4) + secpos.getX(), ((pos.getY() + level.getMinSection()) << 4) + secpos.getY(), (pos.getZ() << 4) + secpos.getZ());
 					
@@ -62,7 +66,10 @@ public class ClientAccess {
 					chunk.removeBlockEntity(blockpos);
 				}
 			} else {
-				for(Short s : changed) {
+				for (short s = 0; s < 4096; ++s) {
+					if (!changed.get(s)) {
+						continue;
+					}
 					Vec3i secpos = ExplosionHelper.decodeSectionPos(s);
 					BlockPos blockpos = new BlockPos((pos.getX() << 4) + secpos.getX(), ((pos.getY() + level.getMinSection()) << 4) + secpos.getY(), (pos.getZ() << 4) + secpos.getZ());
 					
@@ -81,26 +88,30 @@ public class ClientAccess {
 		Minecraft minecraft = Minecraft.getInstance();
 		ClientLevel level = minecraft.level;
 		
-		if(level == null) {
+		if (level == null) {
 			return;
 		}
 		
 		BitStorage heightmap = null;
 		
-		try {
-			for(Field f : ChunkSkyLightSources.class.getDeclaredFields()) {
+		if (heightmapField == null) {
+			for (Field f : ChunkSkyLightSources.class.getDeclaredFields()) {
 				f.setAccessible(true);
-				if(f.get(level.getChunk(pos.x, pos.z).getSkyLightSources()) instanceof BitStorage storage) {
-					heightmap = storage;
+				if (f.getType() == BitStorage.class) {
+					heightmapField = f;
 					break;
 				}
 			}
-		} catch(IllegalAccessException e) {
+		}
+		
+		try {
+			heightmap = (BitStorage)heightmapField.get(level.getChunk(pos.x, pos.z).getSkyLightSources());
+		} catch (IllegalAccessException e) {
 			e.printStackTrace();
 		}
 		
-		if(heightmap != null) {
-			for(short i = 0; i < 256; i++) {
+		if (heightmap != null) {
+			for (short i = 0; i < 256; i++) {
 				heightmap.set(i, data[i]);
 			}
 		}

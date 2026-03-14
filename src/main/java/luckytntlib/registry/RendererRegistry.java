@@ -14,6 +14,7 @@ public class RendererRegistry {
 	public static void register(EntityRenderersEvent.RegisterRenderers event) {
 		event.registerEntityRenderer(EntityRegistry.TNT.get(), LTNTRenderer::new);
 		event.registerEntityRenderer(TempRegistry.ENT_TNT_X10000.get(), LTNTRenderer::new);
+		event.registerEntityRenderer(TempRegistry.ENT_TNT_X10000_MULTI.get(), LTNTRenderer::new);
 		event.registerEntityRenderer(TempRegistry.ENT_SUPERNOVA.get(), LTNTRenderer::new);
 	}
 }
