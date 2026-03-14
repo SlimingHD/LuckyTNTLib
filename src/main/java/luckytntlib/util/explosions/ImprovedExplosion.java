@@ -14,13 +14,16 @@ import javax.annotation.Nullable;
 import org.joml.Vector3f;
 
 import luckytntlib.config.LuckyTNTLibConfigValues;
+import luckytntlib.network.ClientboundSetupExplosionPacket;
 import luckytntlib.network.ClientboundUpdateChunkSectionPacket;
 import luckytntlib.network.PacketHandler;
 import luckytntlib.util.IExplosiveEntity;
+import luckytntlib.util.explosions.rules.ExplosionRule;
 import luckytntlib.util.light.LightUpdateHelper;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.SectionPos;
+import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.util.Mth;
 import net.minecraft.util.RandomSource;
@@ -144,7 +147,33 @@ public class ImprovedExplosion extends Explosion{
 		damageCalculator = explodingEntity == null ? new ExplosionDamageCalculator() : new EntityBasedExplosionDamageCalculator(explodingEntity);
 	}
 	
-	public void doImprovedBlockExplosionMultithreaded(float resistanceImpact, float randomVecLength, boolean ignoreFluidResistance, boolean fire, RandomSource random) {			
+	/**
+	 * Executes a block explosion using either a single or multiple threads based on explosion size and user settings.
+	 * This method exists if it is not executed on the server side.
+	 * @param resistanceImpact  the relative impact that explosion resistance of blocks has on the penetration force of the explosion
+	 * @param randomVecLength  the greater this value, the more distributed the length of the explosion vectors will be. Large explosions should have a value less than 1
+	 * @param ignoreFluidResistance  whether or not fluids should be ignored in the explosion resistance calculation
+	 * @param fire  whether or not the explosion should spawn fire afterwards
+	 * @param random  random number generator
+	 * @param rule  optional rule for causing effects other than just destruction. Leave as null for an efficient explosion that destroys blocks
+	 */
+	public void doImprovedBlockExplosion(float resistanceImpact, float randomVecLength, boolean ignoreFluidResistance, boolean fire, RandomSource random, @Nullable ExplosionRule rule) {
+		if (!level.isClientSide()) {
+			return;
+		}
+		if (LuckyTNTLibConfigValues.MULTITHREADED_EXPLOSIONS.get() && size >= 30) {
+			doImprovedBlockExplosionMultithreaded(resistanceImpact, randomVecLength, ignoreFluidResistance, fire, random, rule);
+		} else {
+			doImprovedBlockExplosion(resistanceImpact, randomVecLength, ignoreFluidResistance, fire, random, rule);
+		}
+	}
+	
+	/**
+	 * Multithreads the improved block explosion, queueing the result to be applied in the next tick.
+	 * Due to being multithreaded, the game and other explosions will run in the background while the explosion loads.
+	 * The amount of parallel explosions is limited by the user settings, making many simultaneous explosions be queued.
+	 */
+	protected void doImprovedBlockExplosionMultithreaded(float resistanceImpact, float randomVecLength, boolean ignoreFluidResistance, boolean fire, RandomSource random, @Nullable ExplosionRule rule) {			
 		long time = System.currentTimeMillis();
 		float randomVecLengthFac = 0.6f * randomVecLength;
 		float resistanceFac = 0.3f * resistanceImpact * 2.25f;
@@ -163,143 +192,153 @@ public class ImprovedExplosion extends Explosion{
 		}
 		System.out.println("Time for vector gathering: " + (System.currentTimeMillis() - time));
 		
-		MasterExplosionThread t = new MasterExplosionThread(this, resistanceFac, ignoreFluidResistance, vectors);
-		t.start();
+		ExplosionThread thread = new ExplosionThread(this, resistanceFac, randomVecLengthFac, ignoreFluidResistance, fire, rule, vectors);
+		MultithreadExplosionHandler.enqueue(thread);
 	}
 
 	
 	/**
-	 * Gets blocks in an area calculated by shooting vectors to the borders of a sphere determined by the {@link ImprovedExplosion#size}
-	 * and will further remove those blocks efficiently.
-	 * This removal process is not customizable any further.
-	 * This method uses very little RAM and performs about 4x faster than other explosion methods found in this class,
-	 * making it ideal for bigger and therefore more resource intensive explosions.
-	 * Has no limit on the size of the explosion
-	 * @param resistanceImpact  the relative impact that explosion resistance of blocks has on the penetration force of explosion
-	 * @param randomVecLength  the greater this value, the more distributed the length of the explosion vectors will be. Large explosions should have a value less than 1
-	 * @param fire  whether or not the explosion should spawn fire afterwards
-	 * @param ignoreFluidResistance  whether or not fluids should be ignored in the explosion resistance calculation
-	 * @param random  more efficient random number generator
+	 * Raycasts onto the surface of a sphere determined by the size of this explosion.
+	 * Each ray uses the explosion resistances of blocks to reduce their length.
+	 * Rays are further lengthened or shortend using random generation.
+	 * Blocks in a ray's remaining path are marked efficiently, making sure RAM and CPU are optimally utilized.
+	 * Blocks are only marked by this method.
 	 */
-	public void doImprovedBlockExplosion(float resistanceImpact, float randomVecLength, boolean ignoreFluidResistance, boolean fire, RandomSource random) {			
+	protected void doImprovedBlockExplosionSinglethreaded(float resistanceImpact, float randomVecLength, boolean ignoreFluidResistance, boolean fire, RandomSource random, @Nullable ExplosionRule rule) {			
 		long time = System.currentTimeMillis();
 		float x = (float)posX, y = (float)posY, z = (float)posZ;
 		float randomVecLengthFac = 0.6f * randomVecLength;
 		float resistanceFac = 0.3f * resistanceImpact * 2.25f;
-		/**
-		 * Keeps track of removed blocks in a {@link LevelChunkSection} using a {@link BitSet} of the size 4096 (the amount of blocks in a Section, 12 bits used for indexing)
-		 * Each bit represents a block in a section, with (from left to right) bits 1-4 being the x index, bits 5-8 being the y index and bits 9-12 being the z index.
-		 * Adding these three coordinate indices together will result in the block index inside the {@link BitSet}, which can then later be decoded back into a position.
-		 * Once the whole of a section's blocks has been marked, the {@link BitSet} is removed and the Section is simply marked as "to remove", saving RAM.
-		 * If a section turns out to be empty, it will be marked as such and will be skipped by any calculations.
-		 */
-		HashMap<SectionPos, BitSet> editedSections = new HashMap<SectionPos, BitSet>();
-		HashMap<Long, SectionPos> sectionsToRemove = new HashMap<Long, SectionPos>();
-		HashMap<Long, SectionPos> emptySections = new HashMap<Long, SectionPos>();
-
+		
+		List<Vector3f> vectors = new ArrayList<Vector3f>((int)(4 * size * size * Math.PI + 10));
+		
 		for (int offX = -size; offX <= size; offX++) {
 			for (int offY = -size; offY <= size; offY++) {
 				for (int offZ = -size; offZ <= size; offZ++) {
-					double distance = Math.sqrt(offX * offX + offY * offY + offZ * offZ);
-					if ((int)distance == size) {
-						double xStep = offX / distance * 0.3f;
-						double yStep = offY / distance * 0.3f;
-						double zStep = offZ / distance * 0.3f;
-						float vectorLength = size * (0.7f + random.nextFloat() * randomVecLengthFac);
-						float blockX = x;
-						float blockY = y;
-						float blockZ = z;
-						BlockPos pos = null;
-						BlockPos lastPos = null;
-						SectionPos lastSectionPos = null;
-						BitSet lastBitSet = null;
-						LevelChunkSection lastSection = null;
-						for (float vecStep = 0f; vecStep < vectorLength; vecStep += 0.225f) {
-							blockX += xStep;
-							blockY += yStep;
-							blockZ += zStep;
-							pos = new BlockPos((int)blockX, (int)blockY, (int)blockZ);
-							if (!level.isInWorldBounds(pos)) {
-								break;
-							}
-							if(pos.equals(lastPos)) {
-								continue;
-							}
-							lastPos = pos;
-							SectionPos sectionPos = SectionPos.of(pos);
-							/**
-							 * If the section is empty, we can skip to the next step
-							 */
-							if(emptySections.containsKey(sectionPos.asLong())) {
-								vectorLength -= 0.3f * resistanceFac;
-								continue;
-							}
-							LevelChunkSection section;
-							BitSet bitSet = new BitSet(4096);
-							if(!sectionPos.equals(lastSectionPos)) {
-								section = level.getChunkAt(pos).getSection((pos.getY() >> 4) - level.getMinSection());
-								if(section.hasOnlyAir()) {
-									emptySections.put(sectionPos.asLong(), sectionPos);
-									continue;
-								}
-								if(!sectionsToRemove.containsKey(sectionPos.asLong())) {
-									if(!editedSections.containsKey(sectionPos)) {
-										editedSections.put(sectionPos, bitSet);
-									} else {
-										bitSet = editedSections.get(sectionPos);
-									}
-								}
-							} else {
-								bitSet = lastBitSet;
-								section = lastSection;
-							}
-							lastSectionPos = sectionPos;
-							lastSection = section;
-							lastBitSet = bitSet;
-							BlockState currentBlockState = section.getBlockState(pos.getX() & 15, pos.getY() & 15, pos.getZ() & 15);
-							if(!currentBlockState.isAir()) {
-								FluidState currentFluidState = currentBlockState.getFluidState();
-								if (!(ignoreFluidResistance && !currentFluidState.isEmpty())) {
-									Optional<Float> explosionResistance = damageCalculator.getBlockExplosionResistance(this, level, pos, currentBlockState, currentFluidState);
-									if (explosionResistance.isPresent()) {
-										vectorLength -= (explosionResistance.get() + 0.3f) * resistanceFac;
-									}
-									if (vectorLength > 0 && damageCalculator.shouldBlockExplode(this, level, pos, currentBlockState, vectorLength)) {
-										bitSet.set(((pos.getX() & 15) << 8) | ((pos.getY() & 15) << 4) | (pos.getZ() & 15));
-									}
-								} else {
-									bitSet.set(((pos.getX() & 15) << 8) | ((pos.getY() & 15) << 4) | (pos.getZ() & 15));
-								}
-							} else {
-								/**
-								 * Even if the block is air, we still want to mark its bit as true.
-								 * This is done to ensure that air blocks don't hinder a section being marked as "to remove"
-								 */
-								bitSet.set(((pos.getX() & 15) << 8) | ((pos.getY() & 15) << 4) | (pos.getZ() & 15));
-							}
-							/**
-							 * If all bits are set to true, we can mark the section as "to remove"
-							 */
-							if(bitSet.cardinality() == 4096) {
-								editedSections.remove(sectionPos);
-								sectionsToRemove.put(sectionPos.asLong(), sectionPos);
-							}
-						}
+					int distanceSqr = offX * offX + offY * offY + offZ * offZ;
+					if (distanceSqr >= size * size && distanceSqr < (size + 1) * (size + 1)) {
+						vectors.add(new Vector3f(offX, offY, offZ).mul(0.7f + random.nextFloat() * randomVecLengthFac));
 					}
 				}
 			}
 		}
+		HashMap<SectionPos, BitSet> editedSections = new HashMap<SectionPos, BitSet>();
+		HashMap<Long, SectionPos> sectionsToRemove = new HashMap<Long, SectionPos>();
+		Set<Long> emptySections = new HashSet<Long>();
+		HashMap<Long, float[]> sectionResistances = new HashMap<Long, float[]>();
 		
-		System.out.println("Time for explosion gathering: " + (System.currentTimeMillis() - time));
+		for (Vector3f v : vectors) {
+			float vectorLength = v.length();
+			float xStep = v.x / vectorLength * 0.3f;
+			float yStep = v.y / vectorLength * 0.3f;
+			float zStep = v.z / vectorLength * 0.3f;
+			float blockX = x;
+			float blockY = y;
+			float blockZ = z;
+			int lastPosX = 0;
+			int lastPosY = -10000;
+			int lastPosZ = 0;
+			BlockPos.MutableBlockPos pos = new BlockPos.MutableBlockPos();
+			long sectionPosL;
+			long lastSectionPosL = Long.MAX_VALUE;
+			SectionPos sectionPos;
+			LevelChunkSection section;
+			BlockState currentBlockState;
+			float[] lastExplosionResistances = new float[0];
+			BitSet bitSet = new BitSet(4096);
+			for (float step = 0f; step < vectorLength; step += 0.225f) {
+				blockX += xStep;
+				blockY += yStep;
+				blockZ += zStep;
+				pos.set((int) blockX, (int) blockY, (int) blockZ);
+				if (!level.isInWorldBounds(pos)) {
+					break;
+				}
+				if (pos.getX() == lastPosX && pos.getY() == lastPosY && pos.getZ() == lastPosZ) {
+					continue;
+				}
+				lastPosX = pos.getX();
+				lastPosY = pos.getY();
+				lastPosZ = pos.getZ();
+				sectionPosL = SectionPos.asLong(pos);
+				/**
+				 * If the section is empty, we can skip to the next step
+				 */
+				if (emptySections.contains(sectionPosL)) {
+					vectorLength -= 0.3f * resistanceFac;
+					continue;
+				}
+				float[] currentExplosionResistances;
+				if (sectionPosL == lastSectionPosL) {
+					currentExplosionResistances = lastExplosionResistances;
+				} else {
+					if (!sectionResistances.containsKey(sectionPosL)) {
+						section = level.getChunkAt(pos).getSection((pos.getY() >> 4) - level.getMinSection());
+						if (section.hasOnlyAir()) {
+							emptySections.add(sectionPosL);
+							vectorLength -= 0.3f * resistanceFac;
+							continue;
+						} else {
+							float[] explosionResistances = new float[4096];
+							sectionResistances.put(sectionPosL, explosionResistances);
+							for (int sx = 0; sx < 16; sx++) {
+								for (int sy = 0; sy < 16; sy++) {
+									for (int sz = 0; sz < 16; sz++) {
+										currentBlockState = section.getBlockState(sx, sy, sz);
+										explosionResistances[sx << 8 | sy << 4 | sz] = ignoreFluidResistance && !currentBlockState.getFluidState().isEmpty() ? 0 : damageCalculator.getBlockExplosionResistance(this, level, pos, currentBlockState, currentBlockState.getFluidState()).orElse(0f);
+									}
+								}
+							}
+						}
+					}
+					currentExplosionResistances = sectionResistances.get(sectionPosL);
+				}
+				sectionPos = SectionPos.of(sectionPosL);
+				if (currentExplosionResistances != lastExplosionResistances) {		
+					if (editedSections.containsKey(sectionPos)) {
+						bitSet = editedSections.get(sectionPos);
+					} else {
+						editedSections.put(SectionPos.of(sectionPosL), bitSet = new BitSet(4096));
+					}
+				}
+				float resistance = currentExplosionResistances[((pos.getX() & 15) << 8) | ((pos.getY() & 15) << 4) | (pos.getZ() & 15)];
+				if (resistance != 0) {
+					vectorLength -= (resistance + 0.3f) * resistanceFac;
+				}
+				if (vectorLength > 0) {
+					bitSet.set(((pos.getX() & 15) << 8) | ((pos.getY() & 15) << 4) | (pos.getZ() & 15));
+				}
+				/**
+				 * If all bits are set to true, we can mark the section as "to remove"
+				 */
+				if (bitSet.cardinality() == 4096) {
+					editedSections.remove(sectionPos);
+					sectionsToRemove.put(sectionPosL, SectionPos.of(pos));
+				}
+				lastSectionPosL = sectionPosL;
+				lastExplosionResistances = currentExplosionResistances;
+			}
+		}
 		
 		if(level instanceof ServerLevel server) {
-			finishImprovedExplosion(server, editedSections, sectionsToRemove);
+			finishImprovedExplosion(server, editedSections, sectionsToRemove, rule);
 			if(fire) {
 				placeFire(randomVecLengthFac, random);
 			}
 		}
 		
 		System.out.println(System.currentTimeMillis() - time);
+	}
+	
+	protected void finishImprovedExplosion(ServerLevel server, HashMap<SectionPos, BitSet> editedSections, HashMap<Long, SectionPos> sectionsToRemove, @Nullable ExplosionRule rule) {
+		if (!level.isClientSide()) {
+			return;
+		}
+		if (rule == null) {
+			finishImprovedExplosionWithouRule(server, editedSections, sectionsToRemove);
+		} else {
+			finishImprovedExplosionWithRule(server, editedSections, sectionsToRemove, rule);
+		}
 	}
 	
 	/**
@@ -311,7 +350,7 @@ public class ImprovedExplosion extends Explosion{
 	 * @param editedSections  sections that do not get cleared completely
 	 * @param sectionsToRemove  sections that should be cleared completely
 	 */
-	protected void finishImprovedExplosion(ServerLevel server, HashMap<SectionPos, BitSet> editedSections, HashMap<Long, SectionPos> sectionsToRemove) {
+	private void finishImprovedExplosionWithouRule(ServerLevel server, HashMap<SectionPos, BitSet> editedSections, HashMap<Long, SectionPos> sectionsToRemove) {
 		HashMap<LevelChunk, BitSet> chunks = new HashMap<>();
 		
 		for(SectionPos pos : sectionsToRemove.values()) {
@@ -372,6 +411,86 @@ public class ImprovedExplosion extends Explosion{
 		LightUpdateHelper.updateIndirectSkyLight(server, chunks);
 	}
 	
+	private void finishImprovedExplosionWithRule(ServerLevel server, HashMap<SectionPos, BitSet> editedSections, HashMap<Long, SectionPos> sectionsToRemove, ExplosionRule rule) {
+		HashMap<LevelChunk, BitSet> chunks = new HashMap<>();
+		PacketHandler.CHANNEL.send(PacketDistributor.ALL.noArg(), new ClientboundSetupExplosionPacket(rule, BlockPos.containing(posX, posY, posZ)));
+	
+		for(SectionPos pos : sectionsToRemove.values()) {
+			LevelChunk chunk = server.getChunk(pos.x(), pos.z());
+			LevelChunkSection section = chunk.getSection(server.getSectionIndexFromSectionY(pos.y()));
+			PalettedContainer<BlockState> states = section.getStates();
+			
+			chunk.setLoaded(true);
+			
+			for(short s = 0; s < 4096; s++) {
+				int xl = (s >> 8) & 15;
+				int yl = (s >> 4) & 15;
+				int zl = s & 15;
+				int x = (pos.x() << 4) + xl;
+				int y = (pos.y() << 4) + yl;
+				int z = (pos.z() << 4) + zl;
+				BlockState state = states.get(xl, yl, zl);
+				if (rule.shouldApply(server, state, new Vec3(posX, posY, posZ), (int)(x - posX), (int)(y - posY), (int)(z - posZ))) {
+					state.getBlock().wasExploded(server, new BlockPos(x, y, z), this);
+					states.set(xl, yl, zl, rule.getState());
+				}
+			}
+			
+			section.recalcBlockCounts();
+			
+			PacketHandler.CHANNEL.send(PacketDistributor.ALL.noArg(), new ClientboundUpdateChunkSectionPacket(SectionPos.of(pos.x(), server.getSectionIndexFromSectionY(pos.y()), pos.z()), new ArrayList<>(), true, false));
+			
+			if(!chunks.containsKey(chunk)) {
+				chunks.put(chunk, new BitSet());
+			}
+			chunks.get(chunk).set(pos.y() - (server.getMinSection() - 1));
+			
+			chunk.setUnsaved(true);
+		}
+		
+		for(Entry<SectionPos, BitSet> entry : editedSections.entrySet()) {
+			SectionPos pos = entry.getKey();
+			BitSet removedBlocks = entry.getValue();
+			LevelChunk chunk = server.getChunk(pos.x(), pos.z());
+			LevelChunkSection section = chunk.getSection(server.getSectionIndexFromSectionY(pos.y()));
+			PalettedContainer<BlockState> states = section.getStates();
+			List<Short> changed = new ArrayList<>();
+			
+			chunk.setLoaded(true);
+			
+			for(short s = 0; s < 4096; s++) {
+				if(removedBlocks.get(s)) {
+					int xl = (s >> 8) & 15;
+					int yl = (s >> 4) & 15;
+					int zl = s & 15;
+					int x = (pos.x() << 4) + xl;
+					int y = (pos.y() << 4) + yl;
+					int z = (pos.z() << 4) + zl;
+					BlockState state = states.get(xl, yl, zl);
+					if (rule.shouldApply(server, state, new Vec3(posX, posY, posZ), (int)(x - posX), (int)(y - posY), (int)(z - posZ))) {
+						state.getBlock().wasExploded(server, new BlockPos(x, y, z), this);
+						states.set(xl, yl, zl, rule.getState());
+						changed.add(s);
+					}
+				}
+			}
+			
+			section.recalcBlockCounts();
+			
+			PacketHandler.CHANNEL.send(PacketDistributor.ALL.noArg(), new ClientboundUpdateChunkSectionPacket(SectionPos.of(pos.x(), server.getSectionIndexFromSectionY(pos.y()), pos.z()), changed, false, false));
+			
+			if(!chunks.containsKey(chunk)) {
+				chunks.put(chunk, new BitSet());
+			}
+			chunks.get(chunk).set(pos.y() - (server.getMinSection() - 1));
+			
+			chunk.setUnsaved(true);
+		}
+		
+		LightUpdateHelper.updateDirectSkyLight(server, chunks);
+		LightUpdateHelper.updateIndirectSkyLight(server, chunks);
+	}
+	
 	/**
 	 * Places fire wherever possible.
 	 * Best used after an explosion has already destroyed blocks.
@@ -379,11 +498,11 @@ public class ImprovedExplosion extends Explosion{
 	 * @param random  more efficient random number generator
 	 */
 	public void placeFire(float randomVecLengthFac, RandomSource random) {
-		for(int offX = -size / 4; offX <= size / 4; offX++) {
-			for(int offY = -size / 4; offY <= size / 4; offY++) {
-				for(int offZ = -size / 4; offZ <= size / 4; offZ++) {
+		for(int offX = -size / 2; offX <= size / 2; offX++) {
+			for(int offY = -size / 2; offY <= size / 2; offY++) {
+				for(int offZ = -size / 2; offZ <= size / 2; offZ++) {
 					double distance = Math.sqrt(offX * offX + offY * offY + offZ * offZ);
-					if ((int)distance == size / 4 && random.nextFloat() < 0.2f) {
+					if ((int)distance == size / 2 && random.nextFloat() < 0.2f) {
 						double xStep = offX / distance * 0.3f;
 						double yStep = offY / distance * 0.3f;
 						double zStep = offZ / distance * 0.3f;
@@ -504,6 +623,7 @@ public class ImprovedExplosion extends Explosion{
 	 * @param isStrongExplosion  whether or not fluids should be ignored in the explosion resistance calculation. Very useful for large explosions
 	 * @param blockEffect  determines what should happen to the blocks gotten by this explosion
 	 */
+	@Deprecated
 	public void doBlockExplosion(float xzStrength, float yStrength, float resistanceImpact, float randomVecLength, boolean isStrongExplosion, IForEachBlockExplosionEffect blockEffect) {
 		BlockPos posTNT = new BlockPos(Mth.floor(posX), Mth.floor(posY), Mth.floor(posZ));
 		Set<Integer> blocks = new HashSet<>();
@@ -569,6 +689,7 @@ public class ImprovedExplosion extends Explosion{
 	 * @param condition  the condition on which a block is added to the {@link Set} of blocks
 	 * @param blockEffect  determines what should happen to the blocks gotten by this explosion
 	 */
+	@Deprecated
 	public void doBlockExplosion(float xzStrength, float yStrength, float resistanceImpact, float randomVecLength, boolean isStrongExplosion, IBlockExplosionCondition condition, IForEachBlockExplosionEffect blockEffect) {
 		BlockPos posTNT = new BlockPos(Mth.floor(posX), Mth.floor(posY), Mth.floor(posZ));
 		Set<Integer> blocks = new HashSet<>();
@@ -628,6 +749,7 @@ public class ImprovedExplosion extends Explosion{
 	 * @param blockEffect  determines what should happen to the blocks gotten by this explosion
 	 * 
 	 */
+	@Deprecated
 	public void doBlockExplosion(IForEachBlockExplosionEffect blockEffect) {
 		doBlockExplosion(1f, 1f, 1f, 1f, false, blockEffect);
 	}
@@ -636,6 +758,7 @@ public class ImprovedExplosion extends Explosion{
 	 * Executes {@link ImprovedExplosion#doBlockExplosion(float, float, float, float, boolean, boolean, condition, blockEffect)} with default values.
 	 * @param blockEffect  determines what should happen to the blocks gotten by this explosion
 	 */
+	@Deprecated
 	public void doBlockExplosion(IBlockExplosionCondition condition, IForEachBlockExplosionEffect blockEffect) {
 		doBlockExplosion(1f, 1f, 1f, 1f, false, condition, blockEffect);
 	}
@@ -830,6 +953,16 @@ public class ImprovedExplosion extends Explosion{
 		}
 	}
 	
+	public void spawnExplosionParticlesServer() {
+		if (!level.isClientSide()) {
+			ServerLevel server = (ServerLevel)level;
+			server.sendParticles(ParticleTypes.EXPLOSION, posX, posY + 0.5d, posZ, Math.min(size * size / 4, 5000), Math.min(size / 4d, 6d), Math.min(size / 4d, 6d), Math.min(size / 4d, 6d), 0d);
+			if (size > 4) {
+				server.sendParticles(ParticleTypes.POOF, posX, posY, posZ, Math.min(size * size, 10000), 0d, 0d, 0d, Math.min(size / 8d, 1.5d));
+			}
+		}
+	}
+	
 	@Nullable
 	@Override
 	public LivingEntity getIndirectSourceEntity() {
@@ -840,7 +973,7 @@ public class ImprovedExplosion extends Explosion{
 	}
 	
 	/** 
-	 * @implNote Must not be used to create an actual explosion!
+	 * @implNote Must	 not be used to create an actual explosion!
 	 * @return ImprovedExplosion with no strength and position at (0, 0, 0)
 	 */
 	public static ImprovedExplosion dummyExplosion(Level level) {

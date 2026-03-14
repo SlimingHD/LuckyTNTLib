@@ -19,7 +19,7 @@ import net.minecraft.world.level.chunk.LevelChunkSection;
 @SuppressWarnings("serial")
 public class ExplosionTask extends RecursiveTask<Long2ObjectMap<BitSet>> {
 	
-	private final MasterExplosionThread explosionThread;
+	private final ExplosionThread explosionThread;
 	private final ImprovedExplosion explosion;
 	private final Level level;
 	private final float x, y, z;
@@ -29,7 +29,7 @@ public class ExplosionTask extends RecursiveTask<Long2ObjectMap<BitSet>> {
 	private final int allowedSize;
 	private final List<Vector3f> vectors;
 	
-	public ExplosionTask(MasterExplosionThread explosionThread, ImprovedExplosion explosion, float resistanceFac, boolean ignoreFluids, int allowedSize, List<Vector3f> vectors) {
+	public ExplosionTask(ExplosionThread explosionThread, ImprovedExplosion explosion, float resistanceFac, boolean ignoreFluids, int allowedSize, List<Vector3f> vectors) {
 		this.explosionThread = explosionThread;
 		this.explosion = explosion;
 		this.level = explosion.level;
@@ -57,7 +57,7 @@ public class ExplosionTask extends RecursiveTask<Long2ObjectMap<BitSet>> {
 					resultBitSets.get(key).or(toMergeBitSets.get(key));
 					if (resultBitSets.get(key).cardinality() == 4096) {
 						resultBitSets.remove(key);
-						explosionThread.sectionsToRemove.put(key, key);
+						explosionThread.sectionsToRemove.add(key);
 					}
 				} else {
 					resultBitSets.put(key, toMergeBitSets.get(key));
@@ -70,40 +70,30 @@ public class ExplosionTask extends RecursiveTask<Long2ObjectMap<BitSet>> {
 
 	private Long2ObjectMap<BitSet> calculate() {
 		Long2ObjectMap<BitSet> editedSections = new Long2ObjectOpenHashMap<BitSet>();
-		
-		float vectorLength;
-		float xStep;
-		float yStep;
-		float zStep;
-		float blockX;
-		float blockY;
-		float blockZ;
-		BlockPos.MutableBlockPos pos = new BlockPos.MutableBlockPos();
-		int lastPosX;
-		int lastPosY;
-		int lastPosZ;
-		long sectionPos;
-		long lastSectionPos = Long.MAX_VALUE;
-		LevelChunkSection section;
-		BlockState currentBlockState;
-		float[] lastExplosionResistances = new float[0];
-		BitSet bitSet = new BitSet(4096);
+
 		for (Vector3f v : vectors) {
-			vectorLength = v.length();
-			xStep = v.x / vectorLength * 0.3f;
-			yStep = v.y / vectorLength * 0.3f;
-			zStep = v.z / vectorLength * 0.3f;
-			blockX = x;
-			blockY = y;
-			blockZ = z;
-			lastPosX = 0;
-			lastPosY = -10000;
-			lastPosZ = 0;
+			float vectorLength = v.length();
+			float xStep = v.x / vectorLength * 0.3f;
+			float yStep = v.y / vectorLength * 0.3f;
+			float zStep = v.z / vectorLength * 0.3f;
+			float blockX = x;
+			float blockY = y;
+			float blockZ = z;
+			int lastPosX = 0;
+			int lastPosY = -10000;
+			int lastPosZ = 0;
+			BlockPos.MutableBlockPos pos = new BlockPos.MutableBlockPos();
+			long sectionPos;
+			long lastSectionPos = Long.MAX_VALUE;
+			LevelChunkSection section;
+			BlockState currentBlockState;
+			float[] lastExplosionResistances = new float[0];
+			BitSet bitSet = new BitSet(4096);
 			for (float step = 0f; step < vectorLength; step += 0.225f) {
 				blockX += xStep;
 				blockY += yStep;
 				blockZ += zStep;
-				pos.set((int) blockX, (int) blockY, (int) blockZ);
+				pos.set((int)blockX, (int)blockY, (int)blockZ);
 				if (!level.isInWorldBounds(pos)) {
 					break;
 				}
@@ -117,7 +107,7 @@ public class ExplosionTask extends RecursiveTask<Long2ObjectMap<BitSet>> {
 				/**
 				 * If the section is empty, we can skip to the next step
 				 */
-				if (explosionThread.emptySections.containsKey(sectionPos)) {
+				if (explosionThread.emptySections.contains(sectionPos)) {
 					vectorLength -= 0.3f * resistanceFac;
 					continue;
 				}
@@ -128,7 +118,7 @@ public class ExplosionTask extends RecursiveTask<Long2ObjectMap<BitSet>> {
 					if (!explosionThread.sectionResistances.containsKey(sectionPos)) {
 						section = level.getChunkAt(pos).getSection((pos.getY() >> 4) - level.getMinSection());
 						if (section.hasOnlyAir()) {
-							explosionThread.emptySections.put(sectionPos, sectionPos);
+							explosionThread.emptySections.add(sectionPos);
 							vectorLength -= 0.3f * resistanceFac;
 							continue;
 						} else {
@@ -165,7 +155,7 @@ public class ExplosionTask extends RecursiveTask<Long2ObjectMap<BitSet>> {
 				 */
 				if (bitSet.cardinality() == 4096) {
 					editedSections.remove(sectionPos);
-					explosionThread.sectionsToRemove.put(sectionPos, sectionPos);
+					explosionThread.sectionsToRemove.add(sectionPos);
 				}
 				lastSectionPos = sectionPos;
 				lastExplosionResistances = currentExplosionResistances;

@@ -24,7 +24,8 @@ import net.minecraft.world.phys.Vec3;
 public class ClientAccess {
 
 	public static void updateChunkSection(SectionPos pos, List<Short> changed, boolean empty, boolean updateLight) {
-		ClientLevel level = Minecraft.getInstance().level;
+		Minecraft minecraft = Minecraft.getInstance();
+		ClientLevel level = minecraft.level;
 		
 		if(level == null) {
 			return;
@@ -77,7 +78,8 @@ public class ClientAccess {
 	}
 	
 	public static void updateChunkSkyLightSources(ChunkPos pos, int[] data) {
-		ClientLevel level = Minecraft.getInstance().level;
+		Minecraft minecraft = Minecraft.getInstance();
+		ClientLevel level = minecraft.level;
 		
 		if(level == null) {
 			return;

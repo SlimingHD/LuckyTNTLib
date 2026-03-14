@@ -5,7 +5,7 @@ import java.util.function.BiFunction;
 import com.mojang.datafixers.util.Pair;
 
 import luckytntlib.block.LTNTBlock;
-import luckytntlib.client.gui.ConfigScreen;
+import luckytntlib.client.gui.MultithreadingConfigScreen;
 import luckytntlib.config.LuckyTNTLibConfigs;
 import luckytntlib.entity.LTNTMinecart;
 import luckytntlib.item.LDynamiteItem;
@@ -66,7 +66,7 @@ public class LuckyTNTLib {
         ModLoadingContext.get().registerExtensionPoint(ConfigScreenHandler.ConfigScreenFactory.class, () -> new ConfigScreenHandler.ConfigScreenFactory(new BiFunction<Minecraft, Screen, Screen>() {		
 			@Override
 			public Screen apply(Minecraft mc, Screen screen) {
-				return new ConfigScreen();
+				return new MultithreadingConfigScreen();
 			}
 		}));
         ENTITIES.register(bus);

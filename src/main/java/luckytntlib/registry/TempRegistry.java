@@ -16,7 +16,6 @@ import luckytntlib.util.explosions.rules.DistanceExplosionRule.SmallerThanDistan
 import luckytntlib.util.explosions.rules.ExplosionRule;
 import luckytntlib.util.explosions.rules.FilterAirExplosionRule;
 import luckytntlib.util.explosions.rules.RandomBlockExplosionRule;
-import luckytntlib.util.explosions.rules.SimpleExplosionRule;
 import luckytntlib.util.explosions.rules.StackedExplosionRule;
 import luckytntlib.util.tnteffects.PrimedTNTEffect;
 import luckytntlib.util.tnteffects.TNTXStrengthEffect;
@@ -67,9 +66,12 @@ public class TempRegistry {
 		
 		@Override
 		public void serverExplosion(IExplosiveEntity ent) {
+			ExplosionRule rule = new FilterAirExplosionRule(new StackedExplosionRule(new DistanceExplosionRule(new RandomBlockExplosionRule(RandomList.<BlockState>floatBuilder().addEntry(Blocks.RED_WOOL.defaultBlockState(), 0.95f).addEntry(Blocks.LIME_WOOL.defaultBlockState(), 0.05f).build()), new SmallerThanDistanceComparator(75)), new DistanceExplosionRule(new RandomBlockExplosionRule(RandomList.ofEqualProbability(Blocks.YELLOW_WOOL.defaultBlockState(), Blocks.PURPLE_WOOL.defaultBlockState())), new SmallerAndGreaterThanDistanceComparator(85, 120))));
+
 			ImprovedExplosion explosion = new ImprovedExplosion(ent.getLevel(), (Entity)ent, null, ent.getPos(), 300);
-			explosion.doEntityExplosion(30f, true);
-			explosion.doImprovedBlockExplosion(0.167f, 0.05f, true, false, ent.getLevel().random);
+			explosion.doEntityExplosion(1f, true);
+			explosion.doImprovedBlockExplosion(0.167f, 0.05f, true, false, ent.getLevel().getRandom(), rule);
+			explosion.spawnExplosionParticlesServer();
 		}
 	}
 }

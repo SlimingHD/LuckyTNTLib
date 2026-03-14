@@ -1,8 +1,14 @@
 {
-	"config.title" : "Lucky TNT Lib Config",
-	"config.reset" : "Reset",
-	"config.performant_explosion" : "Performant Explosion",
-	"config.explosion_performance_factor" : "Performance Factor",
-	"config.performant_explosion_tooltip" : "Replaces the standard explosion with an identical one that reduces loading time at the expense of some detail. If you host a server you will have to change this value in the server config instead",
-	"config.explosion_performance_factor_tooltip" : "Lower values retain more details while higher values provide more performance. Has significant impact on the shape of explosions. If you host a server you will have to change this value in the server config instead"
+	"luckytntlib.config.multithreading_title" : "Lucky TNT Lib Multithreading Config",
+	"luckytntlib.config.deprecated_title" : "Lucky TNT Lib Deprecated Config",
+	"luckytntlib.config.reset" : "Reset",
+	"luckytntlib.config.multithreaded_explosions" : "Multithread large explosions",
+	"luckytntlib.config.max_explosion_threads" : "Maximum simultaneous explosions",
+	"luckytntlib.config.multithreaded_explosions_tooltip" : "Large explosions will use multiple threads to increase performance. They will run in parallel to each other and the game, stressing CPU and RAM. Adjust the value below to control how many explosions can run simultaneously. On servers, this value must be configured in the server config instead",
+	"luckytntlib.config.max_explosion_threads_tooltip" : "Sets the number of explosions that can run in parallel. Each explosion will use multiple threads automatically. Excess explosions will be queued, not discarded. A higher value allows for faster calculation of multiple explosions at the cost of using more CPU and RAM. On servers, this value must be configured in the server config instead",
+		
+	"luckytntlib.config.performant_explosion" : "Performant Explosion",
+	"luckytntlib.config.explosion_performance_factor" : "Performance Factor",
+	"luckytntlib.config.performant_explosion_tooltip" : "Deprecated. See the mod implementing this library as to whether or not this value still has effect.\n Replaces the standard explosion with an identical one that reduces loading time at the expense of some detail. If you host a server you will have to change this value in the server config instead",
+	"luckytntlib.config.explosion_performance_factor_tooltip" : "Deprecated. See the mod implementing this library as to whether or not this value still has effect.\n Lower values retain more details while higher values provide more performance. Has significant impact on the shape of explosions. If you host a server you will have to change this value in the server config instead"
 }

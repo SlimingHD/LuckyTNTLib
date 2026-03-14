@@ -64,8 +64,9 @@ public class TNTXStrengthEffect extends PrimedTNTEffect{
 		if(useOldExplosion) {
 			explosion.doBlockExplosion(xzStrength, yStrength, resistanceImpact, randomVecLength, fire, isStrongExplosion);
 		} else {
-			explosion.doImprovedBlockExplosionMultithreaded(resistanceImpact, randomVecLength, isStrongExplosion, fire, entity.getLevel().getRandom());
+			explosion.doImprovedBlockExplosion(resistanceImpact, randomVecLength, isStrongExplosion, fire, entity.getLevel().getRandom(), null);
 		}
+		explosion.spawnExplosionParticlesServer();
 	}
 	
 	@Override

@@ -19,7 +19,7 @@ import net.minecraftforge.common.extensions.IForgeEntity;
  * It is advised to use methods given by this Interface rather than Minecraft's methods to make porting easier and to increase universalness.
  * @implNote Only entities implementing this Interface are capeable of using anything extending upon {@link PrimedTNTEffect}
  */
-public interface IExplosiveEntity extends IForgeEntity{
+public interface IExplosiveEntity extends IForgeEntity {
 
 	/**
 	 * Gets the current fuse of this IExplosiveEntity
