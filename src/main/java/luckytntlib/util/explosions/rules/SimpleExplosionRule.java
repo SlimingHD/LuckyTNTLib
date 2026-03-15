@@ -13,6 +13,9 @@ import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.Vec3;
 
+/**
+ * {@link ExplosionRule} that provides a given {@link BlockState} for placement
+ */
 public class SimpleExplosionRule implements ExplosionRule {
 
 	public static final ResourceLocation RESOURCE_LOCATION = new ResourceLocation(LuckyTNTLib.MODID, "simple");
@@ -46,7 +49,7 @@ public class SimpleExplosionRule implements ExplosionRule {
 	public static ExplosionRule decode(JsonObject root) {
 		BlockState state = Blocks.AIR.defaultBlockState();
 		Optional<BlockState> optional = BlockState.CODEC.parse(JsonOps.COMPRESSED, root.get("state")).get().left();
-		if(optional.isPresent()) {
+		if (optional.isPresent()) {
 			state = optional.get();
 		}
 		

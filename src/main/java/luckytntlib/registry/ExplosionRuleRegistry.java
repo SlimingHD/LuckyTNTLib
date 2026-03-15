@@ -7,7 +7,6 @@ import com.google.gson.JsonObject;
 
 import luckytntlib.LuckyTNTLib;
 import luckytntlib.util.explosions.rules.*;
-import luckytntlib.util.explosions.rules.DistanceExplosionRule.*;
 import net.minecraft.core.Registry;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
@@ -22,15 +21,15 @@ import net.minecraftforge.registries.RegistryBuilder;
 public class ExplosionRuleRegistry {
 
 	public static final ResourceKey<Registry<Function<JsonObject, ExplosionRule>>> EXPLOSION_RULES_KEY = ResourceKey.createRegistryKey(new ResourceLocation(LuckyTNTLib.MODID, "explosion_rules"));
-	public static final ResourceKey<Registry<Function<JsonObject, DistanceComparator>>> DISTANCE_COMPARATORS_KEY = ResourceKey.createRegistryKey(new ResourceLocation(LuckyTNTLib.MODID, "distance_comparators"));
 	
+	/**
+	 * Registry containing decoders for all registered {@link ExplosionRule}s
+	 */
 	public static Supplier<IForgeRegistry<Function<JsonObject, ExplosionRule>>> EXPLOSION_RULES;
-	public static Supplier<IForgeRegistry<Function<JsonObject, DistanceComparator>>> DISTANCE_COMPARATORS;
 	
 	@SubscribeEvent
 	public static void onCreateRegistries(NewRegistryEvent event) {
 		EXPLOSION_RULES = event.create(RegistryBuilder.<Function<JsonObject, ExplosionRule>>of(EXPLOSION_RULES_KEY.location()).setDefaultKey(SimpleExplosionRule.RESOURCE_LOCATION));
-		DISTANCE_COMPARATORS = event.create(RegistryBuilder.<Function<JsonObject, DistanceComparator>>of(DISTANCE_COMPARATORS_KEY.location()).setDefaultKey(GreaterThanDistanceComparator.RESOURCE_LOCATION));
 	}
 	
 	@SubscribeEvent
@@ -44,9 +43,5 @@ public class ExplosionRuleRegistry {
 		event.register(EXPLOSION_RULES_KEY, NotExplosionRule.RESOURCE_LOCATION, () -> NotExplosionRule::decode);
 		event.register(EXPLOSION_RULES_KEY, FilterBlastResistanceExplosionRule.RESOURCE_LOCATION, () -> FilterBlastResistanceExplosionRule::decode);
 		event.register(EXPLOSION_RULES_KEY, FilterBlockExplosionRule.RESOURCE_LOCATION, () -> FilterBlockExplosionRule::decode);
-		
-		event.register(DISTANCE_COMPARATORS_KEY, GreaterThanDistanceComparator.RESOURCE_LOCATION, () -> GreaterThanDistanceComparator::decode);
-		event.register(DISTANCE_COMPARATORS_KEY, SmallerThanDistanceComparator.RESOURCE_LOCATION, () -> SmallerThanDistanceComparator::decode);
-		event.register(DISTANCE_COMPARATORS_KEY, SmallerAndGreaterThanDistanceComparator.RESOURCE_LOCATION, () -> SmallerAndGreaterThanDistanceComparator::decode);
 	}
 }

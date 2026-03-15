@@ -2,8 +2,6 @@ package luckytntlib.util.explosions.rules;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.LinkedList;
-import java.util.List;
 import java.util.function.Supplier;
 
 import javax.annotation.Nullable;
@@ -24,6 +22,9 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.Vec3;
 import net.minecraftforge.registries.ForgeRegistries;
 
+/**
+ * {@link ExplosionRule} that only applies if a block affected by an explosion is a certain block or in a specific state.
+ */
 public class FilterBlockExplosionRule implements ExplosionRule {
 	
 	public static final ResourceLocation RESOURCE_LOCATION = new ResourceLocation(LuckyTNTLib.MODID, "filter_block");
@@ -37,7 +38,7 @@ public class FilterBlockExplosionRule implements ExplosionRule {
 	@Nullable
 	private final Collection<BlockState> states;
 	
-	protected FilterBlockExplosionRule(ExplosionRule rule, @Nullable Collection<Block> blocks, @Nullable Collection<BlockState> states) {
+	public FilterBlockExplosionRule(ExplosionRule rule, @Nullable Collection<Block> blocks, @Nullable Collection<BlockState> states) {
 		this.rule = rule;
 		this.blocks = blocks;
 		this.states = states;
@@ -85,8 +86,7 @@ public class FilterBlockExplosionRule implements ExplosionRule {
 	}
 	
 	public static ExplosionRule decode(JsonObject root) {
-		JsonObject ruleRoot = root.get("rule").getAsJsonObject();
-		ExplosionRule decodedRule = ExplosionRule.byName(ruleRoot.get("type").getAsString(), ruleRoot);
+		ExplosionRule decodedRule = ExplosionRule.parse(root.get("rule").getAsJsonObject());
 		
 		JsonArray jsonBlocks = root.get("blocks").getAsJsonArray();
 		ArrayList<Block> decodedBlocks = null;
@@ -107,54 +107,5 @@ public class FilterBlockExplosionRule implements ExplosionRule {
 		}
 		
 		return new FilterBlockExplosionRule(decodedRule, decodedBlocks, null);
-	}
-	
-	public static Builder of(ExplosionRule rule) {
-		return new Builder(rule);
-	}
-
-	public static class Builder {
-
-		private ExplosionRule rule;
-		@Nullable
-		private Collection<Block> blocks = new LinkedList<>();
-		@Nullable
-		private Collection<BlockState> states = new LinkedList<>();
-		
-		private Builder(ExplosionRule rule) {
-			this.rule = rule;
-		}
-		
-		public Builder filterBlock(Block blockToFilter) {
-			blocks.add(blockToFilter);
-			return this;
-		}
-		
-		public Builder filterBlocks(Block... blocksToFilter) {
-			return filterBlocks(List.of(blocksToFilter));
-		}
-		
-		public Builder filterBlocks(Collection<Block> blocksToFilter) {
-			blocks.addAll(blocksToFilter);
-			return this;
-		}
-		
-		public Builder filterState(BlockState stateToFilter) {
-			states.add(stateToFilter);
-			return this;
-		}
-		
-		public Builder filterStates(BlockState... statesToFilter) {
-			return filterStates(List.of(statesToFilter));
-		}
-		
-		public Builder filterStates(Collection<BlockState> statesToFilter) {
-			states.addAll(statesToFilter);
-			return this;
-		}
-		
-		public FilterBlockExplosionRule build() {
-			return new FilterBlockExplosionRule(rule, blocks.size() == 0 ? null : blocks, states.size() == 0 ? null : states);
-		}
 	}
 }

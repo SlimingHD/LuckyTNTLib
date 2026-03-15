@@ -261,9 +261,9 @@ public class LightUpdateHelper {
 			}
 		}
 		
-		for(Entry<ChunkPos, HashMap<Integer, BitSet>> entry : packetData.entrySet()) {
+		for (Entry<ChunkPos, HashMap<Integer, BitSet>> entry : packetData.entrySet()) {
 			ChunkPos pos = entry.getKey();
-			for(Entry<Integer, BitSet> e : entry.getValue().entrySet()) {
+			for (Entry<Integer, BitSet> e : entry.getValue().entrySet()) {
 				PacketHandler.CHANNEL.send(PacketDistributor.ALL.noArg(), new ClientboundUpdateChunkSectionPacket(SectionPos.of(pos, e.getKey() - server.getMinSection()), e.getValue(), false, true));
 				
 				for (short s = 0; s < 4096; ++s) {
@@ -281,8 +281,8 @@ public class LightUpdateHelper {
 	
 	/**
 	 * 
-	 * @param packetData  the {@link HashMap} that the queued light update will be written into
-	 * @param pos  the pos of the chunk of the block to be updated
+	 * @param packetData  the {@link HashMap} the queued light update will be written into
+	 * @param pos  the {@link ChunkPos} of the chunk containing the block that will be updated
 	 * @param x  the x offset of the block to the chunk
 	 * @param y  the y coordinate of the block the update is meant to be scheduled for
 	 * @param z  the z offset of the block to the chunk
@@ -295,10 +295,10 @@ public class LightUpdateHelper {
 		int realZ = shiftCoordinate(z);
 		
 		int sectionY = y >> 4;
-		if(packetData.get(chunk) == null) {
+		if (packetData.get(chunk) == null) {
 			packetData.put(chunk, new HashMap<>());
 		}
-		if(packetData.get(chunk).get(sectionY) == null) {
+		if (packetData.get(chunk).get(sectionY) == null) {
 			packetData.get(chunk).put(sectionY, new BitSet(4096));
 		}
 		
@@ -320,7 +320,7 @@ public class LightUpdateHelper {
 		int realX = shiftCoordinate(x);
 		int realZ = shiftCoordinate(z);
 		
-		if(y < server.getMinBuildHeight()) {
+		if (y < server.getMinBuildHeight()) {
 			return 15;
 		}
 		
@@ -344,7 +344,7 @@ public class LightUpdateHelper {
 		
 		int sectionY = y >> 4;
 		DataLayer data = getDataLayerForSection(server, SectionPos.of(chunk, sectionY));
-		if(data == null) {
+		if (data == null) {
 			return 0;
 		}
 		return data.get(realX, y & 15, realZ);
@@ -352,7 +352,7 @@ public class LightUpdateHelper {
 	
 	/**
 	 * Gets the {@link DataLayer} storing the sky light data associated to a {@link LevelChunkSection} at a given {@link SectionPos}.
-	 * @param @param server  the current {@link ServerLevel}
+	 * @param server  the current {@link ServerLevel}
 	 * @param pos  the position of the {@link LevelChunkSection} in the world
 	 * @return the {@link DataLayer} for sky light of the section or <code>null</code> if no data is being stored
 	 * 
@@ -375,14 +375,14 @@ public class LightUpdateHelper {
 	private static ChunkPos shiftChunkPos(ChunkPos pos, int x, int z) {
 		ChunkPos chunk = pos;
 		
-		if(x < 0) {
+		if (x < 0) {
 			chunk = new ChunkPos(chunk.x - 1, chunk.z);
-		} else if(x > 15) {
+		} else if (x > 15) {
 			chunk = new ChunkPos(chunk.x + 1, chunk.z);
 		}
-		if(z < 0) {
+		if (z < 0) {
 			chunk = new ChunkPos(chunk.x, chunk.z - 1);
-		} else if(z > 15) {
+		} else if (z > 15) {
 			chunk = new ChunkPos(chunk.x, chunk.z + 1);
 		}
 		return chunk;

@@ -8,6 +8,9 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.Vec3;
 
+/**
+ * {@link ExplosionRule} that filters out any blocks affected by an explosion that exceed a certain blast resistance
+ */
 public class FilterBlastResistanceExplosionRule implements ExplosionRule {
 	
 	public static final ResourceLocation RESOURCE_LOCATION = new ResourceLocation(LuckyTNTLib.MODID, "filter_blast_resistance");
@@ -46,7 +49,6 @@ public class FilterBlastResistanceExplosionRule implements ExplosionRule {
 	}
 
 	public static ExplosionRule decode(JsonObject root) {
-		JsonObject ruleRoot = root.get("rule").getAsJsonObject();
-		return new FilterBlastResistanceExplosionRule(ExplosionRule.byName(ruleRoot.get("type").getAsString(), ruleRoot), root.get("maxResistance").getAsFloat());
+		return new FilterBlastResistanceExplosionRule(ExplosionRule.parse(root.get("rule").getAsJsonObject()), root.get("maxResistance").getAsFloat());
 	}
 }

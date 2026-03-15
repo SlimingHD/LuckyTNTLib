@@ -8,6 +8,9 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.Vec3;
 
+/**
+ * {@link ExplosionRule} that filters out any blocks affected by an explosion that are air
+ */
 public class FilterAirExplosionRule implements ExplosionRule {
 
 	public static final ResourceLocation RESOURCE_LOCATION = new ResourceLocation(LuckyTNTLib.MODID, "filter_air");
@@ -25,7 +28,7 @@ public class FilterAirExplosionRule implements ExplosionRule {
 
 	@Override
 	public boolean shouldApply(Level level, BlockState state, Vec3 center, int offX, int offY, int offZ) {
-		if(state.isAir()) {
+		if (state.isAir()) {
 			return false;
 		}
 		return rule.shouldApply(level, state, center, offX, offY, offZ);
@@ -41,7 +44,6 @@ public class FilterAirExplosionRule implements ExplosionRule {
 	}
 	
 	public static ExplosionRule decode(JsonObject root) {
-		JsonObject ruleRoot = root.get("rule").getAsJsonObject();
-		return new FilterAirExplosionRule(ExplosionRule.byName(ruleRoot.get("type").getAsString(), ruleRoot));
+		return new FilterAirExplosionRule(ExplosionRule.parse(root.get("rule").getAsJsonObject()));
 	}
 }

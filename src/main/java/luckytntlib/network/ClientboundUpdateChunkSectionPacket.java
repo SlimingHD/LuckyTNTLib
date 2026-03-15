@@ -4,12 +4,20 @@ import java.util.BitSet;
 import java.util.function.Supplier;
 
 import luckytntlib.client.ClientAccess;
+import luckytntlib.util.explosions.ExplosionHelper;
+import luckytntlib.util.explosions.ImprovedExplosion;
+import luckytntlib.util.light.LightUpdateHelper;
 import net.minecraft.core.SectionPos;
 import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.world.level.chunk.LevelChunkSection;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.fml.DistExecutor;
 import net.minecraftforge.network.NetworkEvent;
 
+/**
+ * Packet for updating a specific {@link LevelChunkSection} by either changing the blocks at the specified positions or queuing light updates for said positions.
+ * Only used in {@link ExplosionHelper}, {@link LightUpdateHelper} and {@link ImprovedExplosion} to transmit changes to the world from server to client.
+ */
 public class ClientboundUpdateChunkSectionPacket {
 
 	private final BitSet changed;

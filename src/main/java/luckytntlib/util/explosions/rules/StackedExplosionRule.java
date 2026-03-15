@@ -12,6 +12,10 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.Vec3;
 
+/**
+ * {@link ExplosionRule} wrapping multiple other {@link ExplosionRule}s.
+ * Whichever is the first to apply determines the result. No other rule can apply afterwards, even if its conditions would have been met.
+ */
 public class StackedExplosionRule implements ExplosionRule {
 
 	public static final ResourceLocation RESOURCE_LOCATION = new ResourceLocation(LuckyTNTLib.MODID, "stacked");
@@ -34,8 +38,8 @@ public class StackedExplosionRule implements ExplosionRule {
 
 	@Override
 	public boolean shouldApply(Level level, BlockState state, Vec3 center, int offX, int offY, int offZ) {
-		for(int i = 0; i < rules.length; i++) {
-			if(rules[i].shouldApply(level, state, center, offX, offY, offZ)) {
+		for (int i = 0; i < rules.length; i++) {
+			if (rules[i].shouldApply(level, state, center, offX, offY, offZ)) {
 				applyingRuleIndex = i;
 				return true;
 			}
@@ -48,7 +52,7 @@ public class StackedExplosionRule implements ExplosionRule {
 		root.addProperty("type", RESOURCE_LOCATION.toString());
 		
 		JsonArray jsonRules = new JsonArray();
-		for(ExplosionRule rule : rules) {
+		for (ExplosionRule rule : rules) {
 			jsonRules.add(rule.encode(new JsonObject()));
 		}
 		root.add("rules", jsonRules);
@@ -59,9 +63,8 @@ public class StackedExplosionRule implements ExplosionRule {
 	public static ExplosionRule decode(JsonObject root) {
 		LinkedList<ExplosionRule> rules = new LinkedList<>();
 		JsonArray jsonRules = root.get("rules").getAsJsonArray();
-		for(int i = 0; i < jsonRules.size(); i++) {
-			JsonObject ruleRoot = jsonRules.get(i).getAsJsonObject();
-			rules.add(ExplosionRule.byName(ruleRoot.get("type").getAsString(), ruleRoot));
+		for (int i = 0; i < jsonRules.size(); i++) {
+			rules.add(ExplosionRule.parse(jsonRules.get(i).getAsJsonObject()));
 		}
 		
 		return new StackedExplosionRule(rules);
