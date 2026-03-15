@@ -53,7 +53,7 @@ import net.minecraftforge.network.PacketDistributor;
  * It is needed because the explosion of minecraft is rather limited in functionality and size,
  * while an ImprovedExplosion has no limit in its size and offers multiple and dynamic ways to interact with and customize the explosion.
  */
-public class ImprovedExplosion extends Explosion{
+public class ImprovedExplosion extends Explosion {
 
 	public final Level level;
 	public final double posX, posY, posZ;
@@ -66,7 +66,6 @@ public class ImprovedExplosion extends Explosion{
 	
 	/**
 	 * Creates a new ImprovedExplosion
-	 * @implNote size must not be greater than 511 in most cases. See the respective doBlockExplosion method
 	 * @param level  the level
 	 * @param position  the center position of the explosion
 	 * @param size  the rough size of the explosion, which must not be greater than 511 in most cases
@@ -77,7 +76,6 @@ public class ImprovedExplosion extends Explosion{
 	
 	/**
 	 * Creates a new ImprovedExplosion
-	 * @implNote size must not be greater than 511 in most cases. See the respective doBlockExplosion method
 	 * @param level  the level
 	 * @param source  the DamageSource this explosion uses
 	 * @param position  the center position of the explosion
@@ -89,7 +87,6 @@ public class ImprovedExplosion extends Explosion{
 	
 	/**
 	 * Creates a new ImprovedExplosion
-	 * @implNote size must not be greater than 511 in most cases. See the respective doBlockExplosion method
 	 * @param level  the level
 	 * @param entity  the entity not affected by this explosion. Should be the entity causing the explosion and also an IExplosiveEntity
 	 * @param position  the center position of the explosion
@@ -101,7 +98,6 @@ public class ImprovedExplosion extends Explosion{
 	
 	/**
 	 * Creates a new ImprovedExplosion
-	 * @implNote size must not be greater than 511 in most cases. See the respective doBlockExplosion method
 	 * @param level  the level
 	 * @param entity  the entity not affected by this explosion. Should be the entity causing the explosion and also an IExplosiveEntity
 	 * @param source  the DamageSource this explosion uses
@@ -114,7 +110,6 @@ public class ImprovedExplosion extends Explosion{
 	
 	/**
 	 * Creates a new ImprovedExplosion
-	 * @implNote size must not be greater than 511 in most cases. See the respective doBlockExplosion method
 	 * @param level  the level
 	 * @param entity  the entity not affected by this explosion. Should be the entity causing the explosion and also an IExplosiveEntity
 	 * @param x  the x center position
@@ -128,7 +123,6 @@ public class ImprovedExplosion extends Explosion{
 	
 	/**
 	 * Creates a new ImprovedExplosion
-	 * @implNote size must not be greater than 511 in most cases. See the respective doBlockExplosion method
 	 * @param level  the level
 	 * @param entity  the entity not affected by this explosion. Should be the entity causing the explosion and also an IExplosiveEntity
 	 * @param source  the DamageSource this explosion uses
@@ -149,7 +143,7 @@ public class ImprovedExplosion extends Explosion{
 	
 	/**
 	 * Executes a block explosion using either a single or multiple threads based on explosion size and user settings.
-	 * This method exists if it is not executed on the server side.
+	 * This method exits if it is not executed on the server side, as the explosion wouldn't work.
 	 * @param resistanceImpact  the relative impact that explosion resistance of blocks has on the penetration force of the explosion
 	 * @param randomVecLength  the greater this value, the more distributed the length of the explosion vectors will be. Large explosions should have a value less than 1
 	 * @param ignoreFluidResistance  whether or not fluids should be ignored in the explosion resistance calculation
@@ -330,7 +324,7 @@ public class ImprovedExplosion extends Explosion{
 	}
 	
 	/**
-	 * Finishes an explosion, both multithreaded and singlethreaded, by applying an optional rule to all marked blocks or simply removing them if null is given.
+	 * Finishes an explosion, both multithreaded and singlethreaded, by applying an optional rule to all marked blocks or simply removing them if null is given as a rule.
 	 * @param serverLevel  the level that is being affected by the explosion
 	 * @param editedSections  the chunk sections which were only partially affected by the explosion
 	 * @param fullSections  the chunk sections which are fully affected by the explosion
@@ -747,7 +741,6 @@ public class ImprovedExplosion extends Explosion{
 	/**
 	 * Executes {@link ImprovedExplosion#doBlockExplosion(float, float, float, float, boolean, boolean, blockEffect)} with default values.
 	 * @param blockEffect  determines what should happen to the blocks gotten by this explosion
-	 * 
 	 */
 	@Deprecated
 	public void doBlockExplosion(IForEachBlockExplosionEffect blockEffect) {
@@ -773,7 +766,6 @@ public class ImprovedExplosion extends Explosion{
 	
 	/**
 	 * Gets all blocks in an area calculated by shooting vectors to the borders of a cube determined by the {@link ImprovedExplosion#size} and destroys them.
-	 * Values of the relative coordinates can exceed 511, allowing for bigger explosions at the cost of more ram usage and slower explosion time.
 	 * @param xzStrength  a multiplier to the x and z vector addition, which makes the explosion more powerful. It should not be set to high, otherwise blocks might be skipped
 	 * @param yStrength  a multiplier to the y vector addition, which makes the explosion more powerful. It should not be set to high, otherwise blocks might be skipped
 	 * @param resistanceImpact  the relative impact that explosion resistance of blocks has on the penetration force of explosion

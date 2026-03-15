@@ -26,7 +26,8 @@ public class ClientAccess {
 	private static Field heightmapField;
 	
 	public static void updateChunkSection(SectionPos pos, BitSet changed, boolean empty, boolean updateLight) {
-		ClientLevel level = Minecraft.getInstance().level;
+		Minecraft minecraft = Minecraft.getInstance();
+		ClientLevel level = minecraft.level;
 		
 		if(level == null) {
 			return;

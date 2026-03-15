@@ -25,10 +25,12 @@ public class TNTXStrengthEffect extends PrimedTNTEffect{
 	
 	@Nullable private final Supplier<RegistryObject<LTNTBlock>> TNT;
 	@Nullable private final Supplier<RegistryObject<LDynamiteItem>> dynamite;
+	@SuppressWarnings("unused")
 	@Deprecated(forRemoval = true)
 	private final boolean useOldExplosion;
 	private final int fuse;
 	private final int strength;
+	@SuppressWarnings("unused")
 	@Deprecated(forRemoval = true)
 	private final float xzStrength, yStrength;
 	private final float resistanceImpact;

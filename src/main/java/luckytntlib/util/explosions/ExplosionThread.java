@@ -17,7 +17,7 @@ import net.minecraft.core.SectionPos;
 import net.minecraft.server.level.ServerLevel;
 
 /**
- * Handles the of a multithreaded explosion.
+ * Handles the execution of a multithreaded explosion.
  * This is done in its own thread, as blocking the main thread will lead to a deadlock.
  * The threading itself is done using a {@link ForkJoinPool}, with the number of tasks being chosen dynamically based on the available processors and a minimum size.
  * This thread is started and its explosion is finalized in {@link MultithreadExplosionHandler}.
