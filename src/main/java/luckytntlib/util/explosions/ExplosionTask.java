@@ -145,12 +145,9 @@ public class ExplosionTask extends RecursiveTask<Long2ObjectMap<BitSet>> {
 					}
 				}
 				int blockIndex = ((pos.getX() & 15) << 8) | ((pos.getY() & 15) << 4) | (pos.getZ() & 15);
-				float resistance = currentExplosionResistances[blockIndex];
-				if (resistance != 0) {
-					vectorLength -= (resistance + 0.3f) * resistanceFac;
-					if (vectorLength <= 0f) {
-						break;
-					}
+				vectorLength -= (currentExplosionResistances[blockIndex] + 0.3f) * resistanceFac;
+				if (vectorLength <= 0f) {
+					break;
 				}
 				if ((sectionPos == lastSectionPos && lastSectionFull) || explosionThread.fullSections.contains(sectionPos)) {
 					lastSectionFull = true;
