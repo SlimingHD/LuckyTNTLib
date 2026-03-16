@@ -32,7 +32,7 @@ public class MultithreadExplosionHandler {
 				if (!thread.isAlive()) {
 					explosionThreads.poll();
 					long time = System.currentTimeMillis();
-					thread.getExplosion().finishImprovedExplosion(thread.getServerLevel(), thread.getEditedSections(), thread.getSectionsToRemove(), thread.getExplosionRule());
+					thread.getExplosion().finishImprovedExplosion(thread.getServerLevel(), thread.getEditedSections(), thread.getFullSections(), thread.getExplosionRule());
 					if (thread.shouldPlaceFire()) {
 						thread.getExplosion().placeFire(thread.getRandomVecLengthFac(), thread.getServerLevel().getRandom());
 					}

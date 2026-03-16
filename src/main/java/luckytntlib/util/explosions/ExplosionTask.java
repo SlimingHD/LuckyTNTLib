@@ -1,6 +1,5 @@
 package luckytntlib.util.explosions;
 
-import java.lang.management.ManagementFactory;
 import java.util.BitSet;
 import java.util.List;
 import java.util.concurrent.RecursiveTask;
@@ -59,7 +58,7 @@ public class ExplosionTask extends RecursiveTask<Long2ObjectMap<BitSet>> {
 			for (long key : toMergeBitSets.keySet()) {
 				if (resultBitSets.containsKey(key)) {
 					resultBitSets.get(key).or(toMergeBitSets.get(key));
-					if (resultBitSets.get(key).cardinality() == 4096) {
+					if (resultBitSets.get(key).nextClearBit(0) >= 4096) {
 						resultBitSets.remove(key);
 						explosionThread.fullSections.add(key);
 					}
@@ -92,10 +91,12 @@ public class ExplosionTask extends RecursiveTask<Long2ObjectMap<BitSet>> {
 			BlockPos.MutableBlockPos pos = new BlockPos.MutableBlockPos();
 			long sectionPos;
 			long lastSectionPos = Long.MAX_VALUE;
+			boolean lastSectionEmpty = false;
+			boolean lastSectionFull = false;
 			LevelChunkSection section;
 			BlockState currentBlockState;
-			float[] lastExplosionResistances = new float[0];
-			BitSet bitSet = new BitSet(4096);
+			float[] currentExplosionResistances = new float[0];
+			BitSet bitSet = new BitSet(0);
 			for (float step = 0f; step < vectorLength; step += 0.225f) {
 				blockX += xStep;
 				blockY += yStep;
@@ -111,60 +112,61 @@ public class ExplosionTask extends RecursiveTask<Long2ObjectMap<BitSet>> {
 				lastPosY = pos.getY();
 				lastPosZ = pos.getZ();
 				sectionPos = SectionPos.asLong(pos);
-				if (explosionThread.emptySections.contains(sectionPos)) {
+				if ((sectionPos == lastSectionPos && lastSectionEmpty) || explosionThread.emptySections.contains(sectionPos)) {
+					lastSectionEmpty = true;
 					vectorLength -= 0.3f * resistanceFac;
 					continue;
 				}
-				float[] currentExplosionResistances;
-				if (sectionPos == lastSectionPos) {
-					currentExplosionResistances = lastExplosionResistances;
-				} else {
-					if (!explosionThread.sectionResistances.containsKey(sectionPos)) {
+				lastSectionEmpty = false;
+				if (sectionPos != lastSectionPos) {
+					currentExplosionResistances = explosionThread.sectionResistances.get(sectionPos);
+					if (currentExplosionResistances == null) {
 						section = level.getChunkAt(pos).getSection((pos.getY() >> 4) - level.getMinSection());
 						if (section.hasOnlyAir()) {
 							explosionThread.emptySections.add(sectionPos);
 							vectorLength -= 0.3f * resistanceFac;
 							continue;
-						} else {
-							float[] explosionResistances = new float[4096];
-							explosionThread.sectionResistances.put(sectionPos, explosionResistances);
-							for (int x = 0; x < 16; x++) {
-								for (int y = 0; y < 16; y++) {
-									for (int z = 0; z < 16; z++) {
-										currentBlockState = section.getBlockState(x, y, z);
-										explosionResistances[x << 8 | y << 4 | z] = ignoreFluids && !currentBlockState.getFluidState().isEmpty() ? 0 : damageCalculator.getBlockExplosionResistance(explosion, level, pos, currentBlockState, currentBlockState.getFluidState()).orElse(0f);
-									}
+						}
+						float[] explosionResistances = new float[4096];
+						explosionThread.sectionResistances.put(sectionPos, explosionResistances);
+						for (int x = 0; x < 16; x++) {
+							for (int y = 0; y < 16; y++) {
+								for (int z = 0; z < 16; z++) {
+									currentBlockState = section.getBlockState(x, y, z);
+									explosionResistances[x << 8 | y << 4 | z] = ignoreFluids && !currentBlockState.getFluidState().isEmpty() ? 0 : damageCalculator.getBlockExplosionResistance(explosion, level, pos, currentBlockState, currentBlockState.getFluidState()).orElse(0f);
 								}
 							}
 						}
+						currentExplosionResistances = explosionResistances;
 					}
-					currentExplosionResistances = explosionThread.sectionResistances.get(sectionPos);
-				}
-				if (currentExplosionResistances != lastExplosionResistances) {		
-					if (editedSections.containsKey(sectionPos)) {
-						bitSet = editedSections.get(sectionPos);
-					} else {
+					bitSet = editedSections.get(sectionPos);
+					if (bitSet == null) {
 						editedSections.put(sectionPos, bitSet = new BitSet(4096));
 					}
 				}
-				float resistance = currentExplosionResistances[((pos.getX() & 15) << 8) | ((pos.getY() & 15) << 4) | (pos.getZ() & 15)];
+				int blockIndex = ((pos.getX() & 15) << 8) | ((pos.getY() & 15) << 4) | (pos.getZ() & 15);
+				float resistance = currentExplosionResistances[blockIndex];
 				if (resistance != 0) {
 					vectorLength -= (resistance + 0.3f) * resistanceFac;
+					if (vectorLength <= 0f) {
+						break;
+					}
 				}
-				if (vectorLength > 0) {
-					bitSet.set(((pos.getX() & 15) << 8) | ((pos.getY() & 15) << 4) | (pos.getZ() & 15));
+				if ((sectionPos == lastSectionPos && lastSectionFull) || explosionThread.fullSections.contains(sectionPos)) {
+					lastSectionFull = true;
+					continue;
 				}
-				if (bitSet.cardinality() == 4096) {
-					editedSections.remove(sectionPos);
-					explosionThread.fullSections.add(sectionPos);
-				}
+				lastSectionFull = false;
 				lastSectionPos = sectionPos;
-				lastExplosionResistances = currentExplosionResistances;
+				if (!bitSet.get(blockIndex)) {
+					bitSet.set(blockIndex);
+					if (bitSet.nextClearBit(0) >= 4096) {
+						editedSections.remove(sectionPos);
+						explosionThread.fullSections.add(sectionPos);
+					}
+				}
 			}
 		}
-		long cpuTime = ManagementFactory.getThreadMXBean().getCurrentThreadCpuTime() / 1000000;
-		System.out.println("CPU-Zeit (ms): " + vectors.size() + " " + cpuTime);
-		System.out.println("Task done");
 		return editedSections;
 	}
 }

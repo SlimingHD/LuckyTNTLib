@@ -5,6 +5,7 @@ import java.util.BitSet;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.Set;
@@ -13,6 +14,9 @@ import javax.annotation.Nullable;
 
 import org.joml.Vector3f;
 
+import it.unimi.dsi.fastutil.longs.Long2ObjectMap;
+import it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap;
+import it.unimi.dsi.fastutil.longs.LongOpenHashSet;
 import luckytntlib.config.LuckyTNTLibConfigValues;
 import luckytntlib.network.ClientboundSetupExplosionPacket;
 import luckytntlib.network.ClientboundUpdateChunkSectionPacket;
@@ -168,7 +172,6 @@ public class ImprovedExplosion extends Explosion {
 	 * The amount of parallel explosions is limited by the user settings, making many simultaneous explosions be queued.
 	 */
 	protected void doImprovedBlockExplosionMultithreaded(float resistanceImpact, float randomVecLength, boolean ignoreFluidResistance, boolean fire, RandomSource random, @Nullable ExplosionRule rule) {			
-		long time = System.currentTimeMillis();
 		float randomVecLengthFac = 0.6f * randomVecLength;
 		float resistanceFac = 0.3f * resistanceImpact * 2.25f;
 
@@ -184,7 +187,6 @@ public class ImprovedExplosion extends Explosion {
 				}
 			}
 		}
-		System.out.println("Time for vector gathering: " + (System.currentTimeMillis() - time));
 		
 		ExplosionThread thread = new ExplosionThread(this, resistanceFac, randomVecLengthFac, ignoreFluidResistance, fire, rule, vectors);
 		MultithreadExplosionHandler.enqueue(thread);
@@ -199,7 +201,6 @@ public class ImprovedExplosion extends Explosion {
 	 * Blocks are only marked by this method.
 	 */
 	protected void doImprovedBlockExplosionSinglethreaded(float resistanceImpact, float randomVecLength, boolean ignoreFluidResistance, boolean fire, RandomSource random, @Nullable ExplosionRule rule) {			
-		long time = System.currentTimeMillis();
 		float x = (float)posX, y = (float)posY, z = (float)posZ;
 		float randomVecLengthFac = 0.6f * randomVecLength;
 		float resistanceFac = 0.3f * resistanceImpact * 2.25f;
@@ -221,10 +222,10 @@ public class ImprovedExplosion extends Explosion {
 		 * Sections that are empty are marked to be skipped.
 		 * Sections that have every block marked are saved more efficiently.
 		 */
-		HashMap<SectionPos, BitSet> editedSections = new HashMap<SectionPos, BitSet>();
-		HashMap<Long, SectionPos> fullSections = new HashMap<Long, SectionPos>();
-		Set<Long> emptySections = new HashSet<Long>();
-		HashMap<Long, float[]> sectionResistances = new HashMap<Long, float[]>();
+		Long2ObjectMap<BitSet> editedSections = new Long2ObjectOpenHashMap<BitSet>();
+		Set<Long> fullSections = new LongOpenHashSet();
+		Set<Long> emptySections = new LongOpenHashSet();
+		Long2ObjectMap<float[]> sectionResistances = new Long2ObjectOpenHashMap<float[]>();
 		
 		for (Vector3f v : vectors) {
 			float vectorLength = v.length();
@@ -238,18 +239,19 @@ public class ImprovedExplosion extends Explosion {
 			int lastPosY = -10000;
 			int lastPosZ = 0;
 			BlockPos.MutableBlockPos pos = new BlockPos.MutableBlockPos();
-			long sectionPosL;
-			long lastSectionPosL = Long.MAX_VALUE;
-			SectionPos sectionPos;
+			long sectionPos;
+			long lastSectionPos = Long.MAX_VALUE;
+			boolean lastSectionEmpty = false;
+			boolean lastSectionFull = false;
 			LevelChunkSection section;
 			BlockState currentBlockState;
-			float[] lastExplosionResistances = new float[0];
-			BitSet bitSet = new BitSet(4096);
+			float[] currentExplosionResistances = new float[0];
+			BitSet bitSet = new BitSet(0);
 			for (float step = 0f; step < vectorLength; step += 0.225f) {
 				blockX += xStep;
 				blockY += yStep;
 				blockZ += zStep;
-				pos.set((int) blockX, (int) blockY, (int) blockZ);
+				pos.set((int)blockX, (int)blockY, (int)blockZ);
 				if (!level.isInWorldBounds(pos)) {
 					break;
 				}
@@ -259,57 +261,60 @@ public class ImprovedExplosion extends Explosion {
 				lastPosX = pos.getX();
 				lastPosY = pos.getY();
 				lastPosZ = pos.getZ();
-				sectionPosL = SectionPos.asLong(pos);
-				if (emptySections.contains(sectionPosL)) {
+				sectionPos = SectionPos.asLong(pos);
+				if ((sectionPos == lastSectionPos && lastSectionEmpty) || emptySections.contains(sectionPos)) {
+					lastSectionEmpty = true;
 					vectorLength -= 0.3f * resistanceFac;
 					continue;
 				}
-				float[] currentExplosionResistances;
-				if (sectionPosL == lastSectionPosL) {
-					currentExplosionResistances = lastExplosionResistances;
-				} else {
-					if (!sectionResistances.containsKey(sectionPosL)) {
+				lastSectionEmpty = false;
+				if (sectionPos != lastSectionPos) {
+					currentExplosionResistances = sectionResistances.get(sectionPos);
+					if (currentExplosionResistances == null) {
 						section = level.getChunkAt(pos).getSection((pos.getY() >> 4) - level.getMinSection());
 						if (section.hasOnlyAir()) {
-							emptySections.add(sectionPosL);
+							emptySections.add(sectionPos);
 							vectorLength -= 0.3f * resistanceFac;
 							continue;
-						} else {
-							float[] explosionResistances = new float[4096];
-							sectionResistances.put(sectionPosL, explosionResistances);
-							for (int sx = 0; sx < 16; sx++) {
-								for (int sy = 0; sy < 16; sy++) {
-									for (int sz = 0; sz < 16; sz++) {
-										currentBlockState = section.getBlockState(sx, sy, sz);
-										explosionResistances[sx << 8 | sy << 4 | sz] = ignoreFluidResistance && !currentBlockState.getFluidState().isEmpty() ? 0 : damageCalculator.getBlockExplosionResistance(this, level, pos, currentBlockState, currentBlockState.getFluidState()).orElse(0f);
-									}
+						}
+						float[] explosionResistances = new float[4096];
+						sectionResistances.put(sectionPos, explosionResistances);
+						for (int xs = 0; xs < 16; xs++) {
+							for (int ys = 0; ys < 16; ys++) {
+								for (int zs = 0; zs < 16; zs++) {
+									currentBlockState = section.getBlockState(xs, ys, zs);
+									explosionResistances[xs << 8 | ys << 4 | zs] = ignoreFluidResistance && !currentBlockState.getFluidState().isEmpty() ? 0 : damageCalculator.getBlockExplosionResistance(this, level, pos, currentBlockState, currentBlockState.getFluidState()).orElse(0f);
 								}
 							}
 						}
+						currentExplosionResistances = explosionResistances;
 					}
-					currentExplosionResistances = sectionResistances.get(sectionPosL);
-				}
-				sectionPos = SectionPos.of(sectionPosL);
-				if (currentExplosionResistances != lastExplosionResistances) {		
-					if (editedSections.containsKey(sectionPos)) {
-						bitSet = editedSections.get(sectionPos);
-					} else {
-						editedSections.put(SectionPos.of(sectionPosL), bitSet = new BitSet(4096));
+					bitSet = editedSections.get(sectionPos);
+					if (bitSet == null) {
+						editedSections.put(sectionPos, bitSet = new BitSet(4096));
 					}
 				}
-				float resistance = currentExplosionResistances[((pos.getX() & 15) << 8) | ((pos.getY() & 15) << 4) | (pos.getZ() & 15)];
+				int blockIndex = ((pos.getX() & 15) << 8) | ((pos.getY() & 15) << 4) | (pos.getZ() & 15);
+				float resistance = currentExplosionResistances[blockIndex];
 				if (resistance != 0) {
 					vectorLength -= (resistance + 0.3f) * resistanceFac;
+					if (vectorLength <= 0f) {
+						break;
+					}
 				}
-				if (vectorLength > 0) {
-					bitSet.set(((pos.getX() & 15) << 8) | ((pos.getY() & 15) << 4) | (pos.getZ() & 15));
+				if ((sectionPos == lastSectionPos && lastSectionFull) || fullSections.contains(sectionPos)) {
+					lastSectionFull = true;
+					continue;
 				}
-				if (bitSet.cardinality() == 4096) {
-					editedSections.remove(sectionPos);
-					fullSections.put(sectionPosL, SectionPos.of(pos));
+				lastSectionFull = false;
+				lastSectionPos = sectionPos;
+				if (!bitSet.get(blockIndex)) {
+					bitSet.set(blockIndex);
+					if (bitSet.nextClearBit(0) >= 4096) {
+						editedSections.remove(sectionPos);
+						fullSections.add(sectionPos);
+					}
 				}
-				lastSectionPosL = sectionPosL;
-				lastExplosionResistances = currentExplosionResistances;
 			}
 		}
 		
@@ -319,8 +324,6 @@ public class ImprovedExplosion extends Explosion {
 				placeFire(randomVecLengthFac, random);
 			}
 		}
-		
-		System.out.println(System.currentTimeMillis() - time);
 	}
 	
 	/**
@@ -330,7 +333,7 @@ public class ImprovedExplosion extends Explosion {
 	 * @param fullSections  the chunk sections which are fully affected by the explosion
 	 * @param rule  an optional rule for applying effects other than just destroying all marked blocks
 	 */
-	protected void finishImprovedExplosion(ServerLevel serverLevel, HashMap<SectionPos, BitSet> editedSections, HashMap<Long, SectionPos> fullSections, @Nullable ExplosionRule rule) {
+	protected void finishImprovedExplosion(ServerLevel serverLevel, Map<Long, BitSet> editedSections, Set<Long> fullSections, @Nullable ExplosionRule rule) {
 		if (rule == null) {
 			finishImprovedExplosionWithoutRule(serverLevel, editedSections, fullSections);
 		} else {
@@ -343,10 +346,11 @@ public class ImprovedExplosion extends Explosion {
 	 * For this reason, block updates are omitted.
 	 * Sky light is automatically updated, block light is not.
 	 */
-	private void finishImprovedExplosionWithoutRule(ServerLevel serverLevel, HashMap<SectionPos, BitSet> editedSections, HashMap<Long, SectionPos> fullSections) {
+	private void finishImprovedExplosionWithoutRule(ServerLevel serverLevel, Map<Long, BitSet> editedSections, Set<Long> fullSections) {
 		HashMap<LevelChunk, BitSet> chunks = new HashMap<>();
 		
-		for(SectionPos pos : fullSections.values()) {
+		for(long encodedPos : fullSections) {
+			SectionPos pos = SectionPos.of(encodedPos);
 			LevelChunk chunk = serverLevel.getChunk(pos.x(), pos.z());
 			LevelChunkSection section = chunk.getSection(serverLevel.getSectionIndexFromSectionY(pos.y()));
 			PalettedContainer<BlockState> states = section.getStates();
@@ -370,8 +374,8 @@ public class ImprovedExplosion extends Explosion {
 			chunk.setUnsaved(true);
 		}
 		
-		for(Entry<SectionPos, BitSet> entry : editedSections.entrySet()) {
-			SectionPos pos = entry.getKey();
+		for(Entry<Long, BitSet> entry : editedSections.entrySet()) {
+			SectionPos pos = SectionPos.of(entry.getKey());
 			BitSet removedBlocks = entry.getValue();
 			LevelChunk chunk = serverLevel.getChunk(pos.x(), pos.z());
 			LevelChunkSection section = chunk.getSection(serverLevel.getSectionIndexFromSectionY(pos.y()));
@@ -407,11 +411,12 @@ public class ImprovedExplosion extends Explosion {
 	 * Block updates are omitted to save performance.
 	 * Sky light is automatically updated, block light is not.
 	 */
-	private void finishImprovedExplosionWithRule(ServerLevel server, HashMap<SectionPos, BitSet> editedSections, HashMap<Long, SectionPos> fullSections, ExplosionRule rule) {
+	private void finishImprovedExplosionWithRule(ServerLevel server, Map<Long, BitSet> editedSections, Set<Long> fullSections, ExplosionRule rule) {
 		HashMap<LevelChunk, BitSet> chunks = new HashMap<>();
 		PacketHandler.CHANNEL.send(PacketDistributor.ALL.noArg(), new ClientboundSetupExplosionPacket(rule, BlockPos.containing(posX, posY, posZ)));
-	
-		for(SectionPos pos : fullSections.values()) {
+
+		for(long encodedPos : fullSections) {
+			SectionPos pos = SectionPos.of(encodedPos);
 			LevelChunk chunk = server.getChunk(pos.x(), pos.z());
 			LevelChunkSection section = chunk.getSection(server.getSectionIndexFromSectionY(pos.y()));
 			PalettedContainer<BlockState> states = section.getStates();
@@ -444,8 +449,8 @@ public class ImprovedExplosion extends Explosion {
 			chunk.setUnsaved(true);
 		}
 		
-		for(Entry<SectionPos, BitSet> entry : editedSections.entrySet()) {
-			SectionPos pos = entry.getKey();
+		for(Entry<Long, BitSet> entry : editedSections.entrySet()) {
+			SectionPos pos = SectionPos.of(entry.getKey());
 			BitSet removedBlocks = entry.getValue();
 			LevelChunk chunk = server.getChunk(pos.x(), pos.z());
 			LevelChunkSection section = chunk.getSection(server.getSectionIndexFromSectionY(pos.y()));
@@ -492,15 +497,19 @@ public class ImprovedExplosion extends Explosion {
 	 * @param random  more efficient random number generator
 	 */
 	public void placeFire(float randomVecLengthFac, RandomSource random) {
-		for(int offX = -size / 2; offX <= size / 2; offX++) {
-			for(int offY = -size / 2; offY <= size / 2; offY++) {
-				for(int offZ = -size / 2; offZ <= size / 2; offZ++) {
+		for(int offX = -size / 4; offX <= size / 4; offX++) {
+			for(int offY = -size / 4; offY <= size / 4; offY++) {
+				for(int offZ = -size / 4; offZ <= size / 4; offZ++) {
+					int distanceSqr = offX * offX + offY * offY + offZ * offZ;
 					double distance = Math.sqrt(offX * offX + offY * offY + offZ * offZ);
-					if ((int)distance == size / 2 && random.nextFloat() < 0.2f) {
+					if (distanceSqr >= size * size && distanceSqr < (size + 1) * (size + 1)) {
+						
+					}
+					if ((int)distance == size / 4 && random.nextFloat() < 0.2f) {
 						double xStep = offX / distance * 0.3f;
 						double yStep = offY / distance * 0.3f;
 						double zStep = offZ / distance * 0.3f;
-						float vectorLength = size * (0.7f + random.nextFloat() * randomVecLengthFac);
+						float vectorLength = size * (0.8f + random.nextFloat() * randomVecLengthFac);
 						float blockX = (float)posX;
 						float blockY = (float)posY;
 						float blockZ = (float)posZ;

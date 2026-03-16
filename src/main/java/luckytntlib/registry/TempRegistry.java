@@ -70,9 +70,11 @@ public class TempRegistry {
 		public void serverExplosion(IExplosiveEntity ent) {
 			ExplosionRule rule = new FilterAirExplosionRule(new StackedExplosionRule(new DistanceExplosionRule(new RandomBlockExplosionRule(RandomList.<BlockState>floatBuilder().addEntry(Blocks.RED_WOOL.defaultBlockState(), 0.95f).addEntry(Blocks.LIME_WOOL.defaultBlockState(), 0.05f).build()), new DistanceComparator(DistanceComparingStrategy.SMALLER_THAN, 0, 75)), new DistanceExplosionRule(new RandomBlockExplosionRule(RandomList.ofEqualProbability(Blocks.YELLOW_WOOL.defaultBlockState(), Blocks.PURPLE_WOOL.defaultBlockState())), new DistanceComparator(DistanceComparingStrategy.SMALLER_AND_GREATER_THAN, 85, 120))));
 
-			ImprovedExplosion explosion = new ImprovedExplosion(ent.getLevel(), (Entity)ent, null, ent.getPos(), 300);
+			ImprovedExplosion explosion = new ImprovedExplosion(ent.getLevel(), (Entity)ent, null, ent.getPos(), 600);
 			explosion.doEntityExplosion(1f, true);
-			explosion.doImprovedBlockExplosion(0.167f, 0.05f, true, false, ent.getLevel().getRandom(), rule);
+			long time = System.currentTimeMillis();
+			explosion.doImprovedBlockExplosion(0.167f, 0.05f, true, false, ent.getLevel().getRandom(), null);
+			System.out.println("Time for executing explosion: " + (System.currentTimeMillis() - time));
 			explosion.spawnExplosionParticlesServer();
 		}
 	}
