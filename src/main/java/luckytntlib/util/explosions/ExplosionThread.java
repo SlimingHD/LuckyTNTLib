@@ -18,7 +18,7 @@ import luckytntlib.util.explosions.rules.ExplosionRule;
  * Handles the execution of a multithreaded explosion.
  * This is done in its own thread, as blocking the main thread will lead to a deadlock.
  * The threading itself is done using a {@link ForkJoinPool}, with the number of tasks being chosen dynamically based on the available processors and a minimum size.
- * This thread is started and its explosion is finalized in {@link MultithreadExplosionHandler}.
+ * This thread is started and its explosion is finalized in {@link MultithreadedExplosionHandler}.
  * Only the gathering of blocks to affect is handled in multiple threads. Both the collection of vectors and the finalization are running in a single thread.
  */
 public class ExplosionThread extends Thread {

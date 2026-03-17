@@ -20,7 +20,7 @@ import net.minecraftforge.fml.common.Mod;
  * This is done to save on CPU and RAM usage and make sure the game doesn't just crash.
  */
 @Mod.EventBusSubscriber
-public class MultithreadExplosionHandler {
+public class MultithreadedExplosionHandler {
 
 	private static final Queue<ExplosionThread> queuedExplosionThreads = new LinkedList<ExplosionThread>();
 	private static final Queue<ExplosionThread> explosionThreads = new LinkedList<ExplosionThread>();

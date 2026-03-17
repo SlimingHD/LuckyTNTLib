@@ -186,7 +186,7 @@ public class ImprovedExplosion extends Explosion {
 		}
 		
 		ExplosionThread thread = new ExplosionThread(this, resistanceFac, randomVecLengthFac, ignoreFluidResistance, fire, rule, vectors);
-		MultithreadExplosionHandler.enqueue(thread);
+		MultithreadedExplosionHandler.enqueue(thread);
 	}
 
 	
