@@ -13,7 +13,6 @@ import org.joml.Vector3f;
 
 import it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap;
 import luckytntlib.util.explosions.rules.ExplosionRule;
-import net.minecraft.server.level.ServerLevel;
 
 /**
  * Handles the execution of a multithreaded explosion.
@@ -70,10 +69,6 @@ public class ExplosionThread extends Thread {
 	
 	public ImprovedExplosion getExplosion() {
 		return explosion;
-	}
-	
-	public ServerLevel getServerLevel() {
-		return (ServerLevel)explosion.level;
 	}
 	
 	public float getRandomVecLengthFac() {

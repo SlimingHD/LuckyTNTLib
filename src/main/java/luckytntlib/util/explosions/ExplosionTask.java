@@ -18,11 +18,13 @@ import net.minecraft.world.level.chunk.LevelChunkSection;
 @SuppressWarnings("serial")
 public class ExplosionTask extends RecursiveTask<Long2ObjectMap<BitSet>> {
 	
+	private static final float[] EMPTY_SECTION = new float[0];
+	
 	private final ExplosionThread explosionThread;
 	private final ImprovedExplosion explosion;
+	private final ExplosionDamageCalculator damageCalculator;
 	private final Level level;
 	private final float x, y, z;
-	private final ExplosionDamageCalculator damageCalculator;
 	private final float resistanceFac;
 	private final boolean ignoreFluids;
 	private final int allowedSize;
@@ -31,11 +33,11 @@ public class ExplosionTask extends RecursiveTask<Long2ObjectMap<BitSet>> {
 	public ExplosionTask(ExplosionThread explosionThread, ImprovedExplosion explosion, float resistanceFac, boolean ignoreFluids, int allowedSize, List<Vector3f> vectors) {
 		this.explosionThread = explosionThread;
 		this.explosion = explosion;
+		this.damageCalculator = explosion.damageCalculator;
 		this.level = explosion.level;
 		this.x = (float)explosion.posX;
 		this.y = (float)explosion.posY;
 		this.z = (float)explosion.posZ;
-		this.damageCalculator = explosion.damageCalculator;
 		this.resistanceFac = resistanceFac;
 		this.ignoreFluids = ignoreFluids;
 		this.allowedSize = allowedSize;
@@ -89,12 +91,11 @@ public class ExplosionTask extends RecursiveTask<Long2ObjectMap<BitSet>> {
 			int lastPosY = -10000;
 			int lastPosZ = 0;
 			BlockPos.MutableBlockPos pos = new BlockPos.MutableBlockPos();
+			BlockPos.MutableBlockPos innerPos = new BlockPos.MutableBlockPos();
 			long sectionPos;
 			long lastSectionPos = Long.MAX_VALUE;
-			boolean lastSectionEmpty = false;
-			boolean lastSectionFull = false;
-			LevelChunkSection section;
-			BlockState currentBlockState;
+			boolean sectionEmpty = false;
+			boolean sectionFull = false;
 			float[] currentExplosionResistances = new float[0];
 			BitSet bitSet = new BitSet(0);
 			for (float step = 0f; step < vectorLength; step += 0.225f) {
@@ -112,48 +113,51 @@ public class ExplosionTask extends RecursiveTask<Long2ObjectMap<BitSet>> {
 				lastPosY = pos.getY();
 				lastPosZ = pos.getZ();
 				sectionPos = SectionPos.asLong(pos);
-				if ((sectionPos == lastSectionPos && lastSectionEmpty) || explosionThread.emptySections.contains(sectionPos)) {
-					lastSectionEmpty = true;
+				if ((sectionPos == lastSectionPos && sectionEmpty) || explosionThread.emptySections.contains(sectionPos)) {
+					sectionEmpty = true;
 					vectorLength -= 0.3f * resistanceFac;
 					continue;
 				}
-				lastSectionEmpty = false;
+				sectionEmpty = false;
 				if (sectionPos != lastSectionPos) {
-					currentExplosionResistances = explosionThread.sectionResistances.get(sectionPos);
-					if (currentExplosionResistances == null) {
-						section = level.getChunkAt(pos).getSection((pos.getY() >> 4) - level.getMinSection());
+					int chunkX = pos.getX() >> 4;
+					int chunkY = pos.getY() >> 4;
+					int chunkZ = pos.getZ() >> 4;
+					currentExplosionResistances = explosionThread.sectionResistances.computeIfAbsent(sectionPos, sp -> {
+						LevelChunkSection section = level.getChunk(chunkX, chunkZ).getSection(chunkY - level.getMinSection());
 						if (section.hasOnlyAir()) {
-							explosionThread.emptySections.add(sectionPos);
-							vectorLength -= 0.3f * resistanceFac;
-							continue;
+							return EMPTY_SECTION;
 						}
 						float[] explosionResistances = new float[4096];
-						explosionThread.sectionResistances.put(sectionPos, explosionResistances);
+						BlockState currentBlockState;
 						for (int x = 0; x < 16; x++) {
 							for (int y = 0; y < 16; y++) {
 								for (int z = 0; z < 16; z++) {
 									currentBlockState = section.getBlockState(x, y, z);
-									explosionResistances[x << 8 | y << 4 | z] = ignoreFluids && !currentBlockState.getFluidState().isEmpty() ? 0 : damageCalculator.getBlockExplosionResistance(explosion, level, pos, currentBlockState, currentBlockState.getFluidState()).orElse(0f);
+									innerPos.set((chunkX << 4) + x, (chunkY << 4) + y, (chunkZ << 4) + z);
+									explosionResistances[x << 8 | y << 4 | z] = ignoreFluids && !currentBlockState.getFluidState().isEmpty() ? 0f : damageCalculator.getBlockExplosionResistance(explosion, level, innerPos, currentBlockState, currentBlockState.getFluidState()).orElse(0f);
 								}
 							}
 						}
-						currentExplosionResistances = explosionResistances;
+						return explosionResistances;
+					});
+					if (currentExplosionResistances == EMPTY_SECTION) {
+						explosionThread.emptySections.add(sectionPos);
+						vectorLength -= 0.3f * resistanceFac;
+						continue;
 					}
-					bitSet = editedSections.get(sectionPos);
-					if (bitSet == null) {
-						editedSections.put(sectionPos, bitSet = new BitSet(4096));
-					}
+					bitSet = editedSections.computeIfAbsent(sectionPos, sp -> new BitSet(4096));
 				}
 				int blockIndex = ((pos.getX() & 15) << 8) | ((pos.getY() & 15) << 4) | (pos.getZ() & 15);
 				vectorLength -= (currentExplosionResistances[blockIndex] + 0.3f) * resistanceFac;
 				if (vectorLength <= 0f) {
 					break;
 				}
-				if ((sectionPos == lastSectionPos && lastSectionFull) || explosionThread.fullSections.contains(sectionPos)) {
-					lastSectionFull = true;
+				if ((sectionPos == lastSectionPos && sectionFull) || explosionThread.fullSections.contains(sectionPos)) {
+					sectionFull = true;
 					continue;
 				}
-				lastSectionFull = false;
+				sectionFull = false;
 				lastSectionPos = sectionPos;
 				if (!bitSet.get(blockIndex)) {
 					bitSet.set(blockIndex);

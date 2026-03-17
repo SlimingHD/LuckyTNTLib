@@ -4,6 +4,7 @@ import java.util.LinkedList;
 import java.util.Queue;
 
 import luckytntlib.config.LuckyTNTLibConfigValues;
+import luckytntlib.util.explosions.rules.FireExplosionRule;
 import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.event.TickEvent.ServerTickEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
@@ -32,9 +33,11 @@ public class MultithreadExplosionHandler {
 				if (!thread.isAlive()) {
 					explosionThreads.poll();
 					long time = System.currentTimeMillis();
-					thread.getExplosion().finishImprovedExplosion(thread.getServerLevel(), thread.getEditedSections(), thread.getFullSections(), thread.getExplosionRule());
+					thread.getExplosion().finishImprovedExplosion(thread.getEditedSections(), thread.getFullSections(), thread.getExplosionRule());
 					if (thread.shouldPlaceFire()) {
-						thread.getExplosion().placeFire(thread.getRandomVecLengthFac(), thread.getServerLevel().getRandom());
+						float sizeReduction = (float)Math.sqrt(Math.sqrt(thread.getExplosion().size));
+						ImprovedExplosion fireExplosion = new ImprovedExplosion(thread.getExplosion().level, thread.getExplosion().getPosition(), Math.round(thread.getExplosion().size / sizeReduction));
+						fireExplosion.doImprovedBlockExplosion(1f, 1.2f * sizeReduction, false, false, new FireExplosionRule(1f / sizeReduction));
 					}
 					System.out.println("Time for finishing explosion: " + (System.currentTimeMillis() - time));
 					if (!queuedExplosionThreads.isEmpty()) {

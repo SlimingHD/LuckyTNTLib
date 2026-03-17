@@ -6,10 +6,10 @@ public class LuckyTNTLibConfigValues {
 
 	public static ForgeConfigSpec.BooleanValue MULTITHREADED_EXPLOSIONS;
 	public static ForgeConfigSpec.IntValue MAX_EXPLOSION_THREADS;
-	
-	@Deprecated
+
+	@Deprecated(since = "47.2.32.1", forRemoval = true)
 	public static ForgeConfigSpec.BooleanValue PERFORMANT_EXPLOSION;
-	@Deprecated
+	@Deprecated(since = "47.2.32.1", forRemoval = true)
 	public static ForgeConfigSpec.DoubleValue EXPLOSION_PERFORMANCE_FACTOR;
 	
 	public static void registerConfig(ForgeConfigSpec.Builder builder) {
