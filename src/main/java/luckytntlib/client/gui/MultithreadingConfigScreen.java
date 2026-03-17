@@ -56,6 +56,7 @@ public class MultithreadingConfigScreen extends Screen {
 		RowHelper footerRows = footerGrid.createRowHelper(3);
 		Button backButton = new Button.Builder(CommonComponents.GUI_BACK, button -> {}).width(100).build();
 		backButton.active = false;
+		@SuppressWarnings("removal")
 		Button nextButton = new Button.Builder(CommonComponents.GUI_CONTINUE, button -> {
 			onClose();
 			minecraft.setScreen(new DeprecatedConfigScreen());

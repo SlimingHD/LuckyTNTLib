@@ -22,7 +22,7 @@ import net.minecraftforge.registries.RegistryObject;
  * <p>
  * It offers all the customization needed to create small and large explosions for Dynamite, TNT and {@link StackedPrimedTNTEffect}.
  */
-public class TNTXStrengthEffect extends PrimedTNTEffect{
+public class TNTXStrengthEffect extends PrimedTNTEffect {
 	
 	@Nullable private final Supplier<RegistryObject<LTNTBlock>> TNT;
 	@Nullable private final Supplier<RegistryObject<LDynamiteItem>> dynamite;

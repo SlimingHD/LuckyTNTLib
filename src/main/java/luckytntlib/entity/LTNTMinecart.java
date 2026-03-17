@@ -28,12 +28,11 @@ import net.minecraft.world.phys.Vec3;
 import net.minecraftforge.registries.RegistryObject;
 
 /**
- * 
  * The LTNTMinecart is an extension of Minecraft's {@link AbstractMinecart}
  * and can hold an already existing {@link PrimedLTNT} and its {@link PrimedTNTEffect}.
  * It implements {@link IExplosiveEntity}.
  */
-public class LTNTMinecart extends AbstractMinecart implements IExplosiveEntity{
+public class LTNTMinecart extends AbstractMinecart implements IExplosiveEntity {
 
 	private static final EntityDataAccessor<Integer> DATA_FUSE_ID = SynchedEntityData.defineId(LTNTMinecart.class, EntityDataSerializers.INT);
 	private boolean explodeInstantly;

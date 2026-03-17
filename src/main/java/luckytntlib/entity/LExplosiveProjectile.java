@@ -21,7 +21,6 @@ import net.minecraft.world.phys.EntityHitResult;
 import net.minecraft.world.phys.Vec3;
 
 /**
- * 
  * The LExplosiveProjectile is an extension of Minecraft's {@link AbstractArrow} 
  * and represents a projectile that holds a {@link PrimedTNTEffect}.
  * Unlike a {@link PrimedLTNT} a LExplosiveProjectile has access to other types of logic specifically designed
@@ -29,7 +28,7 @@ import net.minecraft.world.phys.Vec3;
  * through its {@link PrimedTNTEffect}.
  * It implements {@link IExplosiveEntity} and {@link ItemSupplier}.
  */
-public class LExplosiveProjectile extends AbstractArrow implements IExplosiveEntity, ItemSupplier{
+public class LExplosiveProjectile extends AbstractArrow implements IExplosiveEntity, ItemSupplier {
 	
 	private static final EntityDataAccessor<Integer> DATA_FUSE_ID = SynchedEntityData.defineId(LExplosiveProjectile.class, EntityDataSerializers.INT);
 	@Nullable

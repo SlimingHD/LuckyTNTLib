@@ -27,7 +27,7 @@ import net.minecraft.world.phys.Vec3;
  * It controls what a TNT does upon exploding, what particles it displays, what Block/Item gets rendered 
  * and general logic like conditions for exploding.
  */
-public abstract class PrimedTNTEffect{	
+public abstract class PrimedTNTEffect {	
 	/**
 	 * 
 	 * This void is the heart of the PrimedTNTEffect. It's executed every tick on both the logical client and the logical server side 

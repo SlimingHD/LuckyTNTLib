@@ -19,13 +19,12 @@ import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 
 /**
- *
  * The LDynamiteRenderer is similar to the {@link ThrownItemRenderer}, but the item is also scaled by using
  * the size given by the {@link PrimedTNTEffect} of the {@link LExplosiveProjectile}.
  * @param <T>  is an instance of {@link LExplosiveProjectile} and implements {@link ItemSupplier}
  */
 @OnlyIn(Dist.CLIENT)
-public class LDynamiteRenderer<T extends LExplosiveProjectile & ItemSupplier> extends EntityRenderer<T>{
+public class LDynamiteRenderer<T extends LExplosiveProjectile & ItemSupplier> extends EntityRenderer<T> {
 	
 	private final ItemRenderer itemRenderer;
 	

@@ -69,7 +69,7 @@ public class TempRegistry {
 		
 		@Override
 		public void serverExplosion(IExplosiveEntity ent) {
-			ExplosionRule rule = new FilterAirExplosionRule(new StackedExplosionRule(new DistanceExplosionRule(new RandomBlockExplosionRule(RandomList.<BlockState>floatBuilder().addEntry(Blocks.RED_WOOL.defaultBlockState(), 0.95f).addEntry(Blocks.LIME_WOOL.defaultBlockState(), 0.05f).build()), new DistanceComparator(DistanceComparingStrategy.SMALLER_THAN, 0, 75)), new DistanceExplosionRule(new RandomBlockExplosionRule(RandomList.ofEqualProbability(Blocks.YELLOW_WOOL.defaultBlockState(), Blocks.PURPLE_WOOL.defaultBlockState())), new DistanceComparator(DistanceComparingStrategy.SMALLER_AND_GREATER_THAN, 85, 120))));
+			ExplosionRule rule = new FilterAirExplosionRule(new StackedExplosionRule(new DistanceExplosionRule(new RandomBlockExplosionRule(RandomList.<BlockState>floatBuilder().addEntry(Blocks.RED_WOOL.defaultBlockState(), 0.95f).addEntry(Blocks.LIME_WOOL.defaultBlockState(), 0.05f).build()), new DistanceComparator(DistanceComparingStrategy.SMALLER_THAN, 0, 75)), new DistanceExplosionRule(new RandomBlockExplosionRule(RandomList.ofEqualProbability(Blocks.YELLOW_WOOL.defaultBlockState(), Blocks.PURPLE_WOOL.defaultBlockState())), new DistanceComparator(DistanceComparingStrategy.BETWEEN, 85, 120))));
 
 			ImprovedExplosion explosion = new ImprovedExplosion((ServerLevel)ent.getLevel(), (Entity)ent, null, ent.getPos(), 300);
 			explosion.doEntityExplosion(1f, true);

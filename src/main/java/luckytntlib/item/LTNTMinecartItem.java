@@ -25,12 +25,11 @@ import net.minecraft.world.level.gameevent.GameEvent;
 import net.minecraftforge.registries.RegistryObject;
 
 /**
- * 
  * The LTNTMinecartItem is an important step in making a custom TNT minecart.
  * It can be used to spawn a {@link LTNTMinecart} onto rails.
  * If a {@link DispenseItemBehavior} has been registered dispensers can also spawn the minecart.
  */
-public class LTNTMinecartItem extends MinecartItem{
+public class LTNTMinecartItem extends MinecartItem {
 
 	@Nullable Supplier<RegistryObject<EntityType<LTNTMinecart>>> minecart;
 	

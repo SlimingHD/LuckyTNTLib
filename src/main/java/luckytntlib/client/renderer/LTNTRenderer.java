@@ -18,14 +18,13 @@ import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 
 /**
- * 
  * The LTNTRenderer renders an {@link IExplosiveEntity} as a block.
  * The block can be a type of TNT, in which case it will also be animated, or any other block,
  * in which case it is rendered like a normal block.
  * The block is also scaled using the size of its {@link PrimedTNTEffect}.
  */
 @OnlyIn(Dist.CLIENT)
-public class LTNTRenderer extends EntityRenderer<Entity>{
+public class LTNTRenderer extends EntityRenderer<Entity> {
 	private BlockRenderDispatcher blockRenderer;
 	
 	public LTNTRenderer(EntityRendererProvider.Context context) {

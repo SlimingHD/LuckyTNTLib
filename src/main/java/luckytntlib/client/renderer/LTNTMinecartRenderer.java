@@ -17,12 +17,11 @@ import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 
 /**
- * 
  * The LTNTMinecartRenderer renders a Minecart with a TNT inside of it.
  * The TNT is scaled using the size parameter of its {@link PrimedTNTEffect}.
  */
 @OnlyIn(Dist.CLIENT)
-public class LTNTMinecartRenderer extends MinecartRenderer<LTNTMinecart>{
+public class LTNTMinecartRenderer extends MinecartRenderer<LTNTMinecart> {
 	
 	public LTNTMinecartRenderer(EntityRendererProvider.Context context) {
 		super(context, ModelLayers.TNT_MINECART);

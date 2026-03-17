@@ -17,6 +17,7 @@ import net.minecraft.network.chat.Component;
 import net.minecraftforge.client.gui.widget.ForgeSlider;
 import net.minecraftforge.common.ForgeConfigSpec;
 
+@Deprecated(since = "47.2.32.1", forRemoval = true)
 public class DeprecatedConfigScreen extends Screen {
 
 	Button performantExplosion = null;
@@ -28,7 +29,6 @@ public class DeprecatedConfigScreen extends Screen {
 		super(Component.translatable("luckytntlib.config.deprecated_title"));
 	}
 
-	@SuppressWarnings("removal")
 	@Override
 	public void init() {
 		LinearLayout linear = layout.addToHeader(new LinearLayout(0, 0, Orientation.VERTICAL));
@@ -76,7 +76,6 @@ public class DeprecatedConfigScreen extends Screen {
 		super.render(graphics, mouseX, mouseY, partialTicks);
 	}
 	
-	@SuppressWarnings("removal")
 	@Override
 	public void onClose() {
 		if(explosionPerformanceFactor != null) {

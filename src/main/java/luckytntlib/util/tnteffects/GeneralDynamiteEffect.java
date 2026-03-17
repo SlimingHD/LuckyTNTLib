@@ -10,11 +10,10 @@ import net.minecraft.world.item.Item;
 import net.minecraftforge.registries.RegistryObject;
 
 /**
- * 
  * GeneralDynamiteEffect is an extension of the {@link PrimedTNTEffect} and is an easy way of generalizing Dynamites without having to 
  * make existing PrimedTNTEffects messy by being able to transfer already existing PrimedTNTEffect together with some Particles and a Dynamite Item to render.
  */
-public class GeneralDynamiteEffect extends PrimedTNTEffect{
+public class GeneralDynamiteEffect extends PrimedTNTEffect {
 
 	private final Supplier<RegistryObject<LDynamiteItem>> dynamite;
 	private final PrimedTNTEffect effect;

@@ -52,9 +52,8 @@ import net.minecraftforge.event.ForgeEventFactory;
 import net.minecraftforge.network.PacketDistributor;
 
 /**
- * ImprovedExplosion is an extension of Minecraft's {@link Explosion}.
- * It is needed because the explosion of minecraft is rather limited in functionality and size,
- * while an ImprovedExplosion has no limit in its size and offers multiple and dynamic ways to interact with and customize the explosion.
+ * Minecraft's explosions are limited by size, performance, and versatility.
+ * This extension of {@link Explosion} tackles all of those problems by providing a multitude of functions for executing and customizing explosions.
  */
 public class ImprovedExplosion extends Explosion {
 
@@ -65,13 +64,13 @@ public class ImprovedExplosion extends Explosion {
 	@Deprecated(forRemoval = true)
 	List<Integer> affectedBlocks = new ArrayList<>();
 	
-	private static ImprovedExplosion dummyExplosion;
+	private static ImprovedExplosion DUMMY_EXPLOSION;
 	
 	/**
 	 * Creates a new ImprovedExplosion
 	 * @param level  the level
 	 * @param position  the center position of the explosion
-	 * @param size  the rough size of the explosion, which must not be greater than 511 in most cases
+	 * @param size  the radius of a sphere that is being used for raytracing. It influences strength and reach of the explosion
 	 */
 	public ImprovedExplosion(ServerLevel level, Vec3 position, int size) {
 		this(level, null, null, position, size);
@@ -80,9 +79,9 @@ public class ImprovedExplosion extends Explosion {
 	/**
 	 * Creates a new ImprovedExplosion
 	 * @param level  the level
-	 * @param source  the DamageSource this explosion uses
+	 * @param source  the {@link DamageSource} this explosion uses
 	 * @param position  the center position of the explosion
-	 * @param size  the rough size of the explosion, which must not be greater than 511 in most cases
+	 * @param size  the radius of a sphere that is being used for raytracing. It influences strength and reach of the explosion
 	 */
 	public ImprovedExplosion(ServerLevel level, @Nullable DamageSource source, Vec3 position, int size) {
 		this(level, null, source, position, size);
@@ -93,7 +92,7 @@ public class ImprovedExplosion extends Explosion {
 	 * @param level  the level
 	 * @param entity  the entity not affected by this explosion. Should be the entity causing the explosion and also an IExplosiveEntity
 	 * @param position  the center position of the explosion
-	 * @param size  the rough size of the explosion, which must not be greater than 511 in most cases
+	 * @param size  the radius of a sphere that is being used for raytracing. It influences strength and reach of the explosion
 	 */	
 	public ImprovedExplosion(ServerLevel level, @Nullable Entity explodingEntity, Vec3 position, int size) {
 		this(level, explodingEntity, null, position.x, position.y, position.z, size);
@@ -103,9 +102,9 @@ public class ImprovedExplosion extends Explosion {
 	 * Creates a new ImprovedExplosion
 	 * @param level  the level
 	 * @param entity  the entity not affected by this explosion. Should be the entity causing the explosion and also an IExplosiveEntity
-	 * @param source  the DamageSource this explosion uses
+	 * @param source  the {@link DamageSource} this explosion uses
 	 * @param position  the center position of the explosion
-	 * @param size  the rough size of the explosion, which must not be greater than 511 in most cases
+	 * @param size  the radius of a sphere that is being used for raytracing. It influences strength and reach of the explosion
 	 */	
 	public ImprovedExplosion(ServerLevel level, @Nullable Entity explodingEntity, @Nullable DamageSource source, Vec3 position, int size) {
 		this(level, explodingEntity, source, position.x, position.y, position.z, size);
@@ -118,7 +117,7 @@ public class ImprovedExplosion extends Explosion {
 	 * @param x  the x center position
 	 * @param y  the y center position
 	 * @param z  the z center position
-	 * @param size  the rough size of the explosion, which must not be greater than 511 in most cases
+	 * @param size  the radius of a sphere that is being used for raytracing. It influences strength and reach of the explosion
 	 */	
 	public ImprovedExplosion(ServerLevel level, @Nullable Entity explodingEntity, double x, double y, double z, int size) {
 		this(level, explodingEntity, null, x, y, z, size);
@@ -128,11 +127,11 @@ public class ImprovedExplosion extends Explosion {
 	 * Creates a new ImprovedExplosion
 	 * @param level  the level
 	 * @param entity  the entity not affected by this explosion. Should be the entity causing the explosion and also an IExplosiveEntity
-	 * @param source  the DamageSource this explosion uses
+	 * @param source  the {@link DamageSource} this explosion uses
 	 * @param x  the x center position
 	 * @param y  the y center position
 	 * @param z  the z center position
-	 * @param size  the rough size of the explosion, which must not be greater than 511 in most cases
+	 * @param size  the radius of a sphere that is being used for raytracing. It influences strength and reach of the explosion
 	 */	
 	public ImprovedExplosion(ServerLevel level, @Nullable Entity explodingEntity, @Nullable DamageSource source, double x, double y, double z, int size) {
 		super(level, explodingEntity, source, null, x, y, z, size, false, BlockInteraction.KEEP);
@@ -146,7 +145,7 @@ public class ImprovedExplosion extends Explosion {
 	
 	/**
 	 * Executes a block explosion using either a single or multiple threads based on explosion size and user settings.
-	 * This method exits if it is not executed on the server side, as the explosion wouldn't work.
+	 * The explosion is raycasted onto the sphere with the radius determined by the size of this explosion.
 	 * @param resistanceImpact  the relative impact that explosion resistance of blocks has on the penetration force of the explosion
 	 * @param randomVecLength  the greater this value, the more distributed the length of the explosion vectors will be. Large explosions should have a value less than 1
 	 * @param ignoreFluidResistance  whether or not fluids should be ignored in the explosion resistance calculation
@@ -166,6 +165,7 @@ public class ImprovedExplosion extends Explosion {
 	 * Multithreads the improved block explosion, queueing the result to be applied in the next tick.
 	 * Due to being multithreaded, the game and other explosions will run in the background while the explosion loads.
 	 * The amount of parallel explosions is limited by the user settings, making many simultaneous explosions be queued.
+	 * Functionally equivalent to the single-threaded version.
 	 */
 	protected void doImprovedBlockExplosionMultithreaded(float resistanceImpact, float randomVecLength, boolean ignoreFluidResistance, boolean fire, @Nullable ExplosionRule rule) {			
 		float randomVecLengthFac = 0.6f * randomVecLength;
@@ -191,11 +191,10 @@ public class ImprovedExplosion extends Explosion {
 
 	
 	/**
-	 * Raycasts onto the surface of a sphere determined by the size of this explosion.
-	 * Each ray uses the explosion resistances of blocks to reduce their length.
-	 * Rays are further lengthened or shortend using random generation.
-	 * Blocks in a ray's remaining path are marked efficiently, making sure RAM and CPU are optimally utilized.
-	 * Blocks are only marked by this method.
+	 * Raycasts onto the surface of the sphere determined by the size of this explosion.
+	 * Ray length is also determined by the size and a bit of random addition.
+	 * Ray length of any ray is dynamically reduced by the explosion resistances in its path.
+	 * Blocks in a ray's remaining path are marked, not directly affected.
 	 */
 	protected void doImprovedBlockExplosionSinglethreaded(float resistanceImpact, float randomVecLength, boolean ignoreFluidResistance, boolean fire, @Nullable ExplosionRule rule) {			
 		float randomVecLengthFac = 0.6f * randomVecLength;
@@ -325,10 +324,11 @@ public class ImprovedExplosion extends Explosion {
 	}
 	
 	/**
-	 * Finishes an explosion, both multithreaded and singlethreaded, by applying an optional rule to all marked blocks or simply removing them if null is given as a rule.
+	 * Finalizes an explosion by removing / altering the blocks retrieved by raytracing.
+	 * If no rule is given, blocks will simply be removed.
 	 * @param editedSections  the chunk sections which were only partially affected by the explosion
 	 * @param fullSections  the chunk sections which are fully affected by the explosion
-	 * @param rule  an optional rule for applying effects other than just destroying all marked blocks
+	 * @param rule  an optional rule for applying effects other than destroying all marked blocks
 	 */
 	protected void finishImprovedExplosion(Map<Long, BitSet> editedSections, Set<Long> fullSections, @Nullable ExplosionRule rule) {
 		if (rule == null) {
@@ -339,9 +339,9 @@ public class ImprovedExplosion extends Explosion {
 	}
 	
 	/**
-	 * Removes all blocks that are given, having a high level of performance.
-	 * For this reason, block updates are omitted.
-	 * Sky light is automatically updated, block light is not.
+	 * Performant finalization of an explosion that only removes blocks.
+	 * This will not prompt block updates for performance reasons.
+	 * Block and sky light will be updated correctly and efficiently.
 	 */
 	private void finishImprovedExplosionWithoutRule(Map<Long, BitSet> editedSections, Set<Long> fullSections) {
 		HashMap<LevelChunk, BitSet> chunks = new HashMap<>();
@@ -405,9 +405,9 @@ public class ImprovedExplosion extends Explosion {
 	}
 	
 	/**
-	 * Affects all blocks that are given using the provided explosion rule.
-	 * Block updates are omitted to save performance.
-	 * Sky light is automatically updated, block light is not.
+	 * Performant finalization of an explosion that affects blocks using a rule.
+	 * This will not prompt block updates for performance reasons. Such updates need to be manually queued in the given rule.
+	 * Block and sky light will be updated correctly and efficiently.
 	 */
 	private void finishImprovedExplosionWithRule(Map<Long, BitSet> editedSections, Set<Long> fullSections, ExplosionRule rule) {
 		HashMap<LevelChunk, BitSet> chunks = new HashMap<>();
@@ -506,7 +506,7 @@ public class ImprovedExplosion extends Explosion {
 	}
 	
 	/**
-	 * Deprecated and will be removed in versions 1.21+. Please switch to {@link ImprovedExplosion#doImprovedBlockExplosion(float, float, boolean, boolean, RandomSource, ExplosionRule)}, which is magnitudes more efficient.
+	 * Deprecated and will be removed in versions 1.21+. Please switch to {@link #doImprovedBlockExplosion(float, float, boolean, boolean, RandomSource, ExplosionRule)}, which is magnitudes more efficient.
 	 *  
 	 * Gets all blocks in an area calculated by shooting vectors to the borders of a cube determined by the {@link ImprovedExplosion#size} and destroys them.
 	 * If any of the relative coordinates of the affected block exceed 511 they will be clamped to that value.
@@ -580,7 +580,7 @@ public class ImprovedExplosion extends Explosion {
 	}
 	
 	/**
-	 * Deprecated and will be removed in versions 1.21+. Please switch to {@link ImprovedExplosion#doImprovedBlockExplosion(float, float, boolean, boolean, RandomSource, ExplosionRule)}, which is magnitudes more efficient.
+	 * Deprecated and will be removed in versions 1.21+. Please switch to {@link #doImprovedBlockExplosion(float, float, boolean, boolean, RandomSource, ExplosionRule)}, which is magnitudes more efficient.
 	 * 
 	 * Gets all blocks in an area calculated by shooting vectors to the borders of a cube determined by the {@link ImprovedExplosion#size} 
 	 * and does to them whatever specified in the {@link IForEachBlockExplosionEffect}. 
@@ -647,7 +647,7 @@ public class ImprovedExplosion extends Explosion {
 	}
 	
 	/**
-	 * Deprecated and will be removed in versions 1.21+. Please switch to {@link ImprovedExplosion#doImprovedBlockExplosion(float, float, boolean, boolean, RandomSource, ExplosionRule)}, which is magnitudes more efficient.
+	 * Deprecated and will be removed in versions 1.21+. Please switch to {@link #doImprovedBlockExplosion(float, float, boolean, boolean, RandomSource, ExplosionRule)}, which is magnitudes more efficient.
 	 * 
 	 * Gets blocks in an area calculated by shooting vectors to the borders of a cube determined by the {@link ImprovedExplosion#size} if the {@link IBlockExplosionCondition} is met 
 	 * and does to them whatever specified in the blockEffect.
@@ -719,7 +719,7 @@ public class ImprovedExplosion extends Explosion {
 	}
 	
 	/**
-	 * Deprecated and will be removed in versions 1.21+. Please switch to {@link ImprovedExplosion#doImprovedBlockExplosion(float, float, boolean, boolean, RandomSource, ExplosionRule)}, which is magnitudes more efficient.
+	 * Deprecated and will be removed in versions 1.21+. Please switch to {@link #doImprovedBlockExplosion(float, float, boolean, boolean, RandomSource, ExplosionRule)}, which is magnitudes more efficient.
 	 * 
 	 * Executes {@link ImprovedExplosion#doBlockExplosion(float, float, float, float, boolean, boolean, blockEffect)} with default values.
 	 * @param blockEffect  determines what should happen to the blocks gotten by this explosion
@@ -730,7 +730,7 @@ public class ImprovedExplosion extends Explosion {
 	}
 	
 	/**
-	 * Deprecated and will be removed in versions 1.21+. Please switch to {@link ImprovedExplosion#doImprovedBlockExplosion(float, float, boolean, boolean, RandomSource, ExplosionRule)}, which is magnitudes more efficient.
+	 * Deprecated and will be removed in versions 1.21+. Please switch to {@link #doImprovedBlockExplosion(float, float, boolean, boolean, RandomSource, ExplosionRule)}, which is magnitudes more efficient.
 	 * 
 	 * Executes {@link ImprovedExplosion#doBlockExplosion(float, float, float, float, boolean, boolean, condition, blockEffect)} with default values.
 	 * @param blockEffect  determines what should happen to the blocks gotten by this explosion
@@ -741,7 +741,7 @@ public class ImprovedExplosion extends Explosion {
 	}
 	
 	/**
-	 * Deprecated and will be removed in versions 1.21+. Please switch to {@link ImprovedExplosion#doImprovedBlockExplosion(float, float, boolean, boolean, RandomSource, ExplosionRule)}, which is magnitudes more efficient.
+	 * Deprecated and will be removed in versions 1.21+. Please switch to {@link#doImprovedBlockExplosion(float, float, boolean, boolean, RandomSource, ExplosionRule)}, which is magnitudes more efficient.
 	 * 
 	 * Executes {@link ImprovedExplosion#doBlockExplosion(float, float, float, float, boolean, boolean)} with default values.
 	 */
@@ -751,7 +751,7 @@ public class ImprovedExplosion extends Explosion {
 	}
 	
 	/**
-	 * Deprecated and will be removed in versions 1.21+. Please switch to {@link ImprovedExplosion#doImprovedBlockExplosion(float, float, boolean, boolean, RandomSource, ExplosionRule)}, which is magnitudes more efficient.
+	 * Deprecated and will be removed in versions 1.21+. Please switch to {@link #doImprovedBlockExplosion(float, float, boolean, boolean, RandomSource, ExplosionRule)}, which is magnitudes more efficient.
 	 * 
 	 * Gets all blocks in an area calculated by shooting vectors to the borders of a cube determined by the {@link ImprovedExplosion#size} and destroys them.
 	 * @param xzStrength  a multiplier to the x and z vector addition, which makes the explosion more powerful. It should not be set to high, otherwise blocks might be skipped
@@ -879,7 +879,7 @@ public class ImprovedExplosion extends Explosion {
 	}
 	
 	/**
-	 * Damages and throws back all entities affected by this explosion determined by the {@link ImprovedExplosion#size}.
+	 * Damages and throws back all entities affected by this explosion determined by the size of this explosion.
 	 * @param knockbackStrength  multiplier to the strength of the knockback
 	 * @param damageEntities  whether or not entities should be damaged by this explosion
 	 */
@@ -920,9 +920,9 @@ public class ImprovedExplosion extends Explosion {
 	}
 	
 	/**
-	 * Does whatever specified in the {@link IForEachBlockExplosionEffect} to all entities gotten by this explosion,
-	 * which is determined by the {@link ImprovedExplosion#size}.
-	 * @param entityEffect  determines what should be done to the entities gotten by this explosion
+	 * Does whatever specified in the {@link EntityExplosionEffect} to all entities inside the radius of this explosion.
+	 * The radius of this explosion is just its size.
+	 * @param entityEffect  determines what should be done to each entity inside the radius
 	 */
 	public void doEntityExplosion(EntityExplosionEffect entityEffect) {
 		List<Entity> entities = level.getEntities(getExploder(), new AABB(posX - size * 2d, posY - size * 2d, posZ - size * 2d, posX + size * 2d, posY + size * 2d, posZ + size * 2d));
@@ -938,7 +938,7 @@ public class ImprovedExplosion extends Explosion {
 	}
 	
 	/**
-	 * Spawns particles on the server side.
+	 * Spawns explosion particles in an area around the center of this explosion.
 	 * Particle count, distribution, speed, and whether or not poof particles are spawned, is determined by the size of this explosion.
 	 */
 	public void spawnExplosionParticles() {
@@ -957,13 +957,13 @@ public class ImprovedExplosion extends Explosion {
 		return super.getIndirectSourceEntity();
 	}
 	
-	/** 
-	 * @apiNote Use a dummy explosions in methods that need an explosion to be given.
-	 * Do not use it to create an actual explosion, as it will do nothing.
+	/**
+	 * Use a dummy explosions in methods that require a non-null explosion, but the explosion itself remains unused.
+	 * @param level  the level that needs to be given
 	 * @return ImprovedExplosion with no strength and position at (0, 0, 0)
 	 */
 	public static ImprovedExplosion dummyExplosion(ServerLevel level) {
-		return dummyExplosion == null ? dummyExplosion = new ImprovedExplosion(level, new Vec3(0, 0, 0), 0) : dummyExplosion;
+		return DUMMY_EXPLOSION == null ? DUMMY_EXPLOSION = new ImprovedExplosion(level, new Vec3(0, 0, 0), 0) : DUMMY_EXPLOSION;
 	}
 
 	@Override
@@ -976,6 +976,10 @@ public class ImprovedExplosion extends Explosion {
 	public void finalizeExplosion(boolean spawnParticles) {		
 	}
 	
+	/**
+	 * Due to performance reasons, affected blocks are no longer saved and can therefore no longer be retrieved.
+	 * @return This method will always return an empty list.
+	 */
 	@Override
 	@Deprecated
 	public List<BlockPos> getToBlow(){

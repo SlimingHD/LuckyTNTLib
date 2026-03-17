@@ -120,7 +120,7 @@ public class DistanceExplosionRule implements ExplosionRule {
 		/**
 		 * Block will be within range if its distance to the explosions center is in between a given minimum distance and a given maximum distance or equal to either
 		 */
-		SMALLER_AND_GREATER_THAN("smaller_and_greater", true, true, (x, y, z, min, max) -> {
+		BETWEEN("between", true, true, (x, y, z, min, max) -> {
 			int distSquared = x * x + y * y + z * z;
 			return distSquared >= min * min && distSquared <= max * max;
 		});

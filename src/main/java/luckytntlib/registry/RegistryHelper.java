@@ -38,7 +38,6 @@ import net.minecraftforge.registries.DeferredRegister;
 import net.minecraftforge.registries.RegistryObject;
 
 /**
- * 
  * The RegistryHelper offers many methods with varying complexity for each important part of the TNT/Dynamite/TNT Minecart registering 
  * and even allows easy registration of {@link DispenseItemBehavior} where possible.
  * On top of all this it also saves List of TNT, dynamite and minecarts in a {@link HashMap} with the corresponding string assigned while registering.

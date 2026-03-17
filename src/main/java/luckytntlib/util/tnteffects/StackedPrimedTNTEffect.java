@@ -17,7 +17,7 @@ import net.minecraft.world.level.block.state.BlockState;
  * and {@link PrimedTNTEffect#explosionTick(IExplosiveEntity)}, one after the other, 
  * while the primary effect on top of this also decides how the explosive entity will look and behave.
  */
-public class StackedPrimedTNTEffect extends PrimedTNTEffect{
+public class StackedPrimedTNTEffect extends PrimedTNTEffect {
 
 	/**
 	 * List of all PrimedTNTEffects. The first effect of this list is the primary effect.

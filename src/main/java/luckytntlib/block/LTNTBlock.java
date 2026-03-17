@@ -29,11 +29,10 @@ import net.minecraft.world.level.storage.loot.LootParams;
 import net.minecraftforge.registries.RegistryObject;
 
 /**
- * 
  * The {@link LTNTBlock} is an extension of the {@link TntBlock} and it spawns a {@link PrimedLTNT} instead of a {@link PrimedTnt}.
  * If a {@link DispenseItemBehavior} has been registered dispensers can also spawn the TNT.
  */
-public class LTNTBlock extends TntBlock{
+public class LTNTBlock extends TntBlock {
 
 	@Nullable
 	protected RegistryObject<EntityType<PrimedLTNT>> TNT;

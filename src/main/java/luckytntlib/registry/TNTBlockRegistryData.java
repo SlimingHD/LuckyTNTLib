@@ -5,7 +5,6 @@ import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.world.level.material.MapColor;
 
 /**
- * 
  * The TNTBlockRegistryData only serves the purpose of bringing together relatively simple and repetitive properties that a TNT block/item may have.
  * It is currently only used by the {@link RegistryHelper} in some registering methods of TNT blocks.
  * A TNTBlockRegistryData can be created by using the Builder subclass.
