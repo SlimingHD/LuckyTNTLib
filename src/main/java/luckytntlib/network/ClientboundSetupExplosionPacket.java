@@ -2,6 +2,8 @@ package luckytntlib.network;
 
 import java.util.function.Supplier;
 
+import javax.annotation.Nullable;
+
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonObject;
@@ -24,26 +26,39 @@ import net.minecraftforge.network.NetworkEvent;
  */
 public class ClientboundSetupExplosionPacket {
 
+	@Nullable
 	public static ExplosionRule currentRule;
 	public static BlockPos currentCenter;
 	
 	private static final Gson GSON = new GsonBuilder().create();
 	
+	@Nullable
 	private final ExplosionRule rule;
+	@Nullable
 	private final BlockPos center;
 	
-	public ClientboundSetupExplosionPacket(ExplosionRule rule, BlockPos center) {
+	public ClientboundSetupExplosionPacket(@Nullable ExplosionRule rule, @Nullable BlockPos center) {
 		this.rule = rule;
-		this.center = center;
+		this.center = rule == null ? null : center;
 	}
 	
 	public ClientboundSetupExplosionPacket(FriendlyByteBuf buffer) {
+		if (buffer.readBoolean()) {
+			rule = null;
+			center = null;
+			return;
+		}
 		JsonObject root = GsonHelper.parse(buffer.readUtf());
 		rule = ExplosionRule.parse(root);
 		center = buffer.readBlockPos();
 	}
 	
 	public void encode(FriendlyByteBuf buffer) {
+		if (rule == null) {
+			buffer.writeBoolean(true);
+			return;
+		}
+		buffer.writeBoolean(false);
 		buffer.writeUtf(GSON.toJson(rule.encode(new JsonObject())));
 		buffer.writeBlockPos(center);
 	}

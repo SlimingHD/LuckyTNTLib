@@ -28,7 +28,7 @@ public class DeprecatedConfigScreen extends Screen {
 		super(Component.translatable("luckytntlib.config.deprecated_title"));
 	}
 
-	@SuppressWarnings("deprecation")
+	@SuppressWarnings("removal")
 	@Override
 	public void init() {
 		LinearLayout linear = layout.addToHeader(new LinearLayout(0, 0, Orientation.VERTICAL));
@@ -76,7 +76,7 @@ public class DeprecatedConfigScreen extends Screen {
 		super.render(graphics, mouseX, mouseY, partialTicks);
 	}
 	
-	@SuppressWarnings("deprecation")
+	@SuppressWarnings("removal")
 	@Override
 	public void onClose() {
 		if(explosionPerformanceFactor != null) {

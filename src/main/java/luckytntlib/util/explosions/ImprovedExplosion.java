@@ -155,9 +155,6 @@ public class ImprovedExplosion extends Explosion {
 	 * @param rule  optional rule for causing effects other than just destruction. Leave as null for an efficient explosion that destroys blocks
 	 */
 	public void doImprovedBlockExplosion(float resistanceImpact, float randomVecLength, boolean ignoreFluidResistance, boolean fire, @Nullable ExplosionRule rule) {
-		if (level.isClientSide()) {
-			return;
-		}
 		if (LuckyTNTLibConfigValues.MULTITHREADED_EXPLOSIONS.get() && size >= 30) {
 			doImprovedBlockExplosionMultithreaded(resistanceImpact, randomVecLength, ignoreFluidResistance, fire, rule);
 		} else {
@@ -348,8 +345,9 @@ public class ImprovedExplosion extends Explosion {
 	 */
 	private void finishImprovedExplosionWithoutRule(Map<Long, BitSet> editedSections, Set<Long> fullSections) {
 		HashMap<LevelChunk, BitSet> chunks = new HashMap<>();
+		PacketHandler.CHANNEL.send(PacketDistributor.ALL.noArg(), new ClientboundSetupExplosionPacket(null, null));
 		
-		for(long encodedPos : fullSections) {
+		for (long encodedPos : fullSections) {
 			SectionPos pos = SectionPos.of(encodedPos);
 			LevelChunk chunk = level.getChunk(pos.x(), pos.z());
 			LevelChunkSection section = chunk.getSection(level.getSectionIndexFromSectionY(pos.y()));
@@ -357,7 +355,7 @@ public class ImprovedExplosion extends Explosion {
 			
 			chunk.setLoaded(true);
 			
-			for(short s = 0; s < 4096; s++) {
+			for (int s = 0; s < 4096; s++) {
 				BlockState state = states.getAndSet((s >> 8) & 15, (s >> 4) & 15, s & 15, Blocks.AIR.defaultBlockState());
 				state.getBlock().wasExploded(level, new BlockPos((pos.x() << 4) + ((s >> 8) & 15), (pos.y() << 4) + ((s >> 4) & 15), (pos.z() << 4) + (s & 15)), this);
 			}
@@ -366,7 +364,7 @@ public class ImprovedExplosion extends Explosion {
 			
 			PacketHandler.CHANNEL.send(PacketDistributor.ALL.noArg(), new ClientboundUpdateChunkSectionPacket(SectionPos.of(pos.x(), level.getSectionIndexFromSectionY(pos.y()), pos.z()), new BitSet(0), true, false));
 			
-			if(!chunks.containsKey(chunk)) {
+			if (!chunks.containsKey(chunk)) {
 				chunks.put(chunk, new BitSet());
 			}
 			chunks.get(chunk).set(pos.y() - (level.getMinSection() - 1));
@@ -374,7 +372,7 @@ public class ImprovedExplosion extends Explosion {
 			chunk.setUnsaved(true);
 		}
 		
-		for(Entry<Long, BitSet> entry : editedSections.entrySet()) {
+		for (Entry<Long, BitSet> entry : editedSections.entrySet()) {
 			SectionPos pos = SectionPos.of(entry.getKey());
 			BitSet removedBlocks = entry.getValue();
 			LevelChunk chunk = level.getChunk(pos.x(), pos.z());
@@ -383,8 +381,8 @@ public class ImprovedExplosion extends Explosion {
 			
 			chunk.setLoaded(true);
 			
-			for(short s = 0; s < 4096; s++) {
-				if(removedBlocks.get(s)) {
+			for (int s = 0; s < 4096; s++) {
+				if (removedBlocks.get(s)) {
 					BlockState state = states.getAndSet((s >> 8) & 15, (s >> 4) & 15, s & 15, Blocks.AIR.defaultBlockState());
 					state.getBlock().wasExploded(level, new BlockPos((pos.x() << 4) + ((s >> 8) & 15), (pos.y() << 4) + ((s >> 4) & 15), (pos.z() << 4) + (s & 15)), this);
 				}
@@ -394,7 +392,7 @@ public class ImprovedExplosion extends Explosion {
 			
 			PacketHandler.CHANNEL.send(PacketDistributor.ALL.noArg(), new ClientboundUpdateChunkSectionPacket(SectionPos.of(pos.x(), level.getSectionIndexFromSectionY(pos.y()), pos.z()), removedBlocks, false, false));
 			
-			if(!chunks.containsKey(chunk)) {
+			if (!chunks.containsKey(chunk)) {
 				chunks.put(chunk, new BitSet());
 			}
 			chunks.get(chunk).set(pos.y() - (level.getMinSection() - 1));
@@ -415,7 +413,7 @@ public class ImprovedExplosion extends Explosion {
 		HashMap<LevelChunk, BitSet> chunks = new HashMap<>();
 		PacketHandler.CHANNEL.send(PacketDistributor.ALL.noArg(), new ClientboundSetupExplosionPacket(rule, BlockPos.containing(posX, posY, posZ)));
 
-		for(long encodedPos : fullSections) {
+		for (long encodedPos : fullSections) {
 			SectionPos pos = SectionPos.of(encodedPos);
 			LevelChunk chunk = level.getChunk(pos.x(), pos.z());
 			LevelChunkSection section = chunk.getSection(level.getSectionIndexFromSectionY(pos.y()));
@@ -423,7 +421,8 @@ public class ImprovedExplosion extends Explosion {
 			
 			chunk.setLoaded(true);
 			
-			for(short s = 0; s < 4096; s++) {
+			BitSet changed = null;
+			for (int s = 0; s < 4096; s++) {
 				int xl = (s >> 8) & 15;
 				int yl = (s >> 4) & 15;
 				int zl = s & 15;
@@ -432,16 +431,28 @@ public class ImprovedExplosion extends Explosion {
 				int z = (pos.z() << 4) + zl;
 				BlockState state = states.get(xl, yl, zl);
 				if (rule.shouldApply(level, state, getPosition(), x - Mth.floor(posX), y - Mth.floor(posY), z - Mth.floor(posZ))) {
-					state.getBlock().wasExploded(level, new BlockPos(x, y, z), this);
+					BlockPos blockpos = new BlockPos(x, y, z);
+					state.getBlock().wasExploded(level, blockpos, this);
 					states.set(xl, yl, zl, rule.getState());
+					chunk.removeBlockEntity(blockpos);
+				} else {
+					if (changed == null) {
+						changed = new BitSet(4096);
+						changed.set(0, 4096);
+					}
+					changed.set(s, false);
 				}
 			}
 			
 			section.recalcBlockCounts();
 			
-			PacketHandler.CHANNEL.send(PacketDistributor.ALL.noArg(), new ClientboundUpdateChunkSectionPacket(SectionPos.of(pos.x(), level.getSectionIndexFromSectionY(pos.y()), pos.z()), new BitSet(0), true, false));
+			if (changed != null) {
+				PacketHandler.CHANNEL.send(PacketDistributor.ALL.noArg(), new ClientboundUpdateChunkSectionPacket(SectionPos.of(pos.x(), level.getSectionIndexFromSectionY(pos.y()), pos.z()), changed, false, false));
+			} else {
+				PacketHandler.CHANNEL.send(PacketDistributor.ALL.noArg(), new ClientboundUpdateChunkSectionPacket(SectionPos.of(pos.x(), level.getSectionIndexFromSectionY(pos.y()), pos.z()), new BitSet(0), true, false));
+			}
 			
-			if(!chunks.containsKey(chunk)) {
+			if (!chunks.containsKey(chunk)) {
 				chunks.put(chunk, new BitSet());
 			}
 			chunks.get(chunk).set(pos.y() - (level.getMinSection() - 1));
@@ -449,7 +460,7 @@ public class ImprovedExplosion extends Explosion {
 			chunk.setUnsaved(true);
 		}
 		
-		for(Entry<Long, BitSet> entry : editedSections.entrySet()) {
+		for (Entry<Long, BitSet> entry : editedSections.entrySet()) {
 			SectionPos pos = SectionPos.of(entry.getKey());
 			BitSet affectedBlocks = entry.getValue();
 			LevelChunk chunk = level.getChunk(pos.x(), pos.z());
@@ -458,8 +469,8 @@ public class ImprovedExplosion extends Explosion {
 			
 			chunk.setLoaded(true);
 			
-			for(short s = 0; s < 4096; s++) {
-				if(affectedBlocks.get(s)) {
+			for (int s = 0; s < 4096; s++) {
+				if (affectedBlocks.get(s)) {
 					int xl = (s >> 8) & 15;
 					int yl = (s >> 4) & 15;
 					int zl = s & 15;
@@ -468,8 +479,12 @@ public class ImprovedExplosion extends Explosion {
 					int z = (pos.z() << 4) + zl;
 					BlockState state = states.get(xl, yl, zl);
 					if (rule.shouldApply(level, state, getPosition(), x - Mth.floor(posX), y - Mth.floor(posY), z - Mth.floor(posZ))) {
-						state.getBlock().wasExploded(level, new BlockPos(x, y, z), this);
+						BlockPos blockpos = new BlockPos(x, y, z);
+						state.getBlock().wasExploded(level, blockpos, this);
 						states.set(xl, yl, zl, rule.getState());
+						chunk.removeBlockEntity(blockpos);
+					} else {
+						affectedBlocks.set(s, false);
 					}
 				}
 			}
@@ -478,7 +493,7 @@ public class ImprovedExplosion extends Explosion {
 			
 			PacketHandler.CHANNEL.send(PacketDistributor.ALL.noArg(), new ClientboundUpdateChunkSectionPacket(SectionPos.of(pos.x(), level.getSectionIndexFromSectionY(pos.y()), pos.z()), affectedBlocks, false, false));
 			
-			if(!chunks.containsKey(chunk)) {
+			if (!chunks.containsKey(chunk)) {
 				chunks.put(chunk, new BitSet());
 			}
 			chunks.get(chunk).set(pos.y() - (level.getMinSection() - 1));

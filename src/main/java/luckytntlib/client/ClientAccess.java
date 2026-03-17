@@ -3,6 +3,8 @@ package luckytntlib.client;
 import java.lang.reflect.Field;
 import java.util.BitSet;
 
+import javax.annotation.Nullable;
+
 import luckytntlib.network.ClientboundSetupExplosionPacket;
 import luckytntlib.util.explosions.ExplosionHelper;
 import luckytntlib.util.explosions.rules.ExplosionRule;
@@ -29,57 +31,61 @@ public class ClientAccess {
 		Minecraft minecraft = Minecraft.getInstance();
 		ClientLevel level = minecraft.level;
 		
-		if(level == null) {
+		if (level == null) {
 			return;
 		}
 		
 		LevelChunk chunk = level.getChunk(pos.getX(), pos.getZ());
-		PalettedContainer<BlockState> states = chunk.getSection(pos.getY()).getStates();
-		LevelLightEngine engine = level.getLightEngine();
 		chunk.setLoaded(true);
 		
-		if(updateLight) {
-			for (short s = 0; s < 4096; ++s) {
-				if (!changed.get(s)) {
-					continue;
+		if (updateLight) {
+			LevelLightEngine engine = level.getLightEngine();
+			
+			for (int x = 0; x < 16; ++x) {
+				for (int z = 0; z < 16; ++z) {
+					for (int y = 15; y >= 0; --y) {
+						if (!changed.get(ExplosionHelper.encodeSectionPos(x, y, z))) {
+							continue;
+						}
+						engine.checkBlock(new BlockPos((pos.getX() << 4) + x, ((pos.getY() + level.getMinSection()) << 4) + y, (pos.getZ() << 4) + z));
+					}
 				}
-				Vec3i secpos = ExplosionHelper.decodeSectionPos(s);
-				BlockPos blockpos = new BlockPos((pos.getX() << 4) + secpos.getX(), ((pos.getY() + level.getMinSection()) << 4) + secpos.getY(), (pos.getZ() << 4) + secpos.getZ());
-				engine.checkBlock(blockpos);
 			}
 			
 			engine.updateSectionStatus(SectionPos.of(pos.getX(), pos.getY() + level.getMinSection(), pos.getZ()), false);
 			engine.setLightEnabled(chunk.getPos(), true);
 		} else {
+			PalettedContainer<BlockState> states = chunk.getSection(pos.getY()).getStates();
+			
 			ExplosionRule rule = ClientboundSetupExplosionPacket.currentRule;
 			BlockPos center = ClientboundSetupExplosionPacket.currentCenter;
 			boolean useRule = rule != null && center != null;
-			if(empty) {
-				for (short s = 0; s < 4096; s++) {
+			if (empty) {
+				for (int s = 0; s < 4096; s++) {
 					Vec3i secpos = ExplosionHelper.decodeSectionPos(s);
 					BlockPos blockpos = new BlockPos((pos.getX() << 4) + secpos.getX(), ((pos.getY() + level.getMinSection()) << 4) + secpos.getY(), (pos.getZ() << 4) + secpos.getZ());
 					
-					if(useRule) {
+					if (useRule) {
 						rule.shouldApply(level, states.get(secpos.getX(), secpos.getY(), secpos.getZ()), Vec3.atCenterOf(center), pos.getX() - center.getX(), pos.getY() - center.getY(), pos.getZ() - center.getZ());
 					}
-					
-					states.set(secpos.getX(), secpos.getY(), secpos.getZ(), useRule ? rule.getState() : Blocks.AIR.defaultBlockState());
+
 					chunk.removeBlockEntity(blockpos);
+					states.set(secpos.getX(), secpos.getY(), secpos.getZ(), useRule ? rule.getState() : Blocks.AIR.defaultBlockState());
 				}
 			} else {
-				for (short s = 0; s < 4096; ++s) {
+				for (int s = 0; s < 4096; ++s) {
 					if (!changed.get(s)) {
 						continue;
 					}
 					Vec3i secpos = ExplosionHelper.decodeSectionPos(s);
 					BlockPos blockpos = new BlockPos((pos.getX() << 4) + secpos.getX(), ((pos.getY() + level.getMinSection()) << 4) + secpos.getY(), (pos.getZ() << 4) + secpos.getZ());
 					
-					if(useRule) {
+					if (useRule) {
 						rule.shouldApply(level, states.get(secpos.getX(), secpos.getY(), secpos.getZ()), Vec3.atCenterOf(center), pos.getX() - center.getX(), pos.getY() - center.getY(), pos.getZ() - center.getZ());
 					}
-					
-					states.set(secpos.getX(), secpos.getY(), secpos.getZ(), useRule ? rule.getState() : Blocks.AIR.defaultBlockState());
+
 					chunk.removeBlockEntity(blockpos);
+					states.set(secpos.getX(), secpos.getY(), secpos.getZ(), useRule ? rule.getState() : Blocks.AIR.defaultBlockState());
 				}
 			}
 		}
@@ -112,13 +118,13 @@ public class ClientAccess {
 		}
 		
 		if (heightmap != null) {
-			for (short i = 0; i < 256; i++) {
+			for (int i = 0; i < 256; i++) {
 				heightmap.set(i, data[i]);
 			}
 		}
 	}
 	
-	public static void setupExplosion(ExplosionRule rule, BlockPos center) {
+	public static void setupExplosion(@Nullable ExplosionRule rule, @Nullable BlockPos center) {
 		ClientboundSetupExplosionPacket.currentRule = rule;
 		ClientboundSetupExplosionPacket.currentCenter = center;
 	}

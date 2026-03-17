@@ -2,27 +2,31 @@ package luckytntlib.util.light;
 
 import java.lang.reflect.Field;
 import java.util.BitSet;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Map.Entry;
 
-import javax.annotation.Nullable;
-
+import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
+import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
+import it.unimi.dsi.fastutil.longs.Long2ObjectLinkedOpenHashMap;
+import it.unimi.dsi.fastutil.longs.Long2ObjectMap;
+import it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap;
 import luckytntlib.network.ClientboundUpdateChunkSectionPacket;
 import luckytntlib.network.ClientboundUpdateSkyLightSourcesPacket;
 import luckytntlib.network.PacketHandler;
 import luckytntlib.util.explosions.ExplosionHelper;
+import luckytntlib.util.explosions.ImprovedExplosion;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.SectionPos;
-import net.minecraft.core.Vec3i;
-import net.minecraft.network.protocol.game.ClientboundLevelChunkWithLightPacket;
+import net.minecraft.network.protocol.game.ClientboundLightUpdatePacket;
 import net.minecraft.network.protocol.game.ClientboundLightUpdatePacketData;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.server.level.ThreadedLevelLightEngine;
 import net.minecraft.util.BitStorage;
 import net.minecraft.world.level.ChunkPos;
-import net.minecraft.world.level.Level;
 import net.minecraft.world.level.LightLayer;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.chunk.DataLayer;
@@ -34,8 +38,8 @@ import net.minecraft.world.level.lighting.LevelLightEngine;
 import net.minecraftforge.network.PacketDistributor;
 
 /**
- * The {@code LightUpdateHelper} is used to calculate the light changes caused by removing massive amounts of blocks. <br>
- * It is commonly used by Explosions that bypass {@link Level#setBlock(BlockPos, BlockState, int, int)} in the {@link ExplosionHelper}.
+ * The {@code LightUpdateHelper} is used to calculate the light changes caused by explosions. <br>
+ * It is primarily used in {@link ExplosionHelper} and {@link ImprovedExplosion}.
  */
 public class LightUpdateHelper {
 	
@@ -43,21 +47,41 @@ public class LightUpdateHelper {
 	 * A byte array of the length 2048 filled with the value 255. Used to replace the sky light data of empty sections that can see the sky.
 	 */
 	private static final byte[] skyData = new DataLayer(15).getData();
-	
-	/**
-	 * A byte array of the length 2048 filled with the value 0. Used to replace the block light data of empty sections that can see the sky.
-	 */
-	private static final byte[] blockData = new byte[2048];
-	
 	/**
 	 * Cached {@link Field} for less reflection
 	 */
 	private static Field heightmapField;
 
 	
+	public static void updateSkyLightMinecraft(ServerLevel server, HashMap<LevelChunk, BitSet> chunks) {
+		LevelLightEngine engine = server.getLightEngine();
+		
+		for (Entry<LevelChunk, BitSet> entry : chunks.entrySet()) {
+			LevelChunk chunk = entry.getKey();
+			BitSet editedSections = entry.getValue();
+			ChunkPos pos = chunk.getPos();
+			
+			for (int i = server.getMaxSection(); i >= server.getMinSection() - 1; --i) {
+				if (editedSections.get(i - (server.getMinSection() - 1))) {
+					for (int x = 0; x < 16; ++x) {
+						for (int z = 0; z < 16; ++z) {
+							for (int y = 15; y >= 0; --y) {
+								engine.checkBlock(new BlockPos(pos.getBlockX(x), (i << 4) + y, pos.getBlockZ(z)));
+							}
+						}
+					}
+					engine.updateSectionStatus(SectionPos.of(pos, i), false);
+					engine.setLightEnabled(pos, true);
+					
+					PacketHandler.CHANNEL.send(PacketDistributor.ALL.noArg(), new ClientboundUpdateChunkSectionPacket(SectionPos.of(pos, i - server.getMinSection()), new BitSet(0), true, true));
+				}
+			}
+		}
+	}
+	
 	/**
-	 * Calculates the updates to the direct light after explosions. <br>
-	 * Should always be called before {@link #updateIndirectSkyLight(ServerLevel, HashMap)}!
+	 * Calculates the updates to direct sky light after explosions. <br>
+	 * {@link #updateIndirectSkyLight(ServerLevel, HashMap)} should always be called afterwards!
 	 * @param server  the current {@link ServerLevel}
 	 * @param chunks  a {@link HashMap} containing {@link BitSet}s linked to a {@link LevelChunk} with bits set to true according to the {@link LevelChunkSection}s in the chunk that have been edited
 	 * 
@@ -65,90 +89,70 @@ public class LightUpdateHelper {
 	 */
 	public static void updateDirectSkyLight(ServerLevel server, HashMap<LevelChunk, BitSet> chunks) {
 		ThreadedLevelLightEngine engine = server.getChunkSource().getLightEngine();
+		BitSet emptyBitSet = new BitSet(0);
+		int minY = server.getMinBuildHeight() - 1;
 		
-		for(Entry<LevelChunk, BitSet> entry : chunks.entrySet()) {
+		if (heightmapField == null) {
+			for (Field f : ChunkSkyLightSources.class.getDeclaredFields()) {
+				f.setAccessible(true);
+				if (f.getType() == BitStorage.class) {
+					heightmapField = f;
+					break;
+				}
+			}
+		}
+		
+		for (Entry<LevelChunk, BitSet> entry : chunks.entrySet()) {
 			LevelChunk chunk = entry.getKey();
 			BitSet editedSections = entry.getValue();
 			ChunkPos pos = chunk.getPos();
-			ClientboundLevelChunkWithLightPacket packet = new ClientboundLevelChunkWithLightPacket(chunk, server.getLightEngine(), null, null);
+			ClientboundLightUpdatePacket packet = new ClientboundLightUpdatePacket(pos, server.getLightEngine(), emptyBitSet, emptyBitSet);
 			ClientboundLightUpdatePacketData lightData = packet.getLightData();
 			List<byte[]> skyUpdates = lightData.getSkyUpdates();
-			List<byte[]> blockUpdates = lightData.getBlockUpdates();
 			BitStorage heightmap = null;
-			
-			if (heightmapField == null) {
-				for (Field f : ChunkSkyLightSources.class.getDeclaredFields()) {
-					f.setAccessible(true);
-					if (f.getType() == BitStorage.class) {
-						heightmapField = f;
-						break;
-					}
-				}
-			}
 			
 			try {
 				heightmap = (BitStorage)heightmapField.get(server.getChunk(pos.x, pos.z).getSkyLightSources());
 			} catch(IllegalAccessException e) {
 				e.printStackTrace();
 			}
-			
-			blockUpdates.clear();
-			skyUpdates.clear();
-			for(int i = 0; i < engine.getLightSectionCount(); i++) {
-				lightData.getEmptyBlockYMask().set(i, false);
-				lightData.getBlockYMask().set(i, false);
-				lightData.getEmptySkyYMask().set(i, false);
-				lightData.getSkyYMask().set(i, false);
-			}
 
 			int lowestEmptySection = 0;
 			int lowestEmptySectionY = 0;
 
-			for(int i = server.getMaxSection(); i >= server.getMinSection() - 1; i--) {
-				if(i == server.getMaxSection() || i == server.getMinSection() - 1 || chunk.getSection(chunk.getSectionIndexFromSectionY(i)).hasOnlyAir()) {
+			for (int i = server.getMaxSection(); i >= server.getMinSection() - 1; --i) {
+				if (i == server.getMaxSection() || i == server.getMinSection() - 1 || chunk.getSection(chunk.getSectionIndexFromSectionY(i)).hasOnlyAir()) {
 					lowestEmptySection = i - (server.getMinSection() - 1);
 					lowestEmptySectionY = i;
-					if(editedSections.get(lowestEmptySection)) {
-						lightData.getSkyYMask().set(i - (server.getMinSection() - 1), true);
-						lightData.getBlockYMask().set(i - (server.getMinSection() - 1), true);
+					if (editedSections.get(lowestEmptySection)) {
+						lightData.getSkyYMask().set(i - (server.getMinSection() - 1));
+						lightData.getEmptyBlockYMask().set(i - (server.getMinSection() - 1));
 						editedSections.set(lowestEmptySection, false);
 						
-						blockUpdates.add(blockData);
 						skyUpdates.add(skyData);
-	
-						engine.queueSectionData(LightLayer.SKY, SectionPos.of(chunk.getPos(), i), new DataLayer(skyData));
-						engine.queueSectionData(LightLayer.BLOCK, SectionPos.of(chunk.getPos(), i), new DataLayer(blockData));
+						
+						byte[] sky = new byte[2048];
+						System.arraycopy(skyData, 0, sky, 0, skyData.length);
+						engine.queueSectionData(LightLayer.SKY, SectionPos.of(chunk.getPos(), i), new DataLayer(sky));
+						engine.queueSectionData(LightLayer.BLOCK, SectionPos.of(chunk.getPos(), i), new DataLayer(new byte[2048]));
 						engine.updateSectionStatus(SectionPos.of(chunk.getPos(), i), true);
 					}
 				} else {
-					for(int l = lowestEmptySection - 1; l >= 0; l--) {
-						if(editedSections.get(l)) {
-							lightData.getBlockYMask().set(l, true);
-							
-							blockUpdates.add(blockData);
-							
-							engine.queueSectionData(LightLayer.BLOCK, SectionPos.of(chunk.getPos(), l + (server.getMinSection() - 1)), new DataLayer(blockData));
-							engine.updateSectionStatus(SectionPos.of(chunk.getPos(), l + (server.getMinSection() - 1)), true);
-						}
-					}
 					break;
 				}
 			}
 
-			int minY = server.getMinBuildHeight() - 1;
-			if(heightmap != null) {
+			if (heightmap != null) {
 				int lowestYoffset = (lowestEmptySectionY << 4) - minY;
 				
-				for(int i = 0; i < 256; i++) {
-					if(heightmap.get(i) > lowestYoffset) {
-						heightmap.set(i, lowestYoffset);
-					}
+				for (int i = 0; i < 256; ++i) {
+					heightmap.set(i, lowestYoffset);
 				}
 			}
 			
 			boolean continueBelow = true;
-			for(int i = lowestEmptySection - 1; i >= 0; i--) {
-				if(continueBelow) {
+			for (int i = lowestEmptySection - 1; i >= 0; --i) {
+				if (continueBelow) {
 					continueBelow = false;
 				} else {
 					break;
@@ -159,36 +163,28 @@ public class LightUpdateHelper {
 				
 				DataLayer data = engine.getLayerListener(LightLayer.SKY).getDataLayerData(SectionPos.of(pos, sectionY));
 				PalettedContainer<BlockState> states = sectionY < server.getMaxSection() && sectionY >= server.getMinSection() ? chunk.getSection(server.getSectionIndexFromSectionY(sectionY)).getStates() : null;
-				if(data != null && states != null) {
-					for(byte x = 0; x < 16; x++) {
-						for(byte z = 0; z < 16; z++) {
-							for(byte y = 15; y >= 0; y--) {
+				if (data != null && states != null && heightmap != null) {
+					for (int x = 0; x < 16; ++x) {
+						for (int z = 0; z < 16; ++z) {
+							for (int y = 15; y >= 0; --y) {
 								int lightY = heightmap.get(x + (z << 4)) + minY;
 								int yCoord = (sectionY << 4) + y;
-								if(lightY < yCoord) {
-									if(y == 0) {
-										continueBelow = true;
-									}
-									continue;
-								}
-								if(states.get(x, y, z).getLightBlock(server, BlockPos.ZERO) == 0 && lightY == yCoord + 1) {
+								if (lightY == yCoord + 1 && states.get(x, y, z).getLightBlock(server, BlockPos.ZERO) == 0) {
 									data.set(x, y, z, 15);
 									heightmap.set(x + (z << 4), yCoord - minY);
 									
 									sectionChanged = true;
-									if(y == 0) {
+									if (y == 0) {
 										continueBelow = true;
 									}
+								} else {
+									break;
 								}
 							}
 						}
 					}
-					if(sectionChanged) {
-						skyUpdates.add(skyData);
-						for(int s = skyUpdates.size() - 2; s >= 0; s--) {
-							skyUpdates.set(s + 1, skyUpdates.get(s));
-						}
-						skyUpdates.set(0, data.getData());
+					if (sectionChanged) {
+						skyUpdates.add(data.getData());
 						lightData.getSkyYMask().set(i);
 						
 						engine.queueSectionData(LightLayer.SKY, SectionPos.of(pos, sectionY), data);
@@ -200,12 +196,13 @@ public class LightUpdateHelper {
 			engine.setLightEnabled(pos, true);
 			
 			int[] dataToSend = new int[256];
-			for(short i = 0; i < 256; i++) {
+			for (int i = 0; i < 256; ++i) {
 				dataToSend[i] = heightmap.get(i);
 			}
 			PacketHandler.CHANNEL.send(PacketDistributor.ALL.noArg(), new ClientboundUpdateSkyLightSourcesPacket(pos, dataToSend));
 			
-			for(ServerPlayer player : server.players()) {
+			Collections.reverse(skyUpdates);
+			for (ServerPlayer player : server.players()) {
 				player.connection.send(packet);
 			}
 		}
@@ -213,7 +210,7 @@ public class LightUpdateHelper {
 	}
 	
 	/**
-	 * Calculates the updates to the indirect light after explosions. <br>
+	 * Calculates the light updates for areas indirectly lit by the sky. <br>
 	 * Should always be called after {@link #updateDirectSkyLight(ServerLevel, HashMap)}!
 	 * @param server  the current {@link ServerLevel}
 	 * @param chunks  a {@link HashMap} containing {@link BitSet}s linked to a {@link LevelChunk} with bits set to true according to the {@link LevelChunkSection}s in the chunk that have been edited
@@ -222,66 +219,78 @@ public class LightUpdateHelper {
 	 */
 	public static void updateIndirectSkyLight(ServerLevel server, HashMap<LevelChunk, BitSet> chunks) {
 		LevelLightEngine engine = server.getLightEngine();
-		HashMap<ChunkPos, HashMap<Integer, BitSet>> packetData = new HashMap<>();
+		Long2ObjectMap<BitSet> packetData = new Long2ObjectLinkedOpenHashMap<>();
+		Long2ObjectMap<Int2ObjectMap<DataLayer>> dataLayerCache = new Long2ObjectOpenHashMap<>();
 		
-		for(Entry<LevelChunk, BitSet> entry : chunks.entrySet()) {
+		for (Entry<LevelChunk, BitSet> entry : chunks.entrySet()) {
 			LevelChunk chunk = entry.getKey();
 			BitSet editedSections = entry.getValue();
 			ChunkPos pos = chunk.getPos();
 			
-			int lowestEmptySection = 0;
-			for(int i = 0; i < engine.getLightSectionCount(); i++) {
-				if(editedSections.get(i)) {
-					lowestEmptySection = i;
+			int highestEditedSection = 0;
+			int lowestEditedSection = editedSections.nextSetBit(0);
+			for (int i = engine.getLightSectionCount() - 1; i >= 0; --i) {
+				if (editedSections.get(i)) {
+					highestEditedSection = i;
+					break;
 				}
 			}
-			
-			for(byte x = 0; x < 16; x++) {
-				for(byte z = 0; z < 16; z++) {
+
+			int lowestEditedBlockY = Math.max((lowestEditedSection + (server.getMinSection() - 1)) << 4, server.getMinBuildHeight());
+			for (int x = 0; x < 16; ++x) {
+				for (int z = 0; z < 16; ++z) {
 					int lowestLightY = Math.max(chunk.getSkyLightSources().getLowestSourceY(x, z), server.getMinBuildHeight());
-					for(int y = ((lowestEmptySection + (server.getMinSection() - 1)) << 4) + 15; y >= lowestLightY; y--) {
-						if(getLightBlockAtPos(server, pos, x - 1, y, z) < 15 && getLightAtPos(server, pos, x - 1, y, z) < 15) {
-							queuePosForLightUpdate(packetData, pos, x - 1, y, z);
+					for (int y = ((highestEditedSection + (server.getMinSection() - 1)) << 4) + 15; y >= Math.min(lowestLightY, lowestEditedBlockY); --y) {
+						if (y >= lowestLightY) {
+							if (getLightBlockAtPos(server, pos, x - 1, y, z) < 15 && getLightAtPos(server, pos, x - 1, y, z, LightLayer.SKY, dataLayerCache) < 15) {
+								queuePosForLightUpdate(packetData, pos, x - 1, y, z);
+							}
+							if (getLightBlockAtPos(server, pos, x + 1, y, z) < 15 && getLightAtPos(server, pos, x + 1, y, z, LightLayer.SKY, dataLayerCache) < 15) {
+								queuePosForLightUpdate(packetData, pos, x + 1, y, z);
+							}
+							if (getLightBlockAtPos(server, pos, x, y, z - 1) < 15 && getLightAtPos(server, pos, x, y, z - 1, LightLayer.SKY, dataLayerCache) < 15) {
+								queuePosForLightUpdate(packetData, pos, x, y, z - 1);
+							}
+							if (getLightBlockAtPos(server, pos, x, y, z + 1) < 15 && getLightAtPos(server, pos, x, y, z + 1, LightLayer.SKY, dataLayerCache) < 15) {
+								queuePosForLightUpdate(packetData, pos, x, y, z + 1);
+							}
+							
+							if (y == lowestLightY && getLightBlockAtPos(server, pos, x, y - 1, z) < 15 && getLightAtPos(server, pos, x, y - 1, z, LightLayer.SKY, dataLayerCache) < 15) {
+								queuePosForLightUpdate(packetData, pos, x, y - 1, z);
+							}
 						}
-						if(getLightBlockAtPos(server, pos, x + 1, y, z) < 15 && getLightAtPos(server, pos, x + 1, y, z) < 15) {
-							queuePosForLightUpdate(packetData, pos, x + 1, y, z);
-						}
-						if(getLightBlockAtPos(server, pos, x, y, z - 1) < 15 && getLightAtPos(server, pos, x, y, z - 1) < 15) {
-							queuePosForLightUpdate(packetData, pos, x, y, z - 1);
-						}
-						if(getLightBlockAtPos(server, pos, x, y, z + 1) < 15 && getLightAtPos(server, pos, x, y, z + 1) < 15) {
-							queuePosForLightUpdate(packetData, pos, x, y, z + 1);
-						}
-						
-						if(y == lowestLightY && getLightBlockAtPos(server, pos, x, y - 1, z) < 15 && getLightAtPos(server, pos, x, y - 1, z) < 15) {
-							queuePosForLightUpdate(packetData, pos, x, y - 1, z);
+						if (y >= lowestEditedBlockY && getLightAtPos(server, pos, x, y, z, LightLayer.BLOCK, dataLayerCache) > 0) {
+							queuePosForLightUpdate(packetData, pos, x, y, z);
 						}
 					}
 				}
 			}
 		}
 		
-		for (Entry<ChunkPos, HashMap<Integer, BitSet>> entry : packetData.entrySet()) {
-			ChunkPos pos = entry.getKey();
-			for (Entry<Integer, BitSet> e : entry.getValue().entrySet()) {
-				PacketHandler.CHANNEL.send(PacketDistributor.ALL.noArg(), new ClientboundUpdateChunkSectionPacket(SectionPos.of(pos, e.getKey() - server.getMinSection()), e.getValue(), false, true));
-				
-				for (short s = 0; s < 4096; ++s) {
-					if (!e.getValue().get(s)) {
-						continue;
+		for (Entry<Long, BitSet> entry : packetData.long2ObjectEntrySet()) {
+			SectionPos pos = SectionPos.of(entry.getKey());
+			BitSet blocksToCheck = entry.getValue();
+			
+			PacketHandler.CHANNEL.send(PacketDistributor.ALL.noArg(), new ClientboundUpdateChunkSectionPacket(SectionPos.of(pos.getX(), pos.getY() - server.getMinSection(), pos.getZ()), blocksToCheck, false, true));
+			
+			for (int x = 0; x < 16; ++x) {
+				for (int z = 0; z < 16; ++z) {
+					for (int y = 15; y >= 0; --y) {
+						if (!blocksToCheck.get(ExplosionHelper.encodeSectionPos(x, y, z))) {
+							continue;
+						}
+						engine.checkBlock(new BlockPos((pos.getX() << 4) + x, (pos.getY() << 4) + y, (pos.getZ() << 4) + z));
 					}
-					Vec3i vec = ExplosionHelper.decodeSectionPos(s);
-					engine.checkBlock(new BlockPos((pos.x << 4) + vec.getX(), (e.getKey() << 4) + vec.getY(), (pos.z << 4) + vec.getZ()));
 				}
-				engine.updateSectionStatus(SectionPos.of(pos, e.getKey()), false);
-				engine.setLightEnabled(pos, true);
 			}
+			engine.updateSectionStatus(pos, false);
+			engine.setLightEnabled(new ChunkPos(pos.getX(), pos.getZ()), true);
 		}
 	}
 	
 	/**
-	 * 
-	 * @param packetData  the {@link HashMap} the queued light update will be written into
+	 * Sets the bit representing the given position in the given {@link Map} to {@code true} to indicate the light engine should update that position
+	 * @param packetData  the {@link Map} the queued light update will be written into
 	 * @param pos  the {@link ChunkPos} of the chunk containing the block that will be updated
 	 * @param x  the x offset of the block to the chunk
 	 * @param y  the y coordinate of the block the update is meant to be scheduled for
@@ -289,20 +298,16 @@ public class LightUpdateHelper {
 	 * 
 	 * @see #updateIndirectSkyLight(ServerLevel, HashMap)
 	 */
-	private static void queuePosForLightUpdate(HashMap<ChunkPos, HashMap<Integer, BitSet>> packetData, ChunkPos pos, int x, int y, int z) {
-		ChunkPos chunk = shiftChunkPos(pos, x, z);
+	private static void queuePosForLightUpdate(Long2ObjectMap<BitSet> packetData, ChunkPos pos, int x, int y, int z) {
+		long c = SectionPos.of(shiftChunkPos(pos, x, z), y >> 4).asLong();
 		int realX = shiftCoordinate(x);
 		int realZ = shiftCoordinate(z);
 		
-		int sectionY = y >> 4;
-		if (packetData.get(chunk) == null) {
-			packetData.put(chunk, new HashMap<>());
-		}
-		if (packetData.get(chunk).get(sectionY) == null) {
-			packetData.get(chunk).put(sectionY, new BitSet(4096));
+		if (packetData.get(c) == null) {
+			packetData.put(c, new BitSet(4096));
 		}
 		
-		packetData.get(chunk).get(sectionY).set(ExplosionHelper.encodeSectionPos((short)realX, (short)(y & 15), (short)realZ));
+		packetData.get(c).set(ExplosionHelper.encodeSectionPos(realX, (y & 15), realZ));
 	}
 	
 	/**
@@ -321,46 +326,42 @@ public class LightUpdateHelper {
 		int realZ = shiftCoordinate(z);
 		
 		if (y < server.getMinBuildHeight()) {
-			return 15;
+			return 0;
 		}
 		
 		return server.getChunk(chunk.x, chunk.z).getSection(server.getSectionIndexFromSectionY(y >> 4)).getStates().get(realX, y & 15, realZ).getLightBlock(server, BlockPos.ZERO);
 	}
 	
 	/**
-	 * Gets the sky light level of the given position.
+	 * Gets the light level of the given position in the given layer.
 	 * @param server  the current {@link ServerLevel}
 	 * @param pos  the {@link ChunkPos} of the chunk the position is located in
 	 * @param x  the x offset of the position to the chunk
 	 * @param y  the y coordinate of the position
 	 * @param z  the z offset of the position to the chunk
+	 * @param layer  the {@link LightLayer} to retrieve the data from
+	 * @param dataLayerCache  a {@link Map} caching all used {@link DataLayer}s for quicker access
 	 * 
 	 * @see #updateIndirectSkyLight(ServerLevel, HashMap)
 	 */
-	private static int getLightAtPos(ServerLevel server, ChunkPos pos, int x, int y, int z) {
-		ChunkPos chunk = shiftChunkPos(pos, x, z);
+	private static int getLightAtPos(ServerLevel server, ChunkPos pos, int x, int y, int z, LightLayer layer, Long2ObjectMap<Int2ObjectMap<DataLayer>> dataLayerCache) {
+		SectionPos section = SectionPos.of(shiftChunkPos(pos, x, z), y >> 4);
 		int realX = shiftCoordinate(x);
 		int realZ = shiftCoordinate(z);
 		
-		int sectionY = y >> 4;
-		DataLayer data = getDataLayerForSection(server, SectionPos.of(chunk, sectionY));
+		long s = section.asLong();
+		if (dataLayerCache.get(s) == null) {
+			dataLayerCache.put(s, new Int2ObjectOpenHashMap<>());
+		}
+		if (dataLayerCache.get(s).get(layer.ordinal()) == null) {
+			dataLayerCache.get(s).put(layer.ordinal(), server.getLightEngine().getLayerListener(layer).getDataLayerData(section));
+		}
+		
+		DataLayer data = dataLayerCache.get(s).get(layer.ordinal());
 		if (data == null) {
 			return 0;
 		}
 		return data.get(realX, y & 15, realZ);
-	}
-	
-	/**
-	 * Gets the {@link DataLayer} storing the sky light data associated to a {@link LevelChunkSection} at a given {@link SectionPos}.
-	 * @param server  the current {@link ServerLevel}
-	 * @param pos  the position of the {@link LevelChunkSection} in the world
-	 * @return the {@link DataLayer} for sky light of the section or <code>null</code> if no data is being stored
-	 * 
-	 * @see #updateIndirectSkyLight(ServerLevel, HashMap)
-	 */
-	@Nullable
-	private static DataLayer getDataLayerForSection(ServerLevel server, SectionPos pos) {
-		return server.getLightEngine().getLayerListener(LightLayer.SKY).getDataLayerData(pos);
 	}
 	
 	/**

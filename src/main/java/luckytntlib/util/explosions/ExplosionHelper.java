@@ -3,12 +3,13 @@ package luckytntlib.util.explosions;
 import java.util.BitSet;
 import java.util.HashMap;
 
+import javax.annotation.Nullable;
+
 import org.joml.Vector3f;
 
 import luckytntlib.network.ClientboundSetupExplosionPacket;
 import luckytntlib.network.ClientboundUpdateChunkSectionPacket;
 import luckytntlib.network.PacketHandler;
-import luckytntlib.util.explosions.rules.CraterExplosionRule;
 import luckytntlib.util.explosions.rules.ExplosionRule;
 import luckytntlib.util.light.LightUpdateHelper;
 import net.minecraft.core.BlockPos;
@@ -22,6 +23,7 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.context.DirectionalPlaceContext;
 import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.chunk.LevelChunk;
 import net.minecraft.world.level.chunk.LevelChunkSection;
@@ -43,7 +45,7 @@ public class ExplosionHelper {
 	/**
 	 * {@link DistanceCalculator} for calculating a explosion crater shaped like a cuboid
 	 */
-	public static final DistanceCalculator CUBOID_CALCULATOR = (x, z, r, s) -> Math.abs(x) <= r * s.x && Math.abs(z) <= r * s.z ? (int)(r * s.y) : -1;
+	public static final DistanceCalculator CUBOID_CALCULATOR = (x, z, r, s) -> Math.abs(x) <= r * s.x && Math.abs(z) <= r * s.z ? (int)(r * s.y) : 0;
 	
 	
 	/**
@@ -59,7 +61,7 @@ public class ExplosionHelper {
 	 * @see #createSpheroidCrater(Level, Vec3, int, Vector3f, int, ExplosionRule)
 	 */
 	public static void createSphericalCrater(Level level, Vec3 position, int radius, int maxResistance) {
-		createSpheroidCrater(level, position, radius, new Vector3f(1, 1, 1), maxResistance);
+		createSphericalCrater(level, position, radius, maxResistance, null);
 	}
 	
 	/**
@@ -75,8 +77,8 @@ public class ExplosionHelper {
 	 * @see #createSpheroidCrater(Level, Vec3, int, Vector3f, int)
 	 * @see #createSpheroidCrater(Level, Vec3, int, Vector3f, int, ExplosionRule)
 	 */
-	public static void createSphericalCrater(Level level, Vec3 position, int radius, int maxResistance, ExplosionRule rule) {
-		createSpheroidCrater(level, position, radius, new Vector3f(1, 1, 1), maxResistance, rule);
+	public static void createSphericalCrater(Level level, Vec3 position, int radius, int maxResistance, @Nullable ExplosionRule rule) {
+		createSpheroidCrater(level, position, radius, new Vector3f(1), maxResistance, rule);
 	}
 	
 	/**
@@ -94,7 +96,7 @@ public class ExplosionHelper {
 	 * @see #createSpheroidCrater(Level, Vec3, int, Vector3f, int, ExplosionRule)
 	 */
 	public static void createSpheroidCrater(Level level, Vec3 position, int radius, Vector3f scaling, int maxResistance) {
-		createSpheroidCrater(level, position, radius, scaling, maxResistance, new CraterExplosionRule());
+		createSpheroidCrater(level, position, radius, scaling, maxResistance, null);
 	}
 	
 	/**
@@ -112,7 +114,7 @@ public class ExplosionHelper {
 	 * @see #createSphericalCrater(Level, Vec3, int, int, ExplosionRule)
 	 * @see #createSpheroidCrater(Level, Vec3, int, Vector3f, int)
 	 */
-	public static void createSpheroidCrater(Level level, Vec3 position, int radius, Vector3f scaling, int maxResistance, ExplosionRule rule) {
+	public static void createSpheroidCrater(Level level, Vec3 position, int radius, Vector3f scaling, int maxResistance, @Nullable ExplosionRule rule) {
 		createCrater(level, position, radius, scaling, maxResistance, SPHEROID_CALCULATOR, rule);
 	}
 	
@@ -129,7 +131,7 @@ public class ExplosionHelper {
 	 * @see #createCuboidCrater(Level, Vec3, int, Vector3f, int, ExplosionRule)
 	 */
 	public static void createCubicalCrater(Level level, Vec3 position, int radius, int maxResistance) {
-		createCuboidCrater(level, position, radius, new Vector3f(1, 1, 1), maxResistance);
+		createCubicalCrater(level, position, radius, maxResistance, null);
 	}
 	
 	/**
@@ -145,8 +147,8 @@ public class ExplosionHelper {
 	 * @see #createCuboidCrater(Level, Vec3, int, Vector3f, int)
 	 * @see #createCuboidCrater(Level, Vec3, int, Vector3f, int, ExplosionRule)
 	 */
-	public static void createCubicalCrater(Level level, Vec3 position, int radius, int maxResistance, ExplosionRule rule) {
-		createCuboidCrater(level, position, radius, new Vector3f(1, 1, 1), maxResistance, rule);
+	public static void createCubicalCrater(Level level, Vec3 position, int radius, int maxResistance, @Nullable ExplosionRule rule) {
+		createCuboidCrater(level, position, radius, new Vector3f(1), maxResistance, rule);
 	}
 	
 	/**
@@ -164,7 +166,7 @@ public class ExplosionHelper {
 	 * @see #createCuboidCrater(Level, Vec3, int, Vector3f, int, ExplosionRule)
 	 */
 	public static void createCuboidCrater(Level level, Vec3 position, int radius, Vector3f scaling, int maxResistance) {
-		createCuboidCrater(level, position, radius, scaling, maxResistance, new CraterExplosionRule());
+		createCuboidCrater(level, position, radius, scaling, maxResistance, null);
 	}
 	
 	/**
@@ -182,7 +184,7 @@ public class ExplosionHelper {
 	 * @see #createCubicalCrater(Level, Vec3, int, int, ExplosionRule)
 	 * @see #createCuboidCrater(Level, Vec3, int, Vector3f, int)
 	 */
-	public static void createCuboidCrater(Level level, Vec3 position, int radius, Vector3f scaling, int maxResistance, ExplosionRule rule) {
+	public static void createCuboidCrater(Level level, Vec3 position, int radius, Vector3f scaling, int maxResistance, @Nullable ExplosionRule rule) {
 		createCrater(level, position, radius, scaling, maxResistance, CUBOID_CALCULATOR, rule);
 	}
 	
@@ -200,7 +202,7 @@ public class ExplosionHelper {
 	 * @see #createScaledCylindricalCrater(Level, Vec3, int, int, Vector3f, int, ExplosionRule)
 	 */
 	public static void createCylindricalCrater(Level level, Vec3 position, int radiusXZ, int radiusY, int maxResistance) {
-		createCylindricalCrater(level, position, radiusXZ, radiusY, maxResistance, new CraterExplosionRule());
+		createCylindricalCrater(level, position, radiusXZ, radiusY, maxResistance, null);
 	}
 	
 	/**
@@ -217,8 +219,8 @@ public class ExplosionHelper {
 	 * @see #createScaledCylindricalCrater(Level, Vec3, int, int, Vector3f, int)
 	 * @see #createScaledCylindricalCrater(Level, Vec3, int, int, Vector3f, int, ExplosionRule)
 	 */
-	public static void createCylindricalCrater(Level level, Vec3 position, int radiusXZ, int radiusY, int maxResistance, ExplosionRule rule) {
-		createScaledCylindricalCrater(level, position, radiusXZ, radiusY, new Vector3f(1, 1, 1), maxResistance, rule);
+	public static void createCylindricalCrater(Level level, Vec3 position, int radiusXZ, int radiusY, int maxResistance, @Nullable ExplosionRule rule) {
+		createScaledCylindricalCrater(level, position, radiusXZ, radiusY, new Vector3f(1), maxResistance, rule);
 	}
 	
 	/**
@@ -237,7 +239,7 @@ public class ExplosionHelper {
 	 * @see #createScaledCylindricalCrater(Level, Vec3, int, int, Vector3f, int, ExplosionRule)
 	 */
 	public static void createScaledCylindricalCrater(Level level, Vec3 position, int radiusXZ, int radiusY, Vector3f scaling, int maxResistance) {
-		createScaledCylindricalCrater(level, position, radiusXZ, radiusY, scaling, maxResistance, new CraterExplosionRule());
+		createScaledCylindricalCrater(level, position, radiusXZ, radiusY, scaling, maxResistance, null);
 	}
 	
 	/**
@@ -256,8 +258,8 @@ public class ExplosionHelper {
 	 * @see #createCylindricalCrater(Level, Vec3, int, int, int, ExplosionRule)
 	 * @see #createScaledCylindricalCrater(Level, Vec3, int, int, Vector3f, int)
 	 */
-	public static void createScaledCylindricalCrater(Level level, Vec3 position, int radiusXZ, int radiusY, Vector3f scaling, int maxResistance, ExplosionRule rule) {
-		DistanceCalculator calc = (x, z, r, s) -> Math.sqrt(x * x / s.x + z * z / s.z) <= radiusXZ ? (int)(radiusY * s.y) : -1;
+	public static void createScaledCylindricalCrater(Level level, Vec3 position, int radiusXZ, int radiusY, Vector3f scaling, int maxResistance, @Nullable ExplosionRule rule) {
+		DistanceCalculator calc = (x, z, r, s) -> Math.sqrt(x * x / s.x + z * z / s.z) <= radiusXZ ? (int)(radiusY * s.y) : 0;
 		createCrater(level, position, radiusXZ, scaling, maxResistance, calc, rule);
 	}
 	
@@ -293,7 +295,7 @@ public class ExplosionHelper {
 	 * @see LightUpdateHelper
 	 */
 	@SuppressWarnings("deprecation")
-	public static void createCrater(Level level, Vec3 position, int radius, Vector3f scaling, int maxResistance, DistanceCalculator calculator, ExplosionRule rule) {
+	public static void createCrater(Level level, Vec3 position, int radius, Vector3f scaling, int maxResistance, DistanceCalculator calculator, @Nullable ExplosionRule rule) {
 		long time = System.currentTimeMillis();
 		int editedBlocks = 0;
 		if (level instanceof ServerLevel server) {
@@ -301,6 +303,7 @@ public class ExplosionHelper {
 			HashMap<LevelChunk, BitSet> chunks = new HashMap<LevelChunk, BitSet>();
 			ChunkPos pos = new ChunkPos(Mth.floor(position.x) >> 4, Mth.floor(position.z) >> 4);
 			BlockPos center = new BlockPos(Mth.floor(position.x), Mth.floor(position.y), Mth.floor(position.z));
+			boolean useRule = rule != null;
 			
 			PacketHandler.CHANNEL.send(PacketDistributor.DIMENSION.with(() -> server.dimension()), new ClientboundSetupExplosionPacket(rule, center));
 			
@@ -326,17 +329,17 @@ public class ExplosionHelper {
 						BitSet changed = new BitSet(4096);
 						boolean sectionChanged = false;
 
-						for (byte i = 0; i < 16; i++) {
-							for (byte k = 0; k < 16; k++) {
+						for (int i = 0; i < 16; i++) {
+							for (int k = 0; k < 16; k++) {
 								int dx = chunkPos.getBlockX(i) - center.getX();
 								int dz = chunkPos.getBlockZ(k) - center.getZ();
 								int dyMax = calculator.getMaxYDistance(dx, dz, radius, scaling);
-								for (byte j = 0; j < 16; j++) {
+								for (int j = 0; j < 16; j++) {
 									int dy = height + j - center.getY();
-									if (-dyMax <= dy && dy <= dyMax) {
+									if (-dyMax < dy && dy < dyMax) {
 										BlockState state = states.get(i, j, k);
-										if (state.getBlock().getExplosionResistance() <= maxResistance && rule.shouldApply(level, state, position, dx, dy, dz)) {
-											states.set(i, j, k, rule.getState());
+										if (state.getBlock().getExplosionResistance() <= maxResistance && (!useRule || rule.shouldApply(level, state, position, dx, dy, dz))) {
+											states.set(i, j, k, useRule ? rule.getState() : Blocks.AIR.defaultBlockState());
 
 											BlockPos blockpos = new BlockPos((chunkPos.x << 4) + i, height + j, (chunkPos.z << 4) + k);
 											state.getBlock().wasExploded(server, blockpos, dummyExplosion);
@@ -376,8 +379,10 @@ public class ExplosionHelper {
 				}
 			}
 			
+			long lightTime = System.currentTimeMillis();
 			LightUpdateHelper.updateDirectSkyLight(server, chunks);
 			LightUpdateHelper.updateIndirectSkyLight(server, chunks);
+			System.out.println("total light time: " + (System.currentTimeMillis() - lightTime));
 			
 			server.save(null, false, false);
 			
@@ -463,6 +468,7 @@ public class ExplosionHelper {
 	 * @param radius  the radius of the sphere
 	 * @param blockEffect  determines what should happen to the blocks gotten by this function
 	 */
+	@SuppressWarnings("removal")
 	public static void doTopBlockExplosion(Level level, Vec3 position, int radius, IForEachBlockExplosionEffect blockEffect) {
 		for(int offX = -radius; offX <= radius; offX++) {
 			for(int offZ = -radius; offZ <= radius; offZ++) {
@@ -491,6 +497,7 @@ public class ExplosionHelper {
 	 * @param condition  the condition for the top block to be considered, otherwise a new block further down will be searched for
 	 * @param blockEffect  determines what should happen to the blocks gotten by this function
 	 */
+	@SuppressWarnings("removal")
 	public static void doTopBlockExplosion(Level level, Vec3 position, int radius, IBlockExplosionCondition condition, IForEachBlockExplosionEffect blockEffect) {
 		for(int offX = -radius; offX <= radius; offX++) {
 			for(int offZ = -radius; offZ <= radius; offZ++) {
@@ -519,6 +526,7 @@ public class ExplosionHelper {
 	 * @param radius  the radius of the sphere
 	 * @param blockEffect  determines what should happen to the blocks gotten by this function
 	 */
+	@SuppressWarnings("removal")
 	public static void doTopBlockExplosionForAll(Level level, Vec3 position, int radius, IForEachBlockExplosionEffect blockEffect) {
 		for(int offX = -radius; offX <= radius; offX++) {
 			for(int offZ = -radius; offZ <= radius; offZ++) {
@@ -537,26 +545,26 @@ public class ExplosionHelper {
 	}
 	
 	/**
-	 * Encodes 3 {@code shorts} between 0 and 15 into a single short.
+	 * Encodes 3 {@code ints} between 0 and 15 into a single {@code int}
 	 * @param x  the x value to be encoded
 	 * @param y  the y value to be encoded
 	 * @param z  the z value to be encoded
-	 * @return a {@code short} that has all three values encoded into it
+	 * @return a {@code int} that has all three values encoded into it
 	 * 
-	 * @see #decodeSectionPos(short)
+	 * @see #decodeSectionPos(int)
 	 */
-	public static short encodeSectionPos(short x, short y, short z) {
-		return (short)((x << 8) | (y << 4) | z);
+	public static int encodeSectionPos(int x, int y, int z) {
+		return (short)(((x & 15) << 8) | ((y & 15) << 4) | (z & 15));
 	}
 	
 	/**
-	 * Decodes a given {@code short} encoded by {@link #encodeSectionPos(short, short, short)} into 3 {@code shorts} contained in a {@link Vec3i}.
-	 * @param decode  the {@code short} to be decoded
+	 * Decodes a given {@code int} encoded by {@link #encodeSectionPos(int, int, int)} into 3 {@code int}s contained in a {@link Vec3i}.
+	 * @param decode  the {@code int} to be decoded
 	 * @return a {@link Vec3i} that contains all 3 decoded values
 	 * 
-	 * @see #encodeSectionPos(short, short, short)
+	 * @see #encodeSectionPos(int, int, int)
 	 */
-	public static Vec3i decodeSectionPos(short decode) {
+	public static Vec3i decodeSectionPos(int decode) {
 		return new Vec3i((decode & 3840) >> 8, (decode & 240) >> 4, (decode & 15));
 	}
 	
