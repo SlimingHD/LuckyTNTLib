@@ -3,7 +3,6 @@ package luckytntlib.client.renderer;
 import com.mojang.blaze3d.vertex.PoseStack;
 
 import luckytntlib.entity.LTNTMinecart;
-import luckytntlib.util.IExplosiveEntity;
 import luckytntlib.util.tnteffects.PrimedTNTEffect;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.model.geom.ModelLayers;
@@ -39,7 +38,7 @@ public class LTNTMinecartRenderer extends MinecartRenderer<LTNTMinecart> {
 			stack.scale(scale, scale, scale);
 		}
 		stack.translate((-entity.getEffect().getSize(entity) + 1) / 2f, 0, (-entity.getEffect().getSize(entity) + 1) / 2f);
-		stack.scale(entity.getEffect().getSize((IExplosiveEntity)entity), entity.getEffect().getSize((IExplosiveEntity)entity), entity.getEffect().getSize((IExplosiveEntity)entity));
+		stack.scale(entity.getEffect().getSize(entity), entity.getEffect().getSize(entity), entity.getEffect().getSize(entity));
 		TntMinecartRenderer.renderWhiteSolidBlock(Minecraft.getInstance().getBlockRenderer(), state, stack, buffer, i1, fuse > -1 && fuse / 5 % 2 == 0);
 	}
 }
