@@ -34,7 +34,6 @@ public class DeprecatedConfigScreen extends Screen {
 		LinearLayout linear = layout.addToHeader(new LinearLayout(0, 0, Orientation.VERTICAL));
 		linear.addChild(new StringWidget(Component.translatable("luckytntlib.config.deprecated_title"), font), LayoutSettings.defaults().alignHorizontallyCenter());
 		GridLayout grid = new GridLayout();
-		
 		grid.defaultCellSetting().paddingHorizontal(4).paddingBottom(4).alignHorizontallyCenter();
 		RowHelper rows = grid.createRowHelper(3);
 	
@@ -51,15 +50,17 @@ public class DeprecatedConfigScreen extends Screen {
 		GridLayout footerGrid = new GridLayout();
 		footerGrid.defaultCellSetting().paddingHorizontal(4).paddingBottom(4).alignHorizontallyCenter();
 		RowHelper footerRows = footerGrid.createRowHelper(3);
+		
 		Button backButton = new Button.Builder(CommonComponents.GUI_BACK, button -> {
 			onClose();
-			minecraft.setScreen(new MultithreadingConfigScreen());
+			minecraft.setScreen(new QualityConfigScreen());
 		}).width(100).build();
 		Button nextButton = new Button.Builder(CommonComponents.GUI_CONTINUE, button -> {}).width(100).build();
 		nextButton.active = false;
 		footerRows.addChild(backButton);
 		footerRows.addChild(new Button.Builder(CommonComponents.GUI_DONE, button -> onClose()).width(100).build());
 		footerRows.addChild(nextButton);
+		
 		layout.addToFooter(footerGrid);
 		layout.visitWidgets(this::addRenderableWidget);
 		repositionElements();

@@ -34,9 +34,9 @@ public class MultithreadingConfigScreen extends Screen {
 		LinearLayout linear = layout.addToHeader(new LinearLayout(0, 0, Orientation.VERTICAL));
 		linear.addChild(new StringWidget(Component.translatable("luckytntlib.config.multithreading_title"), font), LayoutSettings.defaults().alignHorizontallyCenter());
 		GridLayout grid = new GridLayout();
-		
 		grid.defaultCellSetting().paddingHorizontal(4).paddingBottom(4).alignHorizontallyCenter();
 		RowHelper rows = grid.createRowHelper(3);
+		
 		rows.addChild(multithreadExplosions = new Button.Builder(LuckyTNTLibConfigValues.MULTITHREADED_EXPLOSIONS.get().booleanValue() ? CommonComponents.OPTION_ON : CommonComponents.OPTION_OFF, button -> {
 			nextBooleanValue(LuckyTNTLibConfigValues.MULTITHREADED_EXPLOSIONS, button);
 			maxExplosionThreads.active = LuckyTNTLibConfigValues.MULTITHREADED_EXPLOSIONS.get();
@@ -54,16 +54,17 @@ public class MultithreadingConfigScreen extends Screen {
 		GridLayout footerGrid = new GridLayout();
 		footerGrid.defaultCellSetting().paddingHorizontal(4).paddingBottom(4).alignHorizontallyCenter();
 		RowHelper footerRows = footerGrid.createRowHelper(3);
+		
 		Button backButton = new Button.Builder(CommonComponents.GUI_BACK, button -> {}).width(100).build();
 		backButton.active = false;
-		@SuppressWarnings("removal")
 		Button nextButton = new Button.Builder(CommonComponents.GUI_CONTINUE, button -> {
 			onClose();
-			minecraft.setScreen(new DeprecatedConfigScreen());
+			minecraft.setScreen(new QualityConfigScreen());
 		}).width(100).build();
 		footerRows.addChild(backButton);
 		footerRows.addChild(new Button.Builder(CommonComponents.GUI_DONE, button -> onClose()).width(100).build());
 		footerRows.addChild(nextButton);
+		
 		layout.addToFooter(footerGrid);
 		layout.visitWidgets(this::addRenderableWidget);
 		repositionElements();
@@ -82,7 +83,7 @@ public class MultithreadingConfigScreen extends Screen {
 	
 	@Override
 	public void onClose() {
-		if(maxExplosionThreads != null) {
+		if (maxExplosionThreads != null) {
 			LuckyTNTLibConfigValues.MAX_EXPLOSION_THREADS.set((int)maxExplosionThreads.getValue());
 		}
 		super.onClose();
@@ -99,12 +100,7 @@ public class MultithreadingConfigScreen extends Screen {
 	}
 	
 	private void nextBooleanValue(ForgeConfigSpec.BooleanValue config, Button button) {
-		boolean value = config.get().booleanValue();
-		if(value) {
-			value = false;
-		} else {
-			value = true;
-		}
+		boolean value = !config.get().booleanValue();
 		config.set(value);
 		button.setMessage(value ? CommonComponents.OPTION_ON : CommonComponents.OPTION_OFF);
 	}

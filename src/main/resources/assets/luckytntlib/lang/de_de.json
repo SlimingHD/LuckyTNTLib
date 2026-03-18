@@ -1,13 +1,18 @@
 {
-	"luckytntlib.config.title" : "Lucky TNT Lib Konfiguration",
+	"luckytntlib.config.multithreading_title" : "Lucky TNT Lib Multithreading Konfiguration",
+	"luckytntlib.config.quality_title" : "Lucky TNT Lib Qualität Konfiguration",
+	"luckytntlib.config.deprecated_title" : "Lucky TNT Lib Veraltete Konfiguration",
 	"luckytntlib.config.reset" : "Zur\u00FCcksetzen",
+	
 	"luckytntlib.config.multithreaded_explosions" : "Multithreade große Explosionen",
 	"luckytntlib.config.max_explosion_threads" : "Maximale gleichzeitige Explosionen",
-	"luckytntlib.config.multithreaded_explosions_tooltip" : "Große Explosionen verwenden mehrere Threads zur Leistungsverbesserung. Sie werden parallel zu anderen Explosionen und dem Spiel berechnet, was mehr CPU und RAM beansprucht. Der nachfolgende Konfigurationswert bestimmt die maximale Anzahl gleichzeitiger Explosionen. Auf einem Server muss dieser Wert stattdessen in der Server-Konfiguration gesetzt werden",
-	"luckytntlib.config.max_explosion_threads_tooltip" : "Setzt die maximale Anzahl an Explosionen, die parallel berechnet werden können. Jede Explosion wird automatisch mehrere Threads benutzen. Überschüssige Explosionen werden in eine Warteschlange gesetzt, nicht verworfen. Ein höherer Wert erlaubt eine schnellere Abarbeitung mehrerer Explosionen auf Kosten von CPU und RAM. Auf einem Server muss dieser Wert stattdessen in der Server-Konfiguration gesetzt werden",
+	"luckytntlib.config.multithreaded_explosions_tooltip" : "Große Explosionen verwenden mehrere Threads zur Leistungsverbesserung. Sie werden parallel zu anderen Explosionen und dem Spiel berechnet, was mehr CPU und RAM beansprucht. Der nachfolgende Konfigurationswert bestimmt die maximale Anzahl gleichzeitiger Explosionen. Auf einem Server muss dieser Wert stattdessen in der Server-Konfiguration gesetzt werden.",
+	"luckytntlib.config.max_explosion_threads_tooltip" : "Setzt die maximale Anzahl an Explosionen, die parallel berechnet werden können. Jede Explosion wird automatisch mehrere Threads benutzen. Überschüssige Explosionen werden in eine Warteschlange gesetzt, nicht verworfen. Ein höherer Wert erlaubt eine schnellere Abarbeitung mehrerer Explosionen auf Kosten von CPU und RAM. Auf einem Server muss dieser Wert stattdessen in der Server-Konfiguration gesetzt werden.",
+	"luckytntlib.config.update_block_light": "Update Block Licht",
+	"luckytntlib.config.update_block_light_tooltip": "Performantere Explosionen führen Licht-Updates selbst durch, um die Berechnungzeit zu verkürzen. Ist diese Option an, erhöht das die Qulität der Licht-Updates auf Kosten von Leistung. Auf einem Server muss dieser Wert stattdessen in der Server-Konfiguration gesetzt werden.",
 	
 	"luckytntlib.config.performant_explosion" : "Performante Explosion",
 	"luckytntlib.config.explosion_performance_factor" : "Performanz-Faktor",
-	"luckytntlib.config.performant_explosion_tooltip" : "Ersetzt die Standard-Explosion durch eine Identische, welche die Ladezeit auf geringe Kosten von Details reduziert. Sollte ein Server gehostet werden, muss diese Einstellung stattdessen in der Server-Konfigurations Datei gesetzt werden",
-	"luckytntlib.config.explosion_performance_factor_tooltip" : "Geringe Werte lassen mehr Details zu, w\u00e4hrend hohe Werte f\u00FCr bessere Leistung sorgen. Hat viel Einfluss auf das Aussehen der Explosion. Sollte ein Server gehostet werden, muss diese Einstellung stattdessen in der Server-Konfigurations Datei gesetzt werden"
+	"luckytntlib.config.performant_explosion_tooltip" : "Veraltet. Es ist implementationsabhängig, ob dieser Wert noch einen Effekt hat.\nErsetzt die Standard-Explosion durch eine Identische, die die Ladezeit zu Gunsten von wenig Detailverlust reduziert. Sollte ein Server gehostet werden, muss diese Einstellung stattdessen in der Server-Konfigurations gesetzt werden.",
+	"luckytntlib.config.explosion_performance_factor_tooltip" : "Veraltet. Es ist implementationsabhängig, ob dieser Wert noch einen Effekt hat.\nGeringe Werte erhöhen die Details, w\u00e4hrend hohe Werte die Leistung verbessern. Beeinflusst das Aussehen der Explosion massiv. Sollte ein Server gehostet werden, muss diese Einstellung stattdessen in der Server-Konfigurations gesetzt werden."
 }

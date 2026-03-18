@@ -41,11 +41,11 @@ public class ExplosionHelper {
 	/**
 	 * {@link DistanceCalculator} for calculating a explosion crater shaped like a spheroid
 	 */
-	public static final DistanceCalculator SPHEROID_CALCULATOR = (x, z, r, s) -> (int)Math.sqrt((r * r - x * x / s.x - z * z / s.z) * s.y);
+	public static final DistanceCalculator SPHEROID_CALCULATOR = (x, z, r, s) -> (int)((r * r - x * x / s.x - z * z / s.z) * s.y);
 	/**
 	 * {@link DistanceCalculator} for calculating a explosion crater shaped like a cuboid
 	 */
-	public static final DistanceCalculator CUBOID_CALCULATOR = (x, z, r, s) -> Math.abs(x) <= r * s.x && Math.abs(z) <= r * s.z ? (int)(r * s.y) : 0;
+	public static final DistanceCalculator CUBOID_CALCULATOR = (x, z, r, s) -> Math.abs(x) <= r * s.x && Math.abs(z) <= r * s.z ? (int)(r * r * s.y * s.y) : 0;
 	
 	
 	/**
@@ -71,7 +71,7 @@ public class ExplosionHelper {
 	 * @param position  the center position of the spherical explosion
 	 * @param radius  the radius of the sphere
 	 * @param maxResistance  blocks with an explosion resistance lower or equal to this value will be removed, all other blocks will be untouched
-	 * @param rule  the {@link ExplosionRule} that determines how affected blocks will be edited
+	 * @param rule  an optional {@link ExplosionRule} that determines how affected blocks will be edited. if it's {@code null}, blocks will simply be removed.
 	 * 
 	 * @see #createSphericalCrater(Level, Vec3, int, int)
 	 * @see #createSpheroidCrater(Level, Vec3, int, Vector3f, int)
@@ -108,7 +108,7 @@ public class ExplosionHelper {
 	 * @param radius  the radius of the unscaled sphere
 	 * @param scaling  a {@link Vector3f} containing the scaling for all axes
 	 * @param maxResistance  blocks with an explosion resistance lower or equal to this value will be removed, all other blocks will be untouched
-	 * @param rule  the {@link ExplosionRule} that determines how affected blocks will be edited
+	 * @param rule  an optional {@link ExplosionRule} that determines how affected blocks will be edited. if it's {@code null}, blocks will simply be removed.
 	 * 
 	 * @see #createSphericalCrater(Level, Vec3, int, int)
 	 * @see #createSphericalCrater(Level, Vec3, int, int, ExplosionRule)
@@ -141,7 +141,7 @@ public class ExplosionHelper {
 	 * @param position  the center position of the cubical explosion
 	 * @param radius  the radius of the cube
 	 * @param maxResistance  blocks with an explosion resistance lower or equal to this value will be removed, all other blocks will be untouched
-	 * @param rule  the {@link ExplosionRule} that determines how affected blocks will be edited
+	 * @param rule  an optional {@link ExplosionRule} that determines how affected blocks will be edited. if it's {@code null}, blocks will simply be removed.
 	 * 
 	 * @see #createCubicalCrater(Level, Vec3, int, int)
 	 * @see #createCuboidCrater(Level, Vec3, int, Vector3f, int)
@@ -178,7 +178,7 @@ public class ExplosionHelper {
 	 * @param radius  the radius of the unscaled cube
 	 * @param scaling  a {@link Vector3f} containing the scaling for all axes
 	 * @param maxResistance  blocks with an explosion resistance lower or equal to this value will be removed, all other blocks will be untouched
-	 * @param rule  the {@link ExplosionRule} that determines how affected blocks will be edited
+	 * @param rule  an optional {@link ExplosionRule} that determines how affected blocks will be edited. if it's {@code null}, blocks will simply be removed.
 	 * 
 	 * @see #createCubicalCrater(Level, Vec3, int, int)
 	 * @see #createCubicalCrater(Level, Vec3, int, int, ExplosionRule)
@@ -213,7 +213,7 @@ public class ExplosionHelper {
 	 * @param radiusXZ  the radius for the circle that represents the base area of the cylinder
 	 * @param radiusY  half the height of the cylinder
 	 * @param maxResistance  blocks with an explosion resistance lower or equal to this value will be removed, all other blocks will be untouched
-	 * @param rule  the {@link ExplosionRule} that determines how affected blocks will be edited
+	 * @param rule  an optional {@link ExplosionRule} that determines how affected blocks will be edited. if it's {@code null}, blocks will simply be removed.
 	 * 
 	 * @see #createCylindricalCrater(Level, Vec3, int, int, int)
 	 * @see #createScaledCylindricalCrater(Level, Vec3, int, int, Vector3f, int)
@@ -252,14 +252,14 @@ public class ExplosionHelper {
 	 * @param radiusY  half the height of the unscaled cylinder
 	 * @param scaling  a {@link Vector3f} containing the scaling for all axes
 	 * @param maxResistance  blocks with an explosion resistance lower or equal to this value will be removed, all other blocks will be untouched
-	 * @param rule  the {@link ExplosionRule} that determines how affected blocks will be edited
+	 * @param rule  an optional {@link ExplosionRule} that determines how affected blocks will be edited. if it's {@code null}, blocks will simply be removed.
 	 * 
 	 * @see #createCylindricalCrater(Level, Vec3, int, int, int)
 	 * @see #createCylindricalCrater(Level, Vec3, int, int, int, ExplosionRule)
 	 * @see #createScaledCylindricalCrater(Level, Vec3, int, int, Vector3f, int)
 	 */
 	public static void createScaledCylindricalCrater(Level level, Vec3 position, int radiusXZ, int radiusY, Vector3f scaling, int maxResistance, @Nullable ExplosionRule rule) {
-		DistanceCalculator calc = (x, z, r, s) -> Math.sqrt(x * x / s.x + z * z / s.z) <= radiusXZ ? (int)(radiusY * s.y) : 0;
+		DistanceCalculator calc = (x, z, r, s) -> Math.sqrt(x * x / s.x + z * z / s.z) <= radiusXZ ? (int)(radiusY * radiusY * s.y * s.y) : 0;
 		createCrater(level, position, radiusXZ, scaling, maxResistance, calc, rule);
 	}
 	
@@ -270,8 +270,8 @@ public class ExplosionHelper {
 	 * @param radius  the radius of the crater in blocks
 	 * @param scaling  a {@link Vector3f} containing the scaling for all axes
 	 * @param maxResistance  blocks with an explosion resistance lower or equal to this value will be removed, all other blocks will be untouched
-	 * @param calculator  a {@link DistanceCalculator} that determines the shape of the crater as explained at {@link DistanceCalculator#getMaxYDistance(int, int, int, Vector3f)}
-	 * @param rule  a {@link ExplosionRule} that determines how affected blocks will be edited
+	 * @param calculator  a {@link DistanceCalculator} that determines the shape of the crater as explained at {@link DistanceCalculator#getMaxYDistanceSqr(int, int, int, Vector3f)}
+	 * @param rule  an optional {@link ExplosionRule} that determines how affected blocks will be edited. if it's {@code null}, blocks will simply be removed.
 	 * 
 	 * <br> <br>
 	 * 
@@ -288,7 +288,7 @@ public class ExplosionHelper {
 	 * @see #createCylindricalCrater(Level, Vec3, int, int, int, ExplosionRule)
 	 * @see #createScaledCylindricalCrater(Level, Vec3, int, int, Vector3f, int)
 	 * @see #createScaledCylindricalCrater(Level, Vec3, int, int, Vector3f, int, ExplosionRule)
-	 * <br>
+	 * @see #createScaledCylindricalCrater(Level, Vec3, int, int, Vector3f, int, ExplosionRule) <br>
 	 * @see <i> Related classes: </i>
 	 * @see DistanceCalculator
 	 * @see ExplosionRule
@@ -333,10 +333,10 @@ public class ExplosionHelper {
 							for (int k = 0; k < 16; k++) {
 								int dx = chunkPos.getBlockX(i) - center.getX();
 								int dz = chunkPos.getBlockZ(k) - center.getZ();
-								int dyMax = calculator.getMaxYDistance(dx, dz, radius, scaling);
+								int dyMax = calculator.getMaxYDistanceSqr(dx, dz, radius, scaling);
 								for (int j = 0; j < 16; j++) {
 									int dy = height + j - center.getY();
-									if (-dyMax < dy && dy < dyMax) {
+									if (dy * dy < dyMax) {
 										BlockState state = states.get(i, j, k);
 										if (state.getBlock().getExplosionResistance() <= maxResistance && (!useRule || rule.shouldApply(level, state, position, dx, dy, dz))) {
 											states.set(i, j, k, useRule ? rule.getState() : Blocks.AIR.defaultBlockState());
