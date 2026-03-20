@@ -11,7 +11,7 @@ import net.minecraft.world.level.block.state.BlockState;
  * It is usually used as a parameter of a function.
  */
 @FunctionalInterface
-@Deprecated(since = "47.2.32.1", forRemoval = true)
+@Deprecated(since = "47.2.32.2", forRemoval = true)
 public interface IBlockExplosionCondition {
 
 	/**

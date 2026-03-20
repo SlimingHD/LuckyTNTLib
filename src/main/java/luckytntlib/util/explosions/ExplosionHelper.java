@@ -586,7 +586,7 @@ public class ExplosionHelper {
 	 * @param radius  the radius of the sphere
 	 * @param blockEffect  determines what should happen to the blocks gotten by this function
 	 */
-	@Deprecated(since = "47.2.32.1", forRemoval = true)
+	@Deprecated(since = "47.2.32.2", forRemoval = true)
 	public static void doSphericalExplosion(Level level, Vec3 position, int radius, IForEachBlockExplosionEffect blockEffect) {
 		doModifiedSphericalExplosion(level, position, radius, new Vec3(1, 1, 1), blockEffect);
 	}
@@ -602,7 +602,7 @@ public class ExplosionHelper {
 	 * @param scaling  the scaling of the sphere
 	 * @param blockEffect  determines what should happen to the blocks gotten by this function
 	 */
-	@Deprecated(since = "47.2.32.1", forRemoval = true)
+	@Deprecated(since = "47.2.32.2", forRemoval = true)
 	public static void doModifiedSphericalExplosion(Level level, Vec3 position, int radius, Vec3 scaling, IForEachBlockExplosionEffect blockEffect) {
 		for(double offX = -radius * scaling.x; offX <= radius * scaling.x; offX++) {
 			for(double offY = radius * scaling.y; offY >= -radius * scaling.y; offY--) {
@@ -627,7 +627,7 @@ public class ExplosionHelper {
 	 * @param radius  the radius of the cube
 	 * @param blockEffect  determines what should happen to the blocks gotten by this function
 	 */
-	@Deprecated(since = "47.2.32.1", forRemoval = true)
+	@Deprecated(since = "47.2.32.2", forRemoval = true)
 	public static void doCubicalExplosion(Level level, Vec3 position, int radius, IForEachBlockExplosionEffect blockEffect) {
 		doCuboidExplosion(level, position, new Vec3(radius, radius, radius), blockEffect);
 	}
@@ -641,7 +641,7 @@ public class ExplosionHelper {
 	 * @param radii  a {@link Vec3} containing the radii for the x, y and z directions
 	 * @param blockEffect  determines what should happen to the blocks gotten by this function
 	 */
-	@Deprecated(since = "47.2.32.1", forRemoval = true)
+	@Deprecated(since = "47.2.32.2", forRemoval = true)
 	public static void doCuboidExplosion(Level level, Vec3 position, Vec3 radii, IForEachBlockExplosionEffect blockEffect) {
 		for(int offX = (int)-radii.x; offX <= (int)radii.x; offX++) {
 			for(int offY = (int)-radii.y; offY <= (int)radii.y; offY++) {
@@ -665,7 +665,7 @@ public class ExplosionHelper {
 	 * @param radiusY  the radius of the y dimension of the cylinder
 	 * @param blockEffect  determines what should happen to the blocks gotten by this function
 	 */
-	@Deprecated(since = "47.2.32.1", forRemoval = true)
+	@Deprecated(since = "47.2.32.2", forRemoval = true)
 	public static void doCylindricalExplosion(Level level, Vec3 position, int radius, int radiusY, IForEachBlockExplosionEffect blockEffect) {
 		for(int offX = -radius; offX <= radius; offX++) {
 			for(int offY = -radiusY; offY <= radiusY; offY++) {

@@ -27,12 +27,12 @@ public class TNTXStrengthEffect extends PrimedTNTEffect {
 	@Nullable private final Supplier<RegistryObject<LTNTBlock>> TNT;
 	@Nullable private final Supplier<RegistryObject<LDynamiteItem>> dynamite;
 	@SuppressWarnings("unused")
-	@Deprecated(forRemoval = true)
+	@Deprecated(since = "47.2.32.2", forRemoval = true)
 	private final boolean useOldExplosion;
 	private final int fuse;
 	private final int strength;
 	@SuppressWarnings("unused")
-	@Deprecated(forRemoval = true)
+	@Deprecated(since = "47.2.32.2", forRemoval = true)
 	private final float xzStrength, yStrength;
 	private final float resistanceImpact;
 	private final float randomVecLength;
@@ -101,11 +101,11 @@ public class TNTXStrengthEffect extends PrimedTNTEffect {
 	
 	public static class Builder {
 
-		@Deprecated(forRemoval = true)
+		@Deprecated(since = "47.2.32.2", forRemoval = true)
 		private boolean useOldExplosion = false;
 		private int fuse = 80;
 		private int strength = 4;
-		@Deprecated(forRemoval = true)
+		@Deprecated(since = "47.2.32.2", forRemoval = true)
 		private float xzStrength = 1f, yStrength = 1f;
 		private float resistanceImpact = 1f;
 		private float randomVecLength = 1f;
@@ -135,7 +135,7 @@ public class TNTXStrengthEffect extends PrimedTNTEffect {
 			this.explodesOnImpact = explodesOnImpact;
 		}
 
-		@Deprecated(forRemoval = true)
+		@Deprecated(since = "47.2.32.2", forRemoval = true)
 		public Builder useOldExplosion() {
 			return new Builder(true, fuse, strength, xzStrength, yStrength, resistanceImpact, randomVecLength, fire, knockbackStrength, isStrongExplosion, size, airFuse, explodesOnImpact);
 		}
@@ -160,7 +160,7 @@ public class TNTXStrengthEffect extends PrimedTNTEffect {
 		 * This is a specific value that essentially scales the explosion in the x and z direction
 		 * @param xzStrength
 		 */
-		@Deprecated(forRemoval = true)
+		@Deprecated(since = "47.2.32.2", forRemoval = true)
 		public Builder xzStrength(float xzStrength) {
 			return new Builder(useOldExplosion, fuse, strength, xzStrength, yStrength, resistanceImpact, randomVecLength, fire, knockbackStrength, isStrongExplosion, size, airFuse, explodesOnImpact);
 		}
@@ -169,7 +169,7 @@ public class TNTXStrengthEffect extends PrimedTNTEffect {
 		 * This is a specific value that essentially scales the explosion in the y direction
 		 * @param yStrength
 		 */
-		@Deprecated(forRemoval = true)
+		@Deprecated(since = "47.2.32.2", forRemoval = true)
 		public Builder yStrength(float yStrength) {
 			return new Builder(useOldExplosion, fuse, strength, xzStrength, yStrength, resistanceImpact, randomVecLength, fire, knockbackStrength, isStrongExplosion, size, airFuse, explodesOnImpact);
 		}

@@ -524,7 +524,7 @@ public class ImprovedExplosion extends Explosion {
 	 * @param fire  whether or not the explosion should spawn fire afterwards
 	 * @param isStrongExplosion  whether or not fluids should be ignored in the explosion resistance calculation. Very useful for large explosions
 	 */
-	@Deprecated(since = "47.2.32.1", forRemoval = true)
+	@Deprecated(since = "47.2.32.2", forRemoval = true)
 	public void doBlockExplosion(float xzStrength, float yStrength, float resistanceImpact, float randomVecLength, boolean fire, boolean isStrongExplosion) {			
 		long time = System.currentTimeMillis();
 		BlockPos posTNT = new BlockPos(Mth.floor(posX), Mth.floor(posY), Mth.floor(posZ));
@@ -600,7 +600,7 @@ public class ImprovedExplosion extends Explosion {
 	 * @param isStrongExplosion  whether or not fluids should be ignored in the explosion resistance calculation. Very useful for large explosions
 	 * @param blockEffect  determines what should happen to the blocks gotten by this explosion
 	 */
-	@Deprecated(since = "47.2.32.1", forRemoval = true)
+	@Deprecated(since = "47.2.32.2", forRemoval = true)
 	public void doBlockExplosion(float xzStrength, float yStrength, float resistanceImpact, float randomVecLength, boolean isStrongExplosion, IForEachBlockExplosionEffect blockEffect) {
 		BlockPos posTNT = new BlockPos(Mth.floor(posX), Mth.floor(posY), Mth.floor(posZ));
 		Set<Integer> blocks = new HashSet<>();
@@ -668,7 +668,7 @@ public class ImprovedExplosion extends Explosion {
 	 * @param condition  the condition on which a block is added to the {@link Set} of blocks
 	 * @param blockEffect  determines what should happen to the blocks gotten by this explosion
 	 */
-	@Deprecated(since = "47.2.32.1", forRemoval = true)
+	@Deprecated(since = "47.2.32.2", forRemoval = true)
 	public void doBlockExplosion(float xzStrength, float yStrength, float resistanceImpact, float randomVecLength, boolean isStrongExplosion, IBlockExplosionCondition condition, IForEachBlockExplosionEffect blockEffect) {
 		BlockPos posTNT = new BlockPos(Mth.floor(posX), Mth.floor(posY), Mth.floor(posZ));
 		Set<Integer> blocks = new HashSet<>();
@@ -729,7 +729,7 @@ public class ImprovedExplosion extends Explosion {
 	 * Executes {@link ImprovedExplosion#doBlockExplosion(float, float, float, float, boolean, boolean, blockEffect)} with default values.
 	 * @param blockEffect  determines what should happen to the blocks gotten by this explosion
 	 */
-	@Deprecated(since = "47.2.32.1", forRemoval = true)
+	@Deprecated(since = "47.2.32.2", forRemoval = true)
 	public void doBlockExplosion(IForEachBlockExplosionEffect blockEffect) {
 		doBlockExplosion(1f, 1f, 1f, 1f, false, blockEffect);
 	}
@@ -740,7 +740,7 @@ public class ImprovedExplosion extends Explosion {
 	 * Executes {@link ImprovedExplosion#doBlockExplosion(float, float, float, float, boolean, boolean, condition, blockEffect)} with default values.
 	 * @param blockEffect  determines what should happen to the blocks gotten by this explosion
 	 */
-	@Deprecated(since = "47.2.32.1", forRemoval = true)
+	@Deprecated(since = "47.2.32.2", forRemoval = true)
 	public void doBlockExplosion(IBlockExplosionCondition condition, IForEachBlockExplosionEffect blockEffect) {
 		doBlockExplosion(1f, 1f, 1f, 1f, false, condition, blockEffect);
 	}
@@ -750,7 +750,7 @@ public class ImprovedExplosion extends Explosion {
 	 * 
 	 * Executes {@link ImprovedExplosion#doBlockExplosion(float, float, float, float, boolean, boolean)} with default values.
 	 */
-	@Deprecated(since = "47.2.32.1", forRemoval = true)
+	@Deprecated(since = "47.2.32.2", forRemoval = true)
 	public void doBlockExplosion() {
 		doBlockExplosion(1f, 1f, 1f, 1f, false, false);
 	}
@@ -767,7 +767,7 @@ public class ImprovedExplosion extends Explosion {
 	 * @param isStrongExplosion  whether or not fluids should be ignored in the explosion resistance calculation. Very useful for large explosions
 	 * @param saveBlockPos  whether or not affected blocks should be saved to be used externally
 	 */
-	@Deprecated(since = "47.2.32.1", forRemoval = true)
+	@Deprecated(since = "47.2.32.2", forRemoval = true)
 	public void doOldBlockExplosion(float xzStrength, float yStrength, float resistanceImpact, float randomVecLength, boolean fire, boolean isStrongExplosion, boolean saveBlockPos) {
 		Set<BlockPos> blocks = new HashSet<>();
 		for(int offX = -size; offX <= size; offX++) {
@@ -838,7 +838,7 @@ public class ImprovedExplosion extends Explosion {
 	 * @param z  the z position of the block
 	 * @return encoded int containing information about x, y and z positions, all of which can have values between -511 and 511
 	 */
-	@Deprecated(since = "47.2.32.1", forRemoval = true)
+	@Deprecated(since = "47.2.32.2", forRemoval = true)
 	protected int encodeBlockPos(int x, int y, int z) {
 		int x0 = Integer.signum(x);
 		x = Math.abs(x) > 511 ? 511 : Math.abs(x);
@@ -869,7 +869,7 @@ public class ImprovedExplosion extends Explosion {
 	 * @param encodedVal  the position encoded by {@link ImprovedExplosion#encodeBlockPos(int, int, int)}
 	 * @return BlockPos with the relative x, y and z coordinates decoded again with an absolute max value of 511
 	 */
-	@Deprecated(since = "47.2.32.1", forRemoval = true)
+	@Deprecated(since = "47.2.32.2", forRemoval = true)
 	protected BlockPos decodeBlockPos(int encodedVal) {
 		int zRaw = (encodedVal & 0b00000000000000000000000111111111);
 		int zNeg = (encodedVal & 0b00000000000000000000001000000000) >> 9;

@@ -7,7 +7,7 @@ import net.minecraft.world.entity.Entity;
  * An IForEachEntityExplosionEffect is used to affect individual entities gotten by an {@link ImprovedExplosion} in different ways.
  * It is usually used as a parameter of a function.
  */
-@Deprecated(since = "47.2.32.1", forRemoval = true)
+@Deprecated(since = "47.2.32.2", forRemoval = true)
 public interface IForEachEntityExplosionEffect extends EntityExplosionEffect {
 	
 	/**

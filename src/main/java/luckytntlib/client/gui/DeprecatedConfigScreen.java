@@ -17,7 +17,7 @@ import net.minecraft.network.chat.Component;
 import net.minecraftforge.client.gui.widget.ForgeSlider;
 import net.minecraftforge.common.ForgeConfigSpec;
 
-@Deprecated(since = "47.2.32.1", forRemoval = true)
+@Deprecated(since = "47.2.32.2", forRemoval = true)
 public class DeprecatedConfigScreen extends Screen {
 
 	Button performantExplosion = null;
