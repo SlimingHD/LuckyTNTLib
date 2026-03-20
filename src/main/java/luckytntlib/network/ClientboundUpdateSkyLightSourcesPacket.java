@@ -13,6 +13,7 @@ import net.minecraftforge.network.NetworkEvent;
 
 /**
  * Packet that updates the {@link ChunkSkyLightSources} for a specific chunk.
+ * This is necessary to ensure future light updates work correctly. <br>
  * Only used in {@link LightUpdateHelper}.
  */
 public class ClientboundUpdateSkyLightSourcesPacket {

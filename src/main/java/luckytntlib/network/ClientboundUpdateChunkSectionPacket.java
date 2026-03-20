@@ -15,20 +15,20 @@ import net.minecraftforge.fml.DistExecutor;
 import net.minecraftforge.network.NetworkEvent;
 
 /**
- * Packet for updating a specific {@link LevelChunkSection} by either changing the blocks at the specified positions or queuing light updates for said positions.
+ * Packet for updating a specific {@link LevelChunkSection} by either changing the blocks at the specified positions or queuing light updates for said positions. <br>
  * Only used in {@link ExplosionHelper}, {@link LightUpdateHelper} and {@link ImprovedExplosion} to transmit changes to the world from server to client.
  */
 public class ClientboundUpdateChunkSectionPacket {
 
 	private final BitSet changed;
-	private final boolean updateLight, empty;
+	private final boolean allAffected, updateLight;
 	private final int sectionX, sectionY, sectionZ;
 	
-	public ClientboundUpdateChunkSectionPacket(SectionPos pos, BitSet changed, boolean empty, boolean updateLight) {
+	public ClientboundUpdateChunkSectionPacket(SectionPos pos, BitSet changed, boolean allAffected, boolean updateLight) {
 		this.sectionX = pos.getX();
 		this.sectionY = pos.getY();
 		this.sectionZ = pos.getZ();
-		this.empty = empty;
+		this.allAffected = allAffected;
 		this.updateLight = updateLight;
 		this.changed = changed;
 	}
@@ -37,10 +37,10 @@ public class ClientboundUpdateChunkSectionPacket {
 		sectionX = buffer.readInt();
 		sectionY = buffer.readInt();
 		sectionZ = buffer.readInt();
-		empty = buffer.readBoolean();
+		allAffected = buffer.readBoolean();
 		updateLight = buffer.readBoolean();
 		
-		if(!empty) {
+		if (!allAffected) {
 			changed = buffer.readBitSet();
 		} else {
 			changed = new BitSet(0);
@@ -51,18 +51,16 @@ public class ClientboundUpdateChunkSectionPacket {
 		buffer.writeInt(sectionX);
 		buffer.writeInt(sectionY);
 		buffer.writeInt(sectionZ);
-		buffer.writeBoolean(empty);
+		buffer.writeBoolean(allAffected);
 		buffer.writeBoolean(updateLight);
 		
-		if(!empty) {
+		if (!allAffected) {
 			buffer.writeBitSet(changed);
 		}
 	}
 	
 	public void handle(Supplier<NetworkEvent.Context> ctx) {
-		ctx.get().enqueueWork(() -> {
-			DistExecutor.unsafeRunWhenOn(Dist.CLIENT, () -> () -> ClientAccess.updateChunkSection(SectionPos.of(sectionX, sectionY, sectionZ), changed, empty, updateLight));
-		});
+		ctx.get().enqueueWork(() -> DistExecutor.unsafeRunWhenOn(Dist.CLIENT, () -> () -> ClientAccess.updateChunkSection(SectionPos.of(sectionX, sectionY, sectionZ), changed, allAffected, updateLight)));
 		ctx.get().setPacketHandled(true);
 	}
 }

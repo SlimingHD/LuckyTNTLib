@@ -5,7 +5,6 @@ import java.util.BitSet;
 
 import javax.annotation.Nullable;
 
-import luckytntlib.network.ClientboundSetupExplosionPacket;
 import luckytntlib.util.explosions.ExplosionHelper;
 import luckytntlib.util.explosions.rules.ExplosionRule;
 import net.minecraft.client.Minecraft;
@@ -24,10 +23,15 @@ import net.minecraft.world.level.lighting.LevelLightEngine;
 import net.minecraft.world.phys.Vec3;
 
 public class ClientAccess {
+	
+	@Nullable
+	private static ExplosionRule currentRule;
+	@Nullable
+	private static BlockPos currentCenter;
 
 	private static Field heightmapField;
 	
-	public static void updateChunkSection(SectionPos pos, BitSet changed, boolean empty, boolean updateLight) {
+	public static void updateChunkSection(SectionPos pos, BitSet changed, boolean allAffected, boolean updateLight) {
 		Minecraft minecraft = Minecraft.getInstance();
 		ClientLevel level = minecraft.level;
 		
@@ -57,10 +61,10 @@ public class ClientAccess {
 		} else {
 			PalettedContainer<BlockState> states = chunk.getSection(pos.getY()).getStates();
 			
-			ExplosionRule rule = ClientboundSetupExplosionPacket.currentRule;
-			BlockPos center = ClientboundSetupExplosionPacket.currentCenter;
+			ExplosionRule rule = currentRule;
+			BlockPos center = currentCenter;
 			boolean useRule = rule != null && center != null;
-			if (empty) {
+			if (allAffected) {
 				for (int s = 0; s < 4096; s++) {
 					Vec3i secpos = ExplosionHelper.decodeSectionPos(s);
 					BlockPos blockpos = new BlockPos((pos.getX() << 4) + secpos.getX(), ((pos.getY() + level.getMinSection()) << 4) + secpos.getY(), (pos.getZ() << 4) + secpos.getZ());
@@ -125,7 +129,7 @@ public class ClientAccess {
 	}
 	
 	public static void setupExplosion(@Nullable ExplosionRule rule, @Nullable BlockPos center) {
-		ClientboundSetupExplosionPacket.currentRule = rule;
-		ClientboundSetupExplosionPacket.currentCenter = center;
+		currentRule = rule;
+		currentCenter = center;
 	}
 }

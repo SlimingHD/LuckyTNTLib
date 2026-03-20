@@ -32,9 +32,20 @@ import net.minecraft.world.phys.Vec3;
 import net.minecraftforge.network.PacketDistributor;
 
 /**
- * The ExplosionHelper offers many basic functions that help you get or edit large ares of blocks in the current {@link Level}.
- * This includes simple spherical functions, but also more complex methods like getting the top most block in a sphere.
- * On top of that it also allows for easy customization.
+ * ExplosionHelper is a class that provides utility methods to create non-raytraced explosions. <br>
+ * The main method is {@link #createCrater(Level, Vec3, int, Vector3f, int, DistanceCalculator, ExplosionRule)},
+ * but this class also provides multiple default implementations based on geometric shapes. 
+ * <p>
+ * It is important to mention that {@link #createCrater(Level, Vec3, int, Vector3f, int, DistanceCalculator, ExplosionRule)}
+ * as well as all the implementations are built for performance, not perfection.
+ * To ensure the enormous performance boost, block updates are omitted and updates are batched and synchronized to the client manually.
+ * By omitting block updates, light updates stop working altogether.
+ * To increase performance on that front light updates aren't handled by Minecraft's light engine and instead by {@link LightUpdateHelper}. 
+ * <p>
+ * Any method in this class annotated with {@link Deprecated} have been so in favor of the new methods.
+ * We highly encourage anyone to switch to the new system as future ports for this mod to newer versions of Minecraft won't contain these methods anymore.
+ * As it is always with software development, we can't foresee all possible edge cases these methods might have been or will be used for.
+ * Keeping that in mind, if your specific use case isn't covered by the new system, you'll have to make do yourself.
  */
 public class ExplosionHelper {
 
@@ -71,7 +82,7 @@ public class ExplosionHelper {
 	 * @param position  the center position of the spherical explosion
 	 * @param radius  the radius of the sphere
 	 * @param maxResistance  blocks with an explosion resistance lower or equal to this value will be removed, all other blocks will be untouched
-	 * @param rule  an optional {@link ExplosionRule} that determines how affected blocks will be edited. if it's {@code null}, blocks will simply be removed.
+	 * @param rule  an optional {@link ExplosionRule} that determines how affected blocks will be edited. If it's {@code null}, blocks will simply be removed.
 	 * 
 	 * @see #createSphericalCrater(Level, Vec3, int, int)
 	 * @see #createSpheroidCrater(Level, Vec3, int, Vector3f, int)
@@ -108,7 +119,7 @@ public class ExplosionHelper {
 	 * @param radius  the radius of the unscaled sphere
 	 * @param scaling  a {@link Vector3f} containing the scaling for all axes
 	 * @param maxResistance  blocks with an explosion resistance lower or equal to this value will be removed, all other blocks will be untouched
-	 * @param rule  an optional {@link ExplosionRule} that determines how affected blocks will be edited. if it's {@code null}, blocks will simply be removed.
+	 * @param rule  an optional {@link ExplosionRule} that determines how affected blocks will be edited. If it's {@code null}, blocks will simply be removed.
 	 * 
 	 * @see #createSphericalCrater(Level, Vec3, int, int)
 	 * @see #createSphericalCrater(Level, Vec3, int, int, ExplosionRule)
@@ -141,7 +152,7 @@ public class ExplosionHelper {
 	 * @param position  the center position of the cubical explosion
 	 * @param radius  the radius of the cube
 	 * @param maxResistance  blocks with an explosion resistance lower or equal to this value will be removed, all other blocks will be untouched
-	 * @param rule  an optional {@link ExplosionRule} that determines how affected blocks will be edited. if it's {@code null}, blocks will simply be removed.
+	 * @param rule  an optional {@link ExplosionRule} that determines how affected blocks will be edited. If it's {@code null}, blocks will simply be removed.
 	 * 
 	 * @see #createCubicalCrater(Level, Vec3, int, int)
 	 * @see #createCuboidCrater(Level, Vec3, int, Vector3f, int)
@@ -178,7 +189,7 @@ public class ExplosionHelper {
 	 * @param radius  the radius of the unscaled cube
 	 * @param scaling  a {@link Vector3f} containing the scaling for all axes
 	 * @param maxResistance  blocks with an explosion resistance lower or equal to this value will be removed, all other blocks will be untouched
-	 * @param rule  an optional {@link ExplosionRule} that determines how affected blocks will be edited. if it's {@code null}, blocks will simply be removed.
+	 * @param rule  an optional {@link ExplosionRule} that determines how affected blocks will be edited. If it's {@code null}, blocks will simply be removed.
 	 * 
 	 * @see #createCubicalCrater(Level, Vec3, int, int)
 	 * @see #createCubicalCrater(Level, Vec3, int, int, ExplosionRule)
@@ -213,7 +224,7 @@ public class ExplosionHelper {
 	 * @param radiusXZ  the radius for the circle that represents the base area of the cylinder
 	 * @param radiusY  half the height of the cylinder
 	 * @param maxResistance  blocks with an explosion resistance lower or equal to this value will be removed, all other blocks will be untouched
-	 * @param rule  an optional {@link ExplosionRule} that determines how affected blocks will be edited. if it's {@code null}, blocks will simply be removed.
+	 * @param rule  an optional {@link ExplosionRule} that determines how affected blocks will be edited. If it's {@code null}, blocks will simply be removed.
 	 * 
 	 * @see #createCylindricalCrater(Level, Vec3, int, int, int)
 	 * @see #createScaledCylindricalCrater(Level, Vec3, int, int, Vector3f, int)
@@ -252,7 +263,7 @@ public class ExplosionHelper {
 	 * @param radiusY  half the height of the unscaled cylinder
 	 * @param scaling  a {@link Vector3f} containing the scaling for all axes
 	 * @param maxResistance  blocks with an explosion resistance lower or equal to this value will be removed, all other blocks will be untouched
-	 * @param rule  an optional {@link ExplosionRule} that determines how affected blocks will be edited. if it's {@code null}, blocks will simply be removed.
+	 * @param rule  an optional {@link ExplosionRule} that determines how affected blocks will be edited. If it's {@code null}, blocks will simply be removed.
 	 * 
 	 * @see #createCylindricalCrater(Level, Vec3, int, int, int)
 	 * @see #createCylindricalCrater(Level, Vec3, int, int, int, ExplosionRule)
@@ -271,9 +282,7 @@ public class ExplosionHelper {
 	 * @param scaling  a {@link Vector3f} containing the scaling for all axes
 	 * @param maxResistance  blocks with an explosion resistance lower or equal to this value will be removed, all other blocks will be untouched
 	 * @param calculator  a {@link DistanceCalculator} that determines the shape of the crater as explained at {@link DistanceCalculator#getMaxYDistanceSqr(int, int, int, Vector3f)}
-	 * @param rule  an optional {@link ExplosionRule} that determines how affected blocks will be edited. if it's {@code null}, blocks will simply be removed.
-	 * 
-	 * <br> <br>
+	 * @param rule  an optional {@link ExplosionRule} that determines how affected blocks will be edited. If it's {@code null}, blocks will simply be removed.
 	 * 
 	 * @see <i> Standard implementations for this method: </i>
 	 * @see #createSphericalCrater(Level, Vec3, int, int)
@@ -545,7 +554,7 @@ public class ExplosionHelper {
 	}
 	
 	/**
-	 * Encodes 3 {@code ints} between 0 and 15 into a single {@code int}
+	 * Encodes 3 {@code int}s between 0 and 15 into a single {@code int}
 	 * @param x  the x value to be encoded
 	 * @param y  the y value to be encoded
 	 * @param z  the z value to be encoded

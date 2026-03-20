@@ -15,20 +15,18 @@ import luckytntlib.util.explosions.rules.ExplosionRule;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.util.GsonHelper;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.state.BlockState;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.fml.DistExecutor;
 import net.minecraftforge.network.NetworkEvent;
 
 /**
  * Packet that transmits all necessary information for the processing of an explosion on the client.
- * Needs to be transmitted prior to an explosion sending any block updates for any chunk.
+ * Needs to be transmitted prior to an explosion that doesn't use {@link Level#setBlock(BlockPos, BlockState, int)} for updating the world. <br>
  * Only used in {@link ExplosionHelper} and {@link ImprovedExplosion}.
  */
 public class ClientboundSetupExplosionPacket {
-
-	@Nullable
-	public static ExplosionRule currentRule;
-	public static BlockPos currentCenter;
 	
 	private static final Gson GSON = new GsonBuilder().create();
 	
@@ -64,9 +62,7 @@ public class ClientboundSetupExplosionPacket {
 	}
 	
 	public void handle(Supplier<NetworkEvent.Context> ctx) {
-		ctx.get().enqueueWork(() -> {
-			DistExecutor.unsafeRunWhenOn(Dist.CLIENT, () -> () -> ClientAccess.setupExplosion(rule, center));
-		});
+		ctx.get().enqueueWork(() -> DistExecutor.unsafeRunWhenOn(Dist.CLIENT, () -> () -> ClientAccess.setupExplosion(rule, center)));
 		ctx.get().setPacketHandled(true);
 	}
 }

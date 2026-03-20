@@ -32,6 +32,9 @@ public class ExplosionRuleRegistry {
 		EXPLOSION_RULES = event.create(RegistryBuilder.<Function<JsonObject, ExplosionRule>>of(EXPLOSION_RULES_KEY.location()).setDefaultKey(SimpleExplosionRule.RESOURCE_LOCATION));
 	}
 	
+	/**
+	 * All rules this library provides by default registered to {@link #EXPLOSION_RULES}
+	 */
 	@SubscribeEvent
 	public static void onRegister(RegisterEvent event) {
 		event.register(EXPLOSION_RULES_KEY, SimpleExplosionRule.RESOURCE_LOCATION, () -> SimpleExplosionRule::decode);

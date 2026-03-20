@@ -5,7 +5,6 @@ import java.util.BitSet;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Map.Entry;
 
 import javax.annotation.Nullable;
@@ -268,8 +267,8 @@ public class LightUpdateHelper {
 	}
 	
 	/**
-	 * Sets the bit representing the given position in the given {@link Map} to {@code true} to indicate the light engine should update that position
-	 * @param packetData  the {@link Map} the queued light update will be written into
+	 * Sets the bit representing the given position in the given {@link Long2ObjectMap} to {@code true} to indicate the light engine should update that position
+	 * @param packetData  the {@link Long2ObjectMap} the queued light update will be written into
 	 * @param pos  the {@link ChunkPos} of the chunk containing the block that will be updated
 	 * @param x  the x offset of the block to the chunk
 	 * @param y  the y coordinate of the block the update is meant to be scheduled for
@@ -319,7 +318,7 @@ public class LightUpdateHelper {
 	 * @param y  the y coordinate of the position
 	 * @param z  the z offset of the position to the chunk
 	 * @param layer  the {@link LightLayer} to retrieve the data from
-	 * @param dataLayerCache  a {@link Map} caching all used {@link DataLayer}s for quicker access
+	 * @param dataLayerCache  a {@link Long2ObjectMap} caching all used {@link DataLayer}s for quicker access
 	 * 
 	 * @see #updateIndirectSkyLight(ServerLevel, HashMap)
 	 */

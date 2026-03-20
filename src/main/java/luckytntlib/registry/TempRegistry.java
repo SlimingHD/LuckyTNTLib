@@ -1,22 +1,11 @@
 package luckytntlib.registry;
 
-import org.joml.Vector3f;
-
 import luckytntlib.LuckyTNTLib;
 import luckytntlib.block.LTNTBlock;
 import luckytntlib.entity.PrimedLTNT;
 import luckytntlib.util.IExplosiveEntity;
-import luckytntlib.util.RandomList;
-import luckytntlib.util.explosions.DistanceCalculator;
 import luckytntlib.util.explosions.ExplosionHelper;
 import luckytntlib.util.explosions.ImprovedExplosion;
-import luckytntlib.util.explosions.rules.DistanceExplosionRule;
-import luckytntlib.util.explosions.rules.DistanceExplosionRule.DistanceComparator;
-import luckytntlib.util.explosions.rules.DistanceExplosionRule.DistanceComparingStrategy;
-import luckytntlib.util.explosions.rules.ExplosionRule;
-import luckytntlib.util.explosions.rules.FilterAirExplosionRule;
-import luckytntlib.util.explosions.rules.RandomBlockExplosionRule;
-import luckytntlib.util.explosions.rules.StackedExplosionRule;
 import luckytntlib.util.tnteffects.PrimedTNTEffect;
 import luckytntlib.util.tnteffects.TNTXStrengthEffect;
 import net.minecraft.server.level.ServerLevel;
@@ -24,8 +13,6 @@ import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.level.block.Block;
-import net.minecraft.world.level.block.Blocks;
-import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.material.MapColor;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.registries.DeferredRegister;
@@ -58,10 +45,7 @@ public class TempRegistry {
 		
 		@Override
 		public void serverExplosion(IExplosiveEntity ent) {
-			//DistanceCalculator calc = (x, z, r, s) -> (int)(Math.sqrt(r * r - x * x / s.x - z * z / s.z) * Math.sqrt(s.y));
-			//ExplosionRule rule = new FilterAirExplosionRule(new StackedExplosionRule(new DistanceExplosionRule(new RandomBlockExplosionRule(RandomList.<BlockState>floatBuilder().addEntry(Blocks.RED_WOOL.defaultBlockState(), 0.95f).addEntry(Blocks.LIME_WOOL.defaultBlockState(), 0.05f).build()), new DistanceComparator(DistanceComparingStrategy.SMALLER_THAN, 0, 75)), new DistanceExplosionRule(new RandomBlockExplosionRule(RandomList.ofEqualProbability(Blocks.YELLOW_WOOL.defaultBlockState(), Blocks.PURPLE_WOOL.defaultBlockState())), new DistanceComparator(DistanceComparingStrategy.SMALLER_AND_GREATER_THAN, 85, 120))));
-			//ExplosionHelper.createCrater(ent.getLevel(), ent.getPos(), 150, new Vector3f(1f, 1f, 1f), 5000, calc, rule);
-			ExplosionHelper.createSphericalCrater(ent.getLevel(), ent.getPos(), 150, 5000);
+			ExplosionHelper.createSphericalCrater(ent.getLevel(), ent.getPos(), 400, 5000);
 		}
 	}
 	
@@ -69,7 +53,7 @@ public class TempRegistry {
 		
 		@Override
 		public void serverExplosion(IExplosiveEntity ent) {
-			ExplosionRule rule = new FilterAirExplosionRule(new StackedExplosionRule(new DistanceExplosionRule(new RandomBlockExplosionRule(RandomList.<BlockState>floatBuilder().addEntry(Blocks.RED_WOOL.defaultBlockState(), 0.95f).addEntry(Blocks.LIME_WOOL.defaultBlockState(), 0.05f).build()), new DistanceComparator(DistanceComparingStrategy.SMALLER_THAN, 0, 75)), new DistanceExplosionRule(new RandomBlockExplosionRule(RandomList.ofEqualProbability(Blocks.YELLOW_WOOL.defaultBlockState(), Blocks.PURPLE_WOOL.defaultBlockState())), new DistanceComparator(DistanceComparingStrategy.BETWEEN, 85, 120))));
+			//ExplosionRule rule = new FilterAirExplosionRule(new StackedExplosionRule(new DistanceExplosionRule(new RandomBlockExplosionRule(RandomList.<BlockState>floatBuilder().addEntry(Blocks.RED_WOOL.defaultBlockState(), 0.95f).addEntry(Blocks.LIME_WOOL.defaultBlockState(), 0.05f).build()), new DistanceComparator(DistanceComparingStrategy.SMALLER_THAN, 0, 75)), new DistanceExplosionRule(new RandomBlockExplosionRule(RandomList.ofEqualProbability(Blocks.YELLOW_WOOL.defaultBlockState(), Blocks.PURPLE_WOOL.defaultBlockState())), new DistanceComparator(DistanceComparingStrategy.BETWEEN, 85, 120))));
 
 			ImprovedExplosion explosion = new ImprovedExplosion((ServerLevel)ent.getLevel(), (Entity)ent, null, ent.getPos(), 300);
 			explosion.doEntityExplosion(1f, true);
