@@ -1,13 +1,13 @@
 {
-	"luckytntlib.config.multithreading_title" : "Lucky TNT Lib Multithreading Config",
+	"luckytntlib.config.multithreading_title" : "Lucky TNT Lib Multi-threading Config",
 	"luckytntlib.config.quality_title" : "Lucky TNT Lib Quality Config",
 	"luckytntlib.config.deprecated_title" : "Lucky TNT Lib Deprecated Config",
 	"luckytntlib.config.reset" : "Reset",
 	
-	"luckytntlib.config.multithreaded_explosions" : "Multithread large explosions",
+	"luckytntlib.config.multithreaded_explosions" : "Multi-thread large explosions",
 	"luckytntlib.config.max_explosion_threads" : "Maximum simultaneous explosions",
 	"luckytntlib.config.multithreaded_explosions_tooltip" : "Large explosions will use multiple threads to increase performance. They will run in parallel to each other and the game, stressing CPU and RAM. Adjust the value below to control how many explosions can run simultaneously. On servers, this value must be configured in the server config instead.",
-	"luckytntlib.config.max_explosion_threads_tooltip" : "Sets the number of explosions that can run in parallel. Each explosion will use multiple threads automatically. Excess explosions will be queued, not discarded. A higher value allows for faster calculation of multiple explosions at the cost of using more CPU and RAM. On servers, this value must be configured in the server config instead.",
+	"luckytntlib.config.max_explosion_threads_tooltip" : "Sets the number of explosions that can run in parallel. Each explosion will use multiple threads automatically. Excess explosions will be queued, not discarded. A higher value allows for faster calculation of multiple explosions. On servers, this value must be configured in the server config instead.",
 	"luckytntlib.config.update_block_light": "Update block light",
 	"luckytntlib.config.update_block_light_tooltip": "More performant explosions execute light updates themselves to decrease calculation time. Activating this will increase the visual quality of the light updates at the cost of performance. On servers, this value must be configured in the server config instead.",
 		

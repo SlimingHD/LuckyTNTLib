@@ -38,10 +38,12 @@ import net.minecraft.world.level.lighting.LevelLightEngine;
 import net.minecraftforge.network.PacketDistributor;
 
 /**
- * The {@code LightUpdateHelper} is used to calculate the light changes caused by explosions. <br>
- * It is primarily used in {@link ExplosionHelper} and {@link ImprovedExplosion}. <br>
- * The results aren't perfect by a long shot and there are some edge cases we know about that are problematic (there are probably even more we don't know about),
- * but the results are good enough, especially when you consider the performance increase.
+ * The {@code LightUpdateHelper} is used to calculate the light changes caused by explosions that omit block updates when changing the world. <br>
+ * It is primarily used in {@link ExplosionHelper} and {@link ImprovedExplosion}.
+ * <p>
+ * It is used in favor of Minecraft's light engine, as it provides an immense performance increase.
+ * Due to this performance focus, some edge cases may not mimic Minecraft's behavior,
+ * but the results are visually correct in almost all situations.
  */
 public class LightUpdateHelper {
 	

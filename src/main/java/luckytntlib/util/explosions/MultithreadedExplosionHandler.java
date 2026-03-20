@@ -11,16 +11,18 @@ import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
 
 /**
- * Handles multiple multithreaded explosions, as they are forced to be non-blocking.
- * This class handles queueing of explosions to make sure not too many explosions are run in parallel.
- * The maximum number of simultaneous explosions is decided by the user in their config.
- * Finalization of an explosion needs to be singlethreaded, as it needs to write into chunks.
- * Only one explosion is finalized per tick.
+ * Handles multiple multi-threaded explosions, as they are by nature forced to be non-blocking.
+ * Finalization of an explosion needs to be single-threaded, as it needs to write into chunks.
+ * Excess explosions are queued, not discarded.
+ * <p>
+ * Queuing behavior:<br>
+ * Only one explosion is finalized per tick to not overload the game.
  * Extra explosion threads are queued and only started once space has been made in the explosion queue.
- * This is done to save on CPU and RAM usage and make sure the game doesn't just crash.
+ * The maximum number of simultaneous explosions is decided by the user in their config.
+ * This is done to save on CPU and RAM usage, as handling too many explosions simultaneously will just crash the game.
  */
 @Mod.EventBusSubscriber
-public class MultithreadedExplosionHandler {
+public final class MultithreadedExplosionHandler {
 
 	private static final Queue<ExplosionThread> queuedExplosionThreads = new LinkedList<ExplosionThread>();
 	private static final Queue<ExplosionThread> explosionThreads = new LinkedList<ExplosionThread>();
@@ -50,7 +52,7 @@ public class MultithreadedExplosionHandler {
 		}
 	}
 	
-	public static void enqueue(ExplosionThread explosionThread) {
+	static void enqueue(ExplosionThread explosionThread) {
 		int maxSize = LuckyTNTLibConfigValues.MAX_EXPLOSION_THREADS.get();
 		if (explosionThreads.size() >= maxSize) {
 			queuedExplosionThreads.add(explosionThread);

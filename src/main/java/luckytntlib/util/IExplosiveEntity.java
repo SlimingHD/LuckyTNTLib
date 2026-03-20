@@ -10,7 +10,6 @@ import net.minecraft.world.phys.Vec3;
 import net.minecraftforge.common.extensions.IForgeEntity;
 
 /**
- * 
  * IExplosiveEntity is an extension of {@link IForgeEntity} and is implemented by all entities introduced by Lucky TNT Lib.
  * <p>
  * IExplosiveEntity is required because, for the most part, Minecraft's entities qualify as explosive entities but are not interchangeable.

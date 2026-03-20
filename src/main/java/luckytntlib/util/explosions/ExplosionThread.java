@@ -15,13 +15,13 @@ import it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap;
 import luckytntlib.util.explosions.rules.ExplosionRule;
 
 /**
- * Handles the execution of a multithreaded explosion.
+ * Executes the multi-threaded part of an explosion, if multi-threading is enabled by the user and the explosion is large enough to warrant multi-threading.
  * This is done in its own thread, as blocking the main thread will lead to a deadlock.
  * The threading itself is done using a {@link ForkJoinPool}, with the number of tasks being chosen dynamically based on the available processors and a minimum size.
- * This thread is started and its explosion is finalized in {@link MultithreadedExplosionHandler}.
- * Only the gathering of blocks to affect is handled in multiple threads. Both the collection of vectors and the finalization are running in a single thread.
+ * This thread is started and its explosion finalized in {@link MultithreadedExplosionHandler}.
+ * Only the gathering of blocks to affect is handled in multiple threads. Both the collection of vectors and the finalization are single-threaded.
  */
-public class ExplosionThread extends Thread {
+public final class ExplosionThread extends Thread {
 
 	private static final int minVectorsPerThread = 25000;
 	private static final ForkJoinPool pool = new ForkJoinPool();
@@ -35,13 +35,13 @@ public class ExplosionThread extends Thread {
 	private final ExplosionRule rule;
 	private final List<Vector3f> vectors;
 	
-	public final Set<Long> emptySections = ConcurrentHashMap.newKeySet();
-	public final Set<Long> fullSections = ConcurrentHashMap.newKeySet();
-	public final ConcurrentHashMap<Long, float[]> sectionResistances = new ConcurrentHashMap<Long, float[]>();
+	final Set<Long> emptySections = ConcurrentHashMap.newKeySet();
+	final Set<Long> fullSections = ConcurrentHashMap.newKeySet();
+	final ConcurrentHashMap<Long, float[]> sectionResistances = new ConcurrentHashMap<Long, float[]>();
 	
 	private Map<Long, BitSet> editedSections = new Long2ObjectOpenHashMap<BitSet>();
 	
-	public ExplosionThread(ImprovedExplosion explosion, float resistanceFac, float randomVecLengthFac, boolean ignoreFluids, boolean placeFire, @Nullable ExplosionRule rule, List<Vector3f> vectors) {
+	ExplosionThread(ImprovedExplosion explosion, float resistanceFac, float randomVecLengthFac, boolean ignoreFluids, boolean placeFire, @Nullable ExplosionRule rule, List<Vector3f> vectors) {
 		this.explosion = explosion;
 		this.resistanceFac = resistanceFac;
 		this.randomVecLengthFac = randomVecLengthFac;
@@ -60,11 +60,11 @@ public class ExplosionThread extends Thread {
 	}
 	
 	public Map<Long, BitSet> getEditedSections() {
-		return editedSections;
+		return Map.copyOf(editedSections);
 	}
 	
 	public Set<Long> getFullSections() {
-		return fullSections;
+		return Set.copyOf(fullSections);
 	}
 	
 	public ImprovedExplosion getExplosion() {

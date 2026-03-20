@@ -54,6 +54,11 @@ import net.minecraftforge.network.PacketDistributor;
 /**
  * Minecraft's explosions are limited by size, performance, and versatility.
  * This extension of {@link Explosion} tackles all of those problems by providing a multitude of functions for executing and customizing explosions.
+ * <p>
+ * Any method in this class annotated with {@link Deprecated} have been so in favor of the new methods.
+ * We highly encourage anyone to switch to the new system as future ports for this mod to newer versions of Minecraft won't contain these methods anymore.
+ * As it is always with software development, we can't foresee all possible edge cases these methods might have been or will be used for.
+ * Keeping that in mind, if your specific use case isn't covered by the new system, you'll have to make do yourself.
  */
 public class ImprovedExplosion extends Explosion {
 
@@ -70,7 +75,7 @@ public class ImprovedExplosion extends Explosion {
 	 * Creates a new ImprovedExplosion
 	 * @param level  the level
 	 * @param position  the center position of the explosion
-	 * @param size  the radius of a sphere that is being used for raytracing. It influences strength and reach of the explosion
+	 * @param size  the radius of a sphere that is being used for ray-tracing. It influences strength and reach of the explosion
 	 */
 	public ImprovedExplosion(ServerLevel level, Vec3 position, int size) {
 		this(level, null, null, position, size);
@@ -81,7 +86,7 @@ public class ImprovedExplosion extends Explosion {
 	 * @param level  the level
 	 * @param source  the {@link DamageSource} this explosion uses
 	 * @param position  the center position of the explosion
-	 * @param size  the radius of a sphere that is being used for raytracing. It influences strength and reach of the explosion
+	 * @param size  the radius of a sphere that is being used for ray-tracing. It influences strength and reach of the explosion
 	 */
 	public ImprovedExplosion(ServerLevel level, @Nullable DamageSource source, Vec3 position, int size) {
 		this(level, null, source, position, size);
@@ -92,7 +97,7 @@ public class ImprovedExplosion extends Explosion {
 	 * @param level  the level
 	 * @param entity  the entity not affected by this explosion. Should be the entity causing the explosion and also an IExplosiveEntity
 	 * @param position  the center position of the explosion
-	 * @param size  the radius of a sphere that is being used for raytracing. It influences strength and reach of the explosion
+	 * @param size  the radius of a sphere that is being used for ray-tracing. It influences strength and reach of the explosion
 	 */	
 	public ImprovedExplosion(ServerLevel level, @Nullable Entity explodingEntity, Vec3 position, int size) {
 		this(level, explodingEntity, null, position.x, position.y, position.z, size);
@@ -104,7 +109,7 @@ public class ImprovedExplosion extends Explosion {
 	 * @param entity  the entity not affected by this explosion. Should be the entity causing the explosion and also an IExplosiveEntity
 	 * @param source  the {@link DamageSource} this explosion uses
 	 * @param position  the center position of the explosion
-	 * @param size  the radius of a sphere that is being used for raytracing. It influences strength and reach of the explosion
+	 * @param size  the radius of a sphere that is being used for ray-tracing. It influences strength and reach of the explosion
 	 */	
 	public ImprovedExplosion(ServerLevel level, @Nullable Entity explodingEntity, @Nullable DamageSource source, Vec3 position, int size) {
 		this(level, explodingEntity, source, position.x, position.y, position.z, size);
@@ -117,7 +122,7 @@ public class ImprovedExplosion extends Explosion {
 	 * @param x  the x center position
 	 * @param y  the y center position
 	 * @param z  the z center position
-	 * @param size  the radius of a sphere that is being used for raytracing. It influences strength and reach of the explosion
+	 * @param size  the radius of a sphere that is being used for ray-tracing. It influences strength and reach of the explosion
 	 */	
 	public ImprovedExplosion(ServerLevel level, @Nullable Entity explodingEntity, double x, double y, double z, int size) {
 		this(level, explodingEntity, null, x, y, z, size);
@@ -131,7 +136,7 @@ public class ImprovedExplosion extends Explosion {
 	 * @param x  the x center position
 	 * @param y  the y center position
 	 * @param z  the z center position
-	 * @param size  the radius of a sphere that is being used for raytracing. It influences strength and reach of the explosion
+	 * @param size  the radius of a sphere that is being used for ray-tracing. It influences strength and reach of the explosion
 	 */	
 	public ImprovedExplosion(ServerLevel level, @Nullable Entity explodingEntity, @Nullable DamageSource source, double x, double y, double z, int size) {
 		super(level, explodingEntity, source, null, x, y, z, size, false, BlockInteraction.KEEP);
@@ -145,11 +150,11 @@ public class ImprovedExplosion extends Explosion {
 	
 	/**
 	 * Executes a block explosion using either a single or multiple threads based on explosion size and user settings.
-	 * The explosion is raycasted onto the sphere with the radius determined by the size of this explosion.
+	 * The explosion is ray-casted onto the sphere with the radius determined by the size of this explosion.
 	 * @param resistanceImpact  the relative impact that explosion resistance of blocks has on the penetration force of the explosion
 	 * @param randomVecLength  the greater this value, the more distributed the length of the explosion vectors will be. Large explosions should have a value less than 1
 	 * @param ignoreFluidResistance  whether or not fluids should be ignored in the explosion resistance calculation
-	 * @param fire  whether or not the explosion should spawn fire afterwards
+	 * @param fire  whether or not the explosion should spawn fire afterwards. Fire placement is run as its own explosion. Fire placement may not work correctly in rare special cases.
 	 * @param random  random number generator
 	 * @param rule  optional rule for causing effects other than just destruction. Leave as null for an efficient explosion that destroys blocks
 	 */
@@ -162,8 +167,8 @@ public class ImprovedExplosion extends Explosion {
 	}
 	
 	/**
-	 * Multithreads the improved block explosion, queueing the result to be applied in the next tick.
-	 * Due to being multithreaded, the game and other explosions will run in the background while the explosion loads.
+	 * Multi-threads the improved block explosion, queuing the result to be applied in the next tick.
+	 * Due to being multi-threaded, the game and other explosions will run in the background while the explosion loads.
 	 * The amount of parallel explosions is limited by the user settings, making many simultaneous explosions be queued.
 	 * Functionally equivalent to the single-threaded version.
 	 */
@@ -191,7 +196,7 @@ public class ImprovedExplosion extends Explosion {
 
 	
 	/**
-	 * Raycasts onto the surface of the sphere determined by the size of this explosion.
+	 * Ray-casts onto the surface of the sphere determined by the size of this explosion.
 	 * Ray length is also determined by the size and a bit of random addition.
 	 * Ray length of any ray is dynamically reduced by the explosion resistances in its path.
 	 * Blocks in a ray's remaining path are marked, not directly affected.
@@ -339,7 +344,7 @@ public class ImprovedExplosion extends Explosion {
 	}
 	
 	/**
-	 * Performant finalization of an explosion that only removes blocks.
+	 * Efficient finalization of an explosion that only removes blocks.
 	 * This will not prompt block updates for performance reasons.
 	 * Block and sky light will be updated correctly and efficiently.
 	 */
@@ -405,7 +410,7 @@ public class ImprovedExplosion extends Explosion {
 	}
 	
 	/**
-	 * Performant finalization of an explosion that affects blocks using a rule.
+	 * Efficient finalization of an explosion that affects blocks using a rule.
 	 * This will not prompt block updates for performance reasons. Such updates need to be manually queued in the given rule.
 	 * Block and sky light will be updated correctly and efficiently.
 	 */

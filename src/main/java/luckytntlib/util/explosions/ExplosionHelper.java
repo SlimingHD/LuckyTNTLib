@@ -32,7 +32,7 @@ import net.minecraft.world.phys.Vec3;
 import net.minecraftforge.network.PacketDistributor;
 
 /**
- * ExplosionHelper is a class that provides utility methods to create non-raytraced explosions. <br>
+ * ExplosionHelper is a class that provides utility methods to create non-ray-traced explosions. <br>
  * The main method is {@link #createCrater(Level, Vec3, int, Vector3f, int, DistanceCalculator, ExplosionRule)},
  * but this class also provides multiple default implementations based on geometric shapes. 
  * <p>
@@ -40,7 +40,7 @@ import net.minecraftforge.network.PacketDistributor;
  * as well as all the implementations are built for performance, not perfection.
  * To ensure the enormous performance boost, block updates are omitted and updates are batched and synchronized to the client manually.
  * By omitting block updates, light updates stop working altogether.
- * To increase performance on that front light updates aren't handled by Minecraft's light engine and instead by {@link LightUpdateHelper}. 
+ * To increase performance on that front, light updates aren't handled by Minecraft's light engine and instead by {@link LightUpdateHelper}. 
  * <p>
  * Any method in this class annotated with {@link Deprecated} have been so in favor of the new methods.
  * We highly encourage anyone to switch to the new system as future ports for this mod to newer versions of Minecraft won't contain these methods anymore.

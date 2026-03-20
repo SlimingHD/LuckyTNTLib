@@ -2,6 +2,7 @@ package luckytntlib.util.explosions;
 
 import java.util.BitSet;
 import java.util.List;
+import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.RecursiveTask;
 
 import org.joml.Vector3f;
@@ -15,7 +16,14 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.chunk.LevelChunkSection;
 
-@SuppressWarnings("serial")
+/**
+ * A singular task of a multi-threaded explosion used in a {@link ForkJoinPool}, either splitting itself further if its workload is too large,
+ * merging the data of its sub-tasks once they finished computing,
+ * or computing its result and merging it with its parent task.
+ * <p>
+ * Each task that does not split itself further will compute a sublist of the list of vectors given by an {@link ImprovedExplosion}, marking all blocks in its vectors' paths using ray-tracing.
+ * Data is cached and stored in such a way that threads will block each other as little as possible while still saving as much memory as possible.
+ */
 public class ExplosionTask extends RecursiveTask<Long2ObjectMap<BitSet>> {
 	
 	private static final float[] EMPTY_SECTION = new float[0];
@@ -30,7 +38,7 @@ public class ExplosionTask extends RecursiveTask<Long2ObjectMap<BitSet>> {
 	private final int allowedSize;
 	private final List<Vector3f> vectors;
 	
-	public ExplosionTask(ExplosionThread explosionThread, ImprovedExplosion explosion, float resistanceFac, boolean ignoreFluids, int allowedSize, List<Vector3f> vectors) {
+	ExplosionTask(ExplosionThread explosionThread, ImprovedExplosion explosion, float resistanceFac, boolean ignoreFluids, int allowedSize, List<Vector3f> vectors) {
 		this.explosionThread = explosionThread;
 		this.explosion = explosion;
 		this.damageCalculator = explosion.damageCalculator;
