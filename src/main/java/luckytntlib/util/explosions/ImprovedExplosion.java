@@ -9,6 +9,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.Set;
+import java.util.function.Consumer;
 
 import javax.annotation.Nullable;
 
@@ -66,6 +67,9 @@ public class ImprovedExplosion extends Explosion {
 	public final double posX, posY, posZ;
 	public final int size;
 	public final ExplosionDamageCalculator damageCalculator;
+	
+	private Consumer<ImprovedExplosion> onExplosionFinish;
+	
 	@Deprecated(forRemoval = true)
 	List<Integer> affectedBlocks = new ArrayList<>();
 	
@@ -329,6 +333,18 @@ public class ImprovedExplosion extends Explosion {
 	}
 	
 	/**
+	 * Sets a consumer of this explosion that will execute after {@link #finishImprovedExplosion(Map, Set, ExplosionRule)}.
+	 * <p>
+	 * Due to the possibility of explosions being mutli-threaded if their size is larger than or equal to {@code 30},
+	 * having a way to perform an action after the explosion has finished editing the world is crucial, as multi-threaded explosions will
+	 * not block the main thread.
+	 * @param onExplosionFinish  the action to perform once the explosion has been finished.
+	 */
+	public void setExplosionFinishWork(Consumer<ImprovedExplosion> onExplosionFinish) {
+		this.onExplosionFinish = onExplosionFinish;
+	}
+	
+	/**
 	 * Finalizes an explosion by removing / altering the blocks retrieved by raytracing.
 	 * If no rule is given, blocks will simply be removed.
 	 * @param editedSections  the chunk sections which were only partially affected by the explosion
@@ -340,6 +356,9 @@ public class ImprovedExplosion extends Explosion {
 			finishImprovedExplosionWithoutRule(editedSections, fullSections);
 		} else {
 			finishImprovedExplosionWithRule(editedSections, fullSections, rule);
+		}
+		if (onExplosionFinish != null) {
+			onExplosionFinish.accept(this);
 		}
 	}
 	

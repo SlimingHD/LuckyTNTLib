@@ -12,6 +12,10 @@ import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.Vec3;
 
+/**
+ * {@link ExplosionRule} that places fire wherever eligible. Eligibility is also randomly influenced by a set probability.
+ * Fire blocks are automatically updated.
+ */
 public class FireExplosionRule implements ExplosionRule {
 
 	public static final ResourceLocation RESOURCE_LOCATION = new ResourceLocation(LuckyTNTLib.MODID, "fire");
