@@ -9,7 +9,7 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.Vec3;
 
 /**
- * An {@link ExplosionRule} that filters for blocks that meet a given condition related to distance determined by a {@link DistanceComparator}
+ * An {@link ExplosionRule} that filters for positions that meet a condition related to distance
  */
 public class DistanceExplosionRule implements ExplosionRule {
 	
@@ -18,7 +18,7 @@ public class DistanceExplosionRule implements ExplosionRule {
 	private final ExplosionRule rule;
 	private final DistanceComparator comparator;
 	
-	public DistanceExplosionRule(ExplosionRule rule, DistanceComparator comparator) {
+	protected DistanceExplosionRule(ExplosionRule rule, DistanceComparator comparator) {
 		this.rule = rule;
 		this.comparator = comparator;
 	}
@@ -53,6 +53,27 @@ public class DistanceExplosionRule implements ExplosionRule {
 	}
 	
 	/**
+	 * Creates a {@code DistanceExplosionRule} that will apply the wrapped {@link ExplosionRule} if the distance is bigger than or equal to the given value
+	 */
+	public static DistanceExplosionRule greaterEqual(int minDistance, ExplosionRule ruleToWrap) {
+		return new DistanceExplosionRule(ruleToWrap, new DistanceComparator(DistanceComparingStrategy.GREATER_THAN, minDistance, 0));
+	}
+	
+	/**
+	 * Creates a {@code DistanceExplosionRule} that will apply the wrapped {@link ExplosionRule} if the distance is smaller than or equal to the given value
+	 */
+	public static DistanceExplosionRule lessEqual(int maxDistance, ExplosionRule ruleToWrap) {
+		return new DistanceExplosionRule(ruleToWrap, new DistanceComparator(DistanceComparingStrategy.SMALLER_THAN, 0, maxDistance));
+	}
+	
+	/**
+	 * Creates a {@code DistanceExplosionRule} that will apply the wrapped {@link ExplosionRule} if the distance is in between the given values or equal to either of them
+	 */
+	public static DistanceExplosionRule inBetween(int minDistance, int maxDistance, ExplosionRule ruleToWrap) {
+		return new DistanceExplosionRule(ruleToWrap, new DistanceComparator(DistanceComparingStrategy.GREATER_THAN, minDistance, maxDistance));
+	}
+	
+	/**
 	 * Used to determine when a {@link DistanceExplosionRule} should apply by evaluating the distance of a position to the center of an explosion
 	 */
 	public static class DistanceComparator {
@@ -67,8 +88,11 @@ public class DistanceExplosionRule implements ExplosionRule {
 		 * @param maxDistance  the maximum distance a block can be from the explosions center and still be affected. Might not be used depending on {@code strategy}.
 		 */
 		public DistanceComparator(DistanceComparingStrategy strategy, int minDistance, int maxDistance) {
-			if ((strategy.useMinDistance() && minDistance < 0) || (strategy.useMaxDistance() && maxDistance < 0)) {
-				throw new IllegalArgumentException("Neither minDistance (" + minDistance + ") nor maxDistance (" + maxDistance + ") can be lower than 0");
+			if (strategy.useMinDistance() && minDistance < 0) {
+				throw new IllegalArgumentException("minDistance (" + minDistance + ") cannot be lower than 0");
+			}
+			if (strategy.useMaxDistance() && maxDistance < 0) {
+				throw new IllegalArgumentException("maxDistance (" + maxDistance + ") cannot be lower than 0");
 			}
 			if (strategy.useMinDistance() && strategy.useMaxDistance() && minDistance > maxDistance) {
 				throw new IllegalArgumentException("minDistance (" + minDistance + ") cannot be bigger than maxDistance (" + maxDistance + ")");
@@ -153,9 +177,9 @@ public class DistanceExplosionRule implements ExplosionRule {
 		}
 		
 		/**
-		 * Returns a DistanceComparingStrategy where the name matches a given {@link String} if there is one
-		 * @param name  the name of a DistanceComparingStrategy
-		 * @return a DistanceComparingStrategy where the name matches {@code name} if there is one, otherwise defaults to {@link #GREATER_THAN}
+		 * Returns a {@code DistanceComparingStrategy} whose name matches a given {@link String} if there is one
+		 * @param name  the name of a {@code DistanceComparingStrategy}
+		 * @return a {@code DistanceComparingStrategy} whose name matches {@code name} if there is one, otherwise defaults to {@link #GREATER_THAN}
 		 */
 		public static DistanceComparingStrategy byName(String name) {
 			for (DistanceComparingStrategy d : values()) {

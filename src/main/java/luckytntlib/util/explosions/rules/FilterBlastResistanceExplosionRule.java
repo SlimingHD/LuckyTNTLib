@@ -15,12 +15,12 @@ public class FilterBlastResistanceExplosionRule implements ExplosionRule {
 	
 	public static final ResourceLocation RESOURCE_LOCATION = new ResourceLocation(LuckyTNTLib.MODID, "filter_blast_resistance");
 
-	private final ExplosionRule rule;
 	private final float maxResistance;
+	private final ExplosionRule rule;
 	
-	public FilterBlastResistanceExplosionRule(ExplosionRule rule, float maxResistance) {
-		this.rule = rule;
+	public FilterBlastResistanceExplosionRule(float maxResistance, ExplosionRule rule) {
 		this.maxResistance = maxResistance;
+		this.rule = rule;
 	}
 	
 	@SuppressWarnings("deprecation")
@@ -49,6 +49,6 @@ public class FilterBlastResistanceExplosionRule implements ExplosionRule {
 	}
 
 	public static ExplosionRule decode(JsonObject root) {
-		return new FilterBlastResistanceExplosionRule(ExplosionRule.parse(root.get("rule").getAsJsonObject()), root.get("maxResistance").getAsFloat());
+		return new FilterBlastResistanceExplosionRule(root.get("maxResistance").getAsFloat(), ExplosionRule.parse(root.get("rule").getAsJsonObject()));
 	}
 }

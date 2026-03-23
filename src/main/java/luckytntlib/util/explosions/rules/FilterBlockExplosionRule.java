@@ -2,6 +2,8 @@ package luckytntlib.util.explosions.rules;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.function.Supplier;
 
 import javax.annotation.Nullable;
@@ -38,7 +40,7 @@ public class FilterBlockExplosionRule implements ExplosionRule {
 	@Nullable
 	private final Collection<BlockState> states;
 	
-	public FilterBlockExplosionRule(ExplosionRule rule, @Nullable Collection<Block> blocks, @Nullable Collection<BlockState> states) {
+	protected FilterBlockExplosionRule(ExplosionRule rule, @Nullable Collection<Block> blocks, @Nullable Collection<BlockState> states) {
 		this.rule = rule;
 		this.blocks = blocks;
 		this.states = states;
@@ -106,6 +108,59 @@ public class FilterBlockExplosionRule implements ExplosionRule {
 			}
 		}
 		
-		return new FilterBlockExplosionRule(decodedRule, decodedBlocks, null);
+		return new FilterBlockExplosionRule(decodedRule, decodedBlocks, states);
+	}
+	
+	public static FilterBlockExplosionRule applyOnlyWhen(Block block, ExplosionRule ruleToWrap) {
+		return new FilterBlockExplosionRule(ruleToWrap, List.of(block), null);
+	}
+	
+	public static FilterBlockExplosionRule applyOnlyWhen(BlockState state, ExplosionRule ruleToWrap) {
+		return new FilterBlockExplosionRule(ruleToWrap, null, List.of(state));
+	}
+	
+	public static Builder builder() {
+		return new Builder();
+	}
+	
+	public static class Builder {
+		
+		private Collection<Block> blocks = new LinkedList<>();
+		private Collection<BlockState> states = new LinkedList<>();
+		
+		private Builder() {
+		}
+		
+		public Builder filterForBlock(Block blockToFilter) {
+			blocks.add(blockToFilter);
+			return this;
+		}
+		
+		public Builder filterForBlocks(Block... blocksToFilter) {
+			return filterForBlocks(List.of(blocksToFilter));
+		}
+		
+		public Builder filterForBlocks(Collection<Block> blocksToFilter) {
+			blocks.addAll(blocksToFilter);
+			return this;
+		}
+		
+		public Builder filterForState(BlockState stateToFilter) {
+			states.add(stateToFilter);
+			return this;
+		}
+		
+		public Builder filterForStates(BlockState... statesToFilter) {
+			return filterForStates(List.of(statesToFilter));
+		}
+		
+		public Builder filterForStates(Collection<BlockState> statesToFilter) {
+			states.addAll(statesToFilter);
+			return this;
+		}
+		
+		public FilterBlockExplosionRule build(ExplosionRule ruleToWrap) {
+			return new FilterBlockExplosionRule(ruleToWrap, blocks, states);
+		}
 	}
 }
