@@ -40,15 +40,11 @@ public class FilterBlastResistanceExplosionRule implements ExplosionRule {
 	@Override
 	public JsonObject encode(JsonObject root) {
 		root.addProperty("type", RESOURCE_LOCATION.toString());
-		
 		root.add("rule", rule.encode(new JsonObject()));
-
-		root.addProperty("maxResistance", maxResistance);
-		
 		return root;
 	}
 
 	public static ExplosionRule decode(JsonObject root) {
-		return new FilterBlastResistanceExplosionRule(root.get("maxResistance").getAsFloat(), ExplosionRule.parse(root.get("rule").getAsJsonObject()));
+		return new FilterBlastResistanceExplosionRule(0f, ExplosionRule.parse(root.get("rule").getAsJsonObject()));
 	}
 }

@@ -27,7 +27,7 @@ public class ClientAccess {
 	@Nullable
 	private static ExplosionRule currentRule;
 	@Nullable
-	private static BlockPos currentCenter;
+	private static Vec3 currentCenter;
 
 	private static Field heightmapField;
 	
@@ -62,7 +62,8 @@ public class ClientAccess {
 			PalettedContainer<BlockState> states = chunk.getSection(pos.getY()).getStates();
 			
 			ExplosionRule rule = currentRule;
-			BlockPos center = currentCenter;
+			Vec3 center = currentCenter;
+			BlockPos centerPos = center == null ? null : BlockPos.containing(center);
 			boolean useRule = rule != null && center != null;
 			if (allAffected) {
 				for (int s = 0; s < 4096; s++) {
@@ -70,7 +71,7 @@ public class ClientAccess {
 					BlockPos blockpos = new BlockPos((pos.getX() << 4) + secpos.getX(), ((pos.getY() + level.getMinSection()) << 4) + secpos.getY(), (pos.getZ() << 4) + secpos.getZ());
 					
 					if (useRule) {
-						rule.shouldApply(level, states.get(secpos.getX(), secpos.getY(), secpos.getZ()), Vec3.atCenterOf(center), pos.getX() - center.getX(), pos.getY() - center.getY(), pos.getZ() - center.getZ());
+						rule.setupClientData(level, states.get(secpos.getX(), secpos.getY(), secpos.getZ()), center, pos.getX() - centerPos.getX(), pos.getY() - centerPos.getY(), pos.getZ() - centerPos.getZ());
 					}
 
 					chunk.removeBlockEntity(blockpos);
@@ -85,7 +86,7 @@ public class ClientAccess {
 					BlockPos blockpos = new BlockPos((pos.getX() << 4) + secpos.getX(), ((pos.getY() + level.getMinSection()) << 4) + secpos.getY(), (pos.getZ() << 4) + secpos.getZ());
 					
 					if (useRule) {
-						rule.shouldApply(level, states.get(secpos.getX(), secpos.getY(), secpos.getZ()), Vec3.atCenterOf(center), pos.getX() - center.getX(), pos.getY() - center.getY(), pos.getZ() - center.getZ());
+						rule.setupClientData(level, states.get(secpos.getX(), secpos.getY(), secpos.getZ()), center, pos.getX() - centerPos.getX(), pos.getY() - centerPos.getY(), pos.getZ() - centerPos.getZ());
 					}
 
 					chunk.removeBlockEntity(blockpos);
@@ -128,7 +129,7 @@ public class ClientAccess {
 		}
 	}
 	
-	public static void setupExplosion(@Nullable ExplosionRule rule, @Nullable BlockPos center) {
+	public static void setupExplosion(@Nullable ExplosionRule rule, @Nullable Vec3 center) {
 		currentRule = rule;
 		currentCenter = center;
 	}

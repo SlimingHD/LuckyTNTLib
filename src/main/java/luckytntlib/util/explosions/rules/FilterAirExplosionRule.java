@@ -20,11 +20,6 @@ public class FilterAirExplosionRule implements ExplosionRule {
 	public FilterAirExplosionRule(ExplosionRule rule) {
 		this.rule = rule;
 	}
-	
-	@Override
-	public BlockState getState() {
-		return rule.getState();
-	}
 
 	@Override
 	public boolean shouldApply(Level level, BlockState state, Vec3 center, int offX, int offY, int offZ) {
@@ -33,13 +28,16 @@ public class FilterAirExplosionRule implements ExplosionRule {
 		}
 		return rule.shouldApply(level, state, center, offX, offY, offZ);
 	}
+	
+	@Override
+	public BlockState getState() {
+		return rule.getState();
+	}
 
 	@Override
 	public JsonObject encode(JsonObject root) {
 		root.addProperty("type", RESOURCE_LOCATION.toString());
-		
 		root.add("rule", rule.encode(new JsonObject()));
-		
 		return root;
 	}
 	

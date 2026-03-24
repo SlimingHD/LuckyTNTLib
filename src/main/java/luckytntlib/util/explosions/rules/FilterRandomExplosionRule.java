@@ -6,8 +6,8 @@ import com.google.gson.JsonObject;
 
 import luckytntlib.LuckyTNTLib;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraft.util.RandomSource;
 import net.minecraft.world.level.Level;
+import net.minecraft.util.RandomSource;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.Vec3;
 
@@ -21,7 +21,6 @@ public class FilterRandomExplosionRule implements ExplosionRule {
 	private static final Random RANDOM = new Random();
 	
 	private final float probability;
-	private final long seed;
 	private final RandomSource random;
 	private final ExplosionRule rule;
 	
@@ -32,7 +31,6 @@ public class FilterRandomExplosionRule implements ExplosionRule {
 	public FilterRandomExplosionRule(float probability, long seed, ExplosionRule rule) {
 		this.rule = rule;
 		this.probability = probability;
-		this.seed = seed;
 		this.random = RandomSource.create(seed);
 	}
 	
@@ -52,13 +50,11 @@ public class FilterRandomExplosionRule implements ExplosionRule {
 	@Override
 	public JsonObject encode(JsonObject root) {
 		root.addProperty("type", RESOURCE_LOCATION.toString());
-		root.addProperty("probability", probability);
-		root.addProperty("seed", seed);
 		root.add("rule", rule.encode(new JsonObject()));
 		return root;
 	}
 
 	public static ExplosionRule decode(JsonObject root) {
-		return new FilterRandomExplosionRule(root.get("probability").getAsFloat(), root.get("seed").getAsLong(), ExplosionRule.parse(root.get("rule").getAsJsonObject()));
+		return new FilterRandomExplosionRule(0f, 0l, ExplosionRule.parse(root.get("rule").getAsJsonObject()));
 	}
 }

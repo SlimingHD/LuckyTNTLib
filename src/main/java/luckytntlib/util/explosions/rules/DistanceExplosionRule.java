@@ -36,20 +36,12 @@ public class DistanceExplosionRule implements ExplosionRule {
 	@Override
 	public JsonObject encode(JsonObject root) {
 		root.addProperty("type", RESOURCE_LOCATION.toString());
-		
 		root.add("rule", rule.encode(new JsonObject()));
-		
-		comparator.write(root);
-		
 		return root;
 	}
 	
 	public static ExplosionRule decode(JsonObject root) {
-		ExplosionRule rule = ExplosionRule.parse(root.get("rule").getAsJsonObject());
-		
-		DistanceComparator comparator = DistanceComparator.parse(root);
-		
-		return new DistanceExplosionRule(rule, comparator);
+		return new DistanceExplosionRule(ExplosionRule.parse(root.get("rule").getAsJsonObject()), null);
 	}
 	
 	/**
@@ -104,28 +96,6 @@ public class DistanceExplosionRule implements ExplosionRule {
 		
 		public boolean withinRange(int offX, int offY, int offZ) {
 			return strategy.getDistanceEvaluator().withinRange(offX, offY, offZ, minDistance, maxDistance);
-		}
-		
-		/**
-		 * Encodes the DistanceComparator to a given {@link JsonObject}
-		 * @param root  the {@link JsonObject} the DistanceComparator will be encoded to
-		 */
-		public void write(JsonObject root) {
-			JsonObject encodedComparator = new JsonObject();
-			encodedComparator.addProperty("strategy", strategy.getName());
-			encodedComparator.addProperty("minDist", minDistance);
-			encodedComparator.addProperty("maxDist", maxDistance);
-			root.add("comparator", encodedComparator);
-		}
-		
-		/**
-		 * Parses a DistanceComparator from a given {@link JsonObject}
-		 * @param root  the {@link JsonObject} containing an encoded DistanceComparator
-		 * @return the parsed DistanceComparator
-		 */
-		public static DistanceComparator parse(JsonObject root) {
-			JsonObject encodedComparator = root.get("comparator").getAsJsonObject();
-			return new DistanceComparator(DistanceComparingStrategy.byName(encodedComparator.get("strategy").getAsString()), encodedComparator.get("minDist").getAsInt(), encodedComparator.get("maxDist").getAsInt());
 		}
 	}
 	

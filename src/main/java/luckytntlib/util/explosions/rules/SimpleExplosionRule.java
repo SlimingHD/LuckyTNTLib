@@ -25,15 +25,15 @@ public class SimpleExplosionRule implements ExplosionRule {
 	public SimpleExplosionRule(BlockState state) {
 		this.state = state;
 	}
-	
-	@Override
-	public BlockState getState() {
-		return state;
-	}
 
 	@Override
 	public boolean shouldApply(Level level, BlockState state, Vec3 center, int offX, int offY, int offZ) {
 		return true;
+	}
+	
+	@Override
+	public BlockState getState() {
+		return state;
 	}
 
 	@Override

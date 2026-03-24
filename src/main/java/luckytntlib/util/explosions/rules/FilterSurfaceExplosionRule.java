@@ -58,12 +58,11 @@ public class FilterSurfaceExplosionRule implements ExplosionRule {
 	@Override
 	public JsonObject encode(JsonObject root) {
 		root.addProperty("type", RESOURCE_LOCATION.toString());
-		root.addProperty("target_surface", targetSurface);
 		root.add("rule", rule.encode(new JsonObject()));
 		return root;
 	}
 
 	public static ExplosionRule decode(JsonObject root) {
-		return new FilterSurfaceExplosionRule(root.get("target_surface").getAsBoolean(), ExplosionRule.parse(root.get("rule").getAsJsonObject()));
+		return new FilterSurfaceExplosionRule(false, ExplosionRule.parse(root.get("rule").getAsJsonObject()));
 	}
 }

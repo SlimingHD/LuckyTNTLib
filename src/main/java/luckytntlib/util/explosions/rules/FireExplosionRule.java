@@ -34,18 +34,21 @@ public class FireExplosionRule implements ExplosionRule {
 	}
 	
 	@Override
-	public boolean shouldApply(Level level, BlockState state, Vec3 center, int offX, int offY, int offZ) {
+	public void setupClientData(Level level, BlockState state, Vec3 center, int offX, int offY, int offZ) {
 		currentPos = BlockPos.containing(center).offset(offX, offY, offZ);
 		currentLevel = level;
-		if (level.isClientSide()) {
-			return true;
-		}
+	}
+	
+	@Override
+	public boolean shouldApply(Level level, BlockState state, Vec3 center, int offX, int offY, int offZ) {
 		if (probability != 1 && level.getRandom().nextFloat() > probability) {
 			return false;
 		}
 		if (!BaseFireBlock.canBePlacedAt(level, currentPos, Direction.DOWN)) {
 			return false;
 		}
+		currentPos = BlockPos.containing(center).offset(offX, offY, offZ);
+		currentLevel = level;
 		return true;
 	}
 	

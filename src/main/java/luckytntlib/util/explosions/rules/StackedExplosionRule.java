@@ -32,8 +32,13 @@ public class StackedExplosionRule implements ExplosionRule {
 	}
 	
 	@Override
-	public BlockState getState() {
-		return rules[applyingRuleIndex].getState();
+	public void setupClientData(Level level, BlockState state, Vec3 center, int offX, int offY, int offZ) {
+		for (int i = 0; i < rules.length; i++) {
+			if (rules[i].shouldApply(level, state, center, offX, offY, offZ)) {
+				applyingRuleIndex = i;
+				return;
+			}
+		}
 	}
 
 	@Override
@@ -45,6 +50,11 @@ public class StackedExplosionRule implements ExplosionRule {
 			}
 		}
 		return false;
+	}
+	
+	@Override
+	public BlockState getState() {
+		return rules[applyingRuleIndex].getState();
 	}
 
 	@Override

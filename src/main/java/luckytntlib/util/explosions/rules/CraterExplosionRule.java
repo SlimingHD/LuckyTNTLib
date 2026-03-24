@@ -19,11 +19,6 @@ public class CraterExplosionRule implements ExplosionRule {
 
 	public CraterExplosionRule() {
 	}
-	
-	@Override
-	public BlockState getState() {
-		return Blocks.AIR.defaultBlockState();
-	}
 
 	@Override
 	public boolean shouldApply(Level level, BlockState state, Vec3 center, int offX, int offY, int offZ) {
@@ -31,6 +26,11 @@ public class CraterExplosionRule implements ExplosionRule {
 			return false;
 		}
 		return true;
+	}
+	
+	@Override
+	public BlockState getState() {
+		return Blocks.AIR.defaultBlockState();
 	}
 
 	@Override

@@ -55,9 +55,6 @@ public class FilterRandomDistanceExplosionRule implements ExplosionRule {
 	
 	@Override
 	public boolean shouldApply(Level level, BlockState state, Vec3 center, int offX, int offY, int offZ) {
-		if (level.isClientSide()) {
-			return rule.shouldApply(level, state, center, offX, offY, offZ);
-		}
 		float probability = probabilityCalculator.calculate(offX, offY, offZ, radius);
 		if (probability > 0 && level.getRandom().nextFloat() < probability) {
 			return rule.shouldApply(level, state, center, offX, offY, offZ);
@@ -81,6 +78,7 @@ public class FilterRandomDistanceExplosionRule implements ExplosionRule {
 		return new FilterRandomDistanceExplosionRule(ExplosionRule.parse(root.get("rule").getAsJsonObject()));
 	}
 	
+	@FunctionalInterface
 	public static interface ProbabilityCalculator {
 		public float calculate(int offX, int offY, int offZ, int radius);
 	}

@@ -19,6 +19,20 @@ import net.minecraft.world.phys.Vec3;
 public interface ExplosionRule {
 	
 	/**
+	 * This method can be used to calculate and/or store additional data one the client to return the correct {@link BlockState} with {@link #getState()}
+	 * @param level  the current {@link Level}
+	 * @param state  the {@link BlockState} being affected by an explosion
+	 * @param center  the center of the explosion affecting the given {@link BlockState}
+	 * @param offX  the offset of the given {@link BlockState} to the center of the explosion on the x axis
+	 * @param offY  the offset of the given {@link BlockState} to the center of the explosion on the y axis
+	 * @param offZ  the offset of the given {@link BlockState} to the center of the explosion on the z axis
+	 * 
+	 * @apiNote this method will be called before {@link #getState()} only on the client-side
+	 */
+	default void setupClientData(Level level, BlockState state, Vec3 center, int offX, int offY, int offZ) {
+	}
+	
+	/**
 	 * This method determines whether the ExplosionRule will edit a block affected by an explosion at a given position
 	 * @param level  the current {@link Level}
 	 * @param state  the {@link BlockState} being affected by an explosion
@@ -29,8 +43,7 @@ public interface ExplosionRule {
 	 * @return {@code true} if this rule should edit the world at the given position and {@code false} otherwise. <br>
 	 * If an ExplosionRule decides to apply at a given position, no other rule that could theoretically also apply to the same position will be able to do so.
 	 * 
-	 * @implNote This method will also be called on the client before calling {@link #getState()}, though it won't have an effect on whether the block will be edited or not since the server made that decision.
-	 * You can, however, use that call to calculate and store information relevant to the following call of {@link #getState()}.
+	 * @apiNote this method will only ever be called on the server-side
 	 */
 	boolean shouldApply(Level level, BlockState state, Vec3 center, int offX, int offY, int offZ);
 	
@@ -42,12 +55,13 @@ public interface ExplosionRule {
 	BlockState getState();
 	
 	/**
-	 * Encodes all data relevant to the rule into the given {@link JsonObject}.
+	 * Encodes all data relevant to the rule on the client into the given {@link JsonObject}.
 	 * @param root  the root {@link JsonObject} to write the data to
 	 * @return the {@link JsonObject} that represents the object all data has been written to, should usually just be {@code root}
 	 * 
 	 * @implNote Additionally to this method every {@code ExplosionRule} needs a {@code public static} method that returns a {@code ExplosionRule} decoded from a given {@link JsonObject}.
-	 * That method needs to be registered to {@link ExplosionRuleRegistry#EXPLOSION_RULES}. <p>
+	 * That method needs to be registered to {@link ExplosionRuleRegistry#EXPLOSION_RULES}. 
+	 * <p>
 	 * It is imperative that the given {@link JsonObject} contains a property named "type" that holds the registry name of this rule as a {@link String} after this method finishes.
 	 * 
 	 * @see <i> How to register: </i>

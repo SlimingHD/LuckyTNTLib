@@ -73,8 +73,6 @@ public class ImprovedExplosion extends Explosion {
 	@Deprecated(forRemoval = true)
 	List<Integer> affectedBlocks = new ArrayList<>();
 	
-	private static ImprovedExplosion DUMMY_EXPLOSION;
-	
 	/**
 	 * Creates a new ImprovedExplosion
 	 * @param level  the level
@@ -143,7 +141,7 @@ public class ImprovedExplosion extends Explosion {
 	 * @param size  the radius of a sphere that is being used for ray-tracing. It influences strength and reach of the explosion
 	 */	
 	public ImprovedExplosion(ServerLevel level, @Nullable Entity explodingEntity, @Nullable DamageSource source, double x, double y, double z, int size) {
-		super(level, explodingEntity, source, null, x, y, z, size, false, BlockInteraction.KEEP);
+		super(level, explodingEntity, source, null, x, y, z, size, false, BlockInteraction.DESTROY);
 		this.level = level;
 		this.posX = x;
 		this.posY = y;
@@ -435,7 +433,7 @@ public class ImprovedExplosion extends Explosion {
 	 */
 	private void finishImprovedExplosionWithRule(Map<Long, BitSet> editedSections, Set<Long> fullSections, ExplosionRule rule) {
 		HashMap<LevelChunk, BitSet> chunks = new HashMap<>();
-		PacketHandler.CHANNEL.send(PacketDistributor.ALL.noArg(), new ClientboundSetupExplosionPacket(rule, BlockPos.containing(posX, posY, posZ)));
+		PacketHandler.CHANNEL.send(PacketDistributor.ALL.noArg(), new ClientboundSetupExplosionPacket(rule, new Vec3(posX, posY, posZ)));
 
 		for (long encodedPos : fullSections) {
 			SectionPos pos = SectionPos.of(encodedPos);
@@ -910,10 +908,10 @@ public class ImprovedExplosion extends Explosion {
 	public void doEntityExplosion(float knockbackStrength, boolean damageEntities) {
 		List<Entity> entities = level.getEntities(getExploder(), new AABB(posX - size * 2, posY - size * 2, posZ - size * 2, posX + size * 2, posY + size * 2, posZ + size * 2));
 		ForgeEventFactory.onExplosionDetonate(level, this, entities, size * 2);
-		for(Entity entity : entities) {
-			if(!entity.ignoreExplosion()) {
+		for (Entity entity : entities) {
+			if (!entity.ignoreExplosion()) {
 				double distance = Math.sqrt(entity.distanceToSqr(getPosition())) / (size * 2);
-				if(distance <= 1f) {
+				if (distance <= 1f) {
 					double offX = (entity.getX() - posX);
 					double offY = (entity.getEyeY() - posY);
 					double offZ = (entity.getZ() - posZ);
@@ -923,18 +921,18 @@ public class ImprovedExplosion extends Explosion {
 					offZ /= distance2;
 					double seenPercent = getSeenPercent(getPosition(), entity);
 					float damage = (1f - (float)distance) * (float)seenPercent;
-					if(damageEntities) {
+					if (damageEntities) {
 						entity.hurt(getDamageSource(), (damage * damage + damage) / 2f * 7 * size + 1f);
 					}
 					double knockback = damage;
-					if(entity instanceof LivingEntity lEnt) {
+					if (entity instanceof LivingEntity lEnt) {
 						knockback = ProtectionEnchantment.getExplosionKnockbackAfterDampener(lEnt, damage);
 					}
 					entity.setDeltaMovement(entity.getDeltaMovement().add(offX * knockback * knockbackStrength, offY * knockback * knockbackStrength, offZ * knockback * knockbackStrength));
-					if(entity instanceof Player) {
+					if (entity instanceof Player) {
 						Player player = (Player)entity;
 						player.hurtMarked = true;
-						if(!player.isSpectator() && (!player.isCreative() || !player.getAbilities().flying)) {
+						if (!player.isSpectator() && (!player.isCreative() || !player.getAbilities().flying)) {
 							getHitPlayers().put(player, new Vec3(offX * damage, offY * damage, offZ * damage));
 						}
 					}
@@ -951,8 +949,8 @@ public class ImprovedExplosion extends Explosion {
 	public void doEntityExplosion(EntityExplosionEffect entityEffect) {
 		List<Entity> entities = level.getEntities(getExploder(), new AABB(posX - size * 2d, posY - size * 2d, posZ - size * 2d, posX + size * 2d, posY + size * 2d, posZ + size * 2d));
 		ForgeEventFactory.onExplosionDetonate(level, this, entities, size * 2d);
-		for(Entity entity : entities) {
-			if(!entity.ignoreExplosion()) {
+		for (Entity entity : entities) {
+			if (!entity.ignoreExplosion()) {
 				double distance = Math.sqrt(entity.distanceToSqr(posX, posY, posZ)) / size * 2d;
 				if (distance <= 1f) {
 					entityEffect.handleEntity(entity, distance);
@@ -975,7 +973,7 @@ public class ImprovedExplosion extends Explosion {
 	@Nullable
 	@Override
 	public LivingEntity getIndirectSourceEntity() {
-		if(getExploder() instanceof IExplosiveEntity ent) {
+		if (getExploder() instanceof IExplosiveEntity ent) {
 			return ent.owner();
 		}
 		return super.getIndirectSourceEntity();
@@ -987,7 +985,7 @@ public class ImprovedExplosion extends Explosion {
 	 * @return ImprovedExplosion with no strength and position at (0, 0, 0)
 	 */
 	public static ImprovedExplosion dummyExplosion(ServerLevel level) {
-		return DUMMY_EXPLOSION == null ? DUMMY_EXPLOSION = new ImprovedExplosion(level, new Vec3(0, 0, 0), 0) : DUMMY_EXPLOSION;
+		return new ImprovedExplosion(level, new Vec3(0, 0, 0), 0);
 	}
 
 	@Override
@@ -997,7 +995,12 @@ public class ImprovedExplosion extends Explosion {
 	
 	@Override
 	@Deprecated
-	public void finalizeExplosion(boolean spawnParticles) {		
+	public void finalizeExplosion(boolean spawnParticles) {	
+		doImprovedBlockExplosion(0.25f, 0.1f, false, false, null);
+		doEntityExplosion(size / 10f, true);
+		if (spawnParticles) {
+			spawnExplosionParticles();
+		}
 	}
 	
 	/**
@@ -1006,11 +1009,7 @@ public class ImprovedExplosion extends Explosion {
 	 */
 	@Override
 	@Deprecated
-	public List<BlockPos> getToBlow(){
-		List<BlockPos> blocks = new ArrayList<>();
-		for(int intPos : affectedBlocks) {
-			blocks.add(decodeBlockPos(intPos).offset(Mth.floor(posX), Mth.floor(posY), Mth.floor(posZ)));
-		}
-		return blocks;
+	public List<BlockPos> getToBlow() {
+		return List.of();
 	}
 }

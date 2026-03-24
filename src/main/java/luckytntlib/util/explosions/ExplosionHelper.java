@@ -314,7 +314,7 @@ public class ExplosionHelper {
 			BlockPos center = new BlockPos(Mth.floor(position.x), Mth.floor(position.y), Mth.floor(position.z));
 			boolean useRule = rule != null;
 			
-			PacketHandler.CHANNEL.send(PacketDistributor.DIMENSION.with(() -> server.dimension()), new ClientboundSetupExplosionPacket(rule, center));
+			PacketHandler.CHANNEL.send(PacketDistributor.DIMENSION.with(() -> server.dimension()), new ClientboundSetupExplosionPacket(rule, position));
 			
 			float scale = Math.max(scaling.x, scaling.z);
 			int chunkRadius = (int)Math.ceil((float)(radius * scale) / 16f) + 1;

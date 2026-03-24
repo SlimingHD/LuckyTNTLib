@@ -17,6 +17,7 @@ import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.util.GsonHelper;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.phys.Vec3;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.fml.DistExecutor;
 import net.minecraftforge.network.NetworkEvent;
@@ -33,9 +34,9 @@ public class ClientboundSetupExplosionPacket {
 	@Nullable
 	private final ExplosionRule rule;
 	@Nullable
-	private final BlockPos center;
+	private final Vec3 center;
 	
-	public ClientboundSetupExplosionPacket(@Nullable ExplosionRule rule, @Nullable BlockPos center) {
+	public ClientboundSetupExplosionPacket(@Nullable ExplosionRule rule, @Nullable Vec3 center) {
 		this.rule = rule;
 		this.center = rule == null ? null : center;
 	}
@@ -48,7 +49,7 @@ public class ClientboundSetupExplosionPacket {
 		}
 		JsonObject root = GsonHelper.parse(buffer.readUtf());
 		rule = ExplosionRule.parse(root);
-		center = buffer.readBlockPos();
+		center = new Vec3(buffer.readDouble(), buffer.readDouble(), buffer.readDouble());
 	}
 	
 	public void encode(FriendlyByteBuf buffer) {
@@ -58,7 +59,9 @@ public class ClientboundSetupExplosionPacket {
 		}
 		buffer.writeBoolean(false);
 		buffer.writeUtf(GSON.toJson(rule.encode(new JsonObject())));
-		buffer.writeBlockPos(center);
+		buffer.writeDouble(center.x);
+		buffer.writeDouble(center.y);
+		buffer.writeDouble(center.z);
 	}
 	
 	public void handle(Supplier<NetworkEvent.Context> ctx) {

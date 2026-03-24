@@ -43,18 +43,12 @@ public class LogicExplosionRule implements ExplosionRule {
 	@Override
 	public JsonObject encode(JsonObject root) {
 		root.addProperty("type", RESOURCE_LOCATION.toString());
-		
-		root.add("conditionRule", conditionRule.encode(new JsonObject()));
-		
 		root.add("rule", rule.encode(new JsonObject()));
-		
-		root.addProperty("operator", operator.getName());
-		
 		return root;
 	}
 	
 	public static ExplosionRule decode(JsonObject root) {
-		return new LogicExplosionRule(LogicOperator.byName(root.get("operator").getAsString()), ExplosionRule.parse(root.get("conditionRule").getAsJsonObject()), ExplosionRule.parse(root.get("conditionRule").getAsJsonObject()));
+		return new LogicExplosionRule(LogicOperator.NOT, null, ExplosionRule.parse(root.get("conditionRule").getAsJsonObject()));
 	}
 	
 	/**
