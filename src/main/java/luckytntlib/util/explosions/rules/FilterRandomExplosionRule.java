@@ -20,10 +20,10 @@ public class FilterRandomExplosionRule implements ExplosionRule {
 	
 	private static final Random RANDOM = new Random();
 	
-	private final ExplosionRule rule;
 	private final float probability;
 	private final long seed;
 	private final RandomSource random;
+	private final ExplosionRule rule;
 	
 	public FilterRandomExplosionRule(float probability, ExplosionRule rule) {
 		this(probability, RANDOM.nextLong(), rule);
@@ -52,9 +52,9 @@ public class FilterRandomExplosionRule implements ExplosionRule {
 	@Override
 	public JsonObject encode(JsonObject root) {
 		root.addProperty("type", RESOURCE_LOCATION.toString());
-		root.add("rule", rule.encode(new JsonObject()));
 		root.addProperty("probability", probability);
 		root.addProperty("seed", seed);
+		root.add("rule", rule.encode(new JsonObject()));
 		return root;
 	}
 
