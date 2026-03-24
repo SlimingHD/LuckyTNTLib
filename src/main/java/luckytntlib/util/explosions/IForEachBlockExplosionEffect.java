@@ -3,6 +3,7 @@ package luckytntlib.util.explosions;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.phys.Vec3;
 
 /**
  * 
@@ -12,7 +13,7 @@ import net.minecraft.world.level.block.state.BlockState;
  */
 @FunctionalInterface
 @Deprecated(since = "47.2.32.2", forRemoval = true)
-public interface IForEachBlockExplosionEffect {
+public interface IForEachBlockExplosionEffect extends BlockExplosionEffect {
 
 	/**
 	 * @param level  the current level
@@ -22,4 +23,9 @@ public interface IForEachBlockExplosionEffect {
 	 */
 	public void doBlockExplosion(Level level, BlockPos pos, BlockState state, double distance);
 	
+	@Override
+	default void handleBlock(Level level, Vec3 center, BlockPos pos, BlockState state) {
+		double distance = center.distanceTo(Vec3.atLowerCornerOf(pos));
+		doBlockExplosion(level, pos, state, distance);
+	}
 }

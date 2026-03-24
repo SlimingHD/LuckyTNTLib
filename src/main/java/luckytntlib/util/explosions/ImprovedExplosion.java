@@ -40,6 +40,7 @@ import net.minecraft.world.item.enchantment.ProtectionEnchantment;
 import net.minecraft.world.level.EntityBasedExplosionDamageCalculator;
 import net.minecraft.world.level.Explosion;
 import net.minecraft.world.level.ExplosionDamageCalculator;
+import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.BaseFireBlock;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
@@ -63,10 +64,12 @@ import net.minecraftforge.network.PacketDistributor;
  */
 public class ImprovedExplosion extends Explosion {
 
-	public final ServerLevel level;
+	public final Level level;
 	public final double posX, posY, posZ;
 	public final int size;
 	public final ExplosionDamageCalculator damageCalculator;
+	public final boolean legacyExplosion;
+	private final BlockExplosionEffect customExplosionEffect;
 	
 	private Consumer<ImprovedExplosion> onExplosionFinish;
 	
@@ -79,7 +82,7 @@ public class ImprovedExplosion extends Explosion {
 	 * @param position  the center position of the explosion
 	 * @param size  the radius of a sphere that is being used for ray-tracing. It influences strength and reach of the explosion
 	 */
-	public ImprovedExplosion(ServerLevel level, Vec3 position, int size) {
+	public ImprovedExplosion(Level level, Vec3 position, int size) {
 		this(level, null, null, position, size);
 	}
 	
@@ -90,7 +93,7 @@ public class ImprovedExplosion extends Explosion {
 	 * @param position  the center position of the explosion
 	 * @param size  the radius of a sphere that is being used for ray-tracing. It influences strength and reach of the explosion
 	 */
-	public ImprovedExplosion(ServerLevel level, @Nullable DamageSource source, Vec3 position, int size) {
+	public ImprovedExplosion(Level level, @Nullable DamageSource source, Vec3 position, int size) {
 		this(level, null, source, position, size);
 	}
 	
@@ -101,7 +104,7 @@ public class ImprovedExplosion extends Explosion {
 	 * @param position  the center position of the explosion
 	 * @param size  the radius of a sphere that is being used for ray-tracing. It influences strength and reach of the explosion
 	 */	
-	public ImprovedExplosion(ServerLevel level, @Nullable Entity explodingEntity, Vec3 position, int size) {
+	public ImprovedExplosion(Level level, @Nullable Entity explodingEntity, Vec3 position, int size) {
 		this(level, explodingEntity, null, position.x, position.y, position.z, size);
 	}
 	
@@ -113,7 +116,7 @@ public class ImprovedExplosion extends Explosion {
 	 * @param position  the center position of the explosion
 	 * @param size  the radius of a sphere that is being used for ray-tracing. It influences strength and reach of the explosion
 	 */	
-	public ImprovedExplosion(ServerLevel level, @Nullable Entity explodingEntity, @Nullable DamageSource source, Vec3 position, int size) {
+	public ImprovedExplosion(Level level, @Nullable Entity explodingEntity, @Nullable DamageSource source, Vec3 position, int size) {
 		this(level, explodingEntity, source, position.x, position.y, position.z, size);
 	}
 	
@@ -126,7 +129,7 @@ public class ImprovedExplosion extends Explosion {
 	 * @param z  the z center position
 	 * @param size  the radius of a sphere that is being used for ray-tracing. It influences strength and reach of the explosion
 	 */	
-	public ImprovedExplosion(ServerLevel level, @Nullable Entity explodingEntity, double x, double y, double z, int size) {
+	public ImprovedExplosion(Level level, @Nullable Entity explodingEntity, double x, double y, double z, int size) {
 		this(level, explodingEntity, null, x, y, z, size);
 	}
 	
@@ -140,7 +143,23 @@ public class ImprovedExplosion extends Explosion {
 	 * @param z  the z center position
 	 * @param size  the radius of a sphere that is being used for ray-tracing. It influences strength and reach of the explosion
 	 */	
-	public ImprovedExplosion(ServerLevel level, @Nullable Entity explodingEntity, @Nullable DamageSource source, double x, double y, double z, int size) {
+	public ImprovedExplosion(Level level, @Nullable Entity explodingEntity, @Nullable DamageSource source, double x, double y, double z, int size) {
+		this(level, explodingEntity, source, x, y, z, size, size < 60 ? true : false, null);
+	}
+	
+	/**
+	 * Creates a new ImprovedExplosion
+	 * @param level the level
+	 * @param entity the entity not affected by this explosion. Should be the entity causing the explosion and also an IExplosiveEntity
+	 * @param source the {@link DamageSource} this explosion uses
+	 * @param x the x center position
+	 * @param y the y center position
+	 * @param z the z center position
+	 * @param size the radius of a sphere that is being used for ray-tracing. It influences strength and reach of the explosion
+	 * @param legacyExplosion whether or not the explosion should update all affected blocks (far slower, but updates are automatically applied). Set to true for smaller explosions
+	 * @param customExplosionEffect if not set to {@code null}, this will hijack the finishing of the explosion and instead call {@link #finishCustomExplosion(Map, Set)} 
+	 */
+	public ImprovedExplosion(Level level, @Nullable Entity explodingEntity, @Nullable DamageSource source, double x, double y, double z, int size, boolean legacyExplosion, @Nullable BlockExplosionEffect customExplosionEffect) {
 		super(level, explodingEntity, source, null, x, y, z, size, false, BlockInteraction.DESTROY);
 		this.level = level;
 		this.posX = x;
@@ -148,10 +167,13 @@ public class ImprovedExplosion extends Explosion {
 		this.posZ = z;
 		this.size = size;
 		damageCalculator = explodingEntity == null ? new ExplosionDamageCalculator() : new EntityBasedExplosionDamageCalculator(explodingEntity);
+		this.legacyExplosion = legacyExplosion;
+		this.customExplosionEffect = customExplosionEffect;
 	}
 	
 	/**
 	 * Executes a block explosion using either a single or multiple threads based on explosion size and user settings.
+	 * Only works on the server sided level.
 	 * The explosion is ray-casted onto the sphere with the radius determined by the size of this explosion.
 	 * @param resistanceImpact  the relative impact that explosion resistance of blocks has on the penetration force of the explosion
 	 * @param randomVecLength  the greater this value, the more distributed the length of the explosion vectors will be. Large explosions should have a value less than 1
@@ -161,7 +183,10 @@ public class ImprovedExplosion extends Explosion {
 	 * @param rule  optional rule for causing effects other than just destruction. Leave as null for an efficient explosion that destroys blocks
 	 */
 	public void doImprovedBlockExplosion(float resistanceImpact, float randomVecLength, boolean ignoreFluidResistance, boolean fire, @Nullable ExplosionRule rule) {
-		if (LuckyTNTLibConfigValues.MULTITHREADED_EXPLOSIONS.get() && size >= 30) {
+		if (level.isClientSide()) {
+			return;
+		}
+		if (LuckyTNTLibConfigValues.MULTITHREADED_EXPLOSIONS.get() && size >= 60) {
 			doImprovedBlockExplosionMultithreaded(resistanceImpact, randomVecLength, ignoreFluidResistance, fire, rule);
 		} else {
 			doImprovedBlockExplosionSinglethreaded(resistanceImpact, randomVecLength, ignoreFluidResistance, fire, rule);
@@ -350,7 +375,15 @@ public class ImprovedExplosion extends Explosion {
 	 * @param rule  an optional rule for applying effects other than destroying all marked blocks
 	 */
 	protected void finishImprovedExplosion(Map<Long, BitSet> editedSections, Set<Long> fullSections, @Nullable ExplosionRule rule) {
-		if (rule == null) {
+		if (customExplosionEffect != null) {
+			finishCustomExplosion(editedSections, fullSections);
+		} else if (legacyExplosion) {
+			if (rule == null) {
+				finishLegacyExplosionWithoutRule(editedSections, fullSections);
+			} else {
+				finishLegacyExplosionWithRule(editedSections, fullSections, rule);
+			}
+		} else if (rule == null) {
 			finishImprovedExplosionWithoutRule(editedSections, fullSections);
 		} else {
 			finishImprovedExplosionWithRule(editedSections, fullSections, rule);
@@ -525,6 +558,127 @@ public class ImprovedExplosion extends Explosion {
 		
 		LightUpdateHelper.updateDirectSkyLight((ServerLevel)level, chunks);
 		LightUpdateHelper.updateIndirectSkyLight((ServerLevel)level, chunks);
+	}
+	
+	/**
+	 * Finalization of an explosion without a rule that automatically updates all affected blocks, having a huge negative impact on performance.
+	 * Best used for small explosions.
+	 */
+	private void finishLegacyExplosionWithoutRule(Map<Long, BitSet> editedSections, Set<Long> fullSections) {
+		for (long encodedPos : fullSections) {
+			SectionPos sectionPos = SectionPos.of(encodedPos);
+			int x = sectionPos.getX() << 4;
+			int y = sectionPos.getY() << 4;
+			int z = sectionPos.getZ() << 4;
+			for (int i = 0; i < 4096; i++) {
+				BlockPos pos = new BlockPos(x + ((i >> 8) & 15), y + ((i >> 4) & 15), z + (i & 15));
+				level.setBlockAndUpdate(pos, Blocks.AIR.defaultBlockState());
+			}
+		}
+		for (Entry<Long, BitSet> entry : editedSections.entrySet()) {
+			SectionPos sectionPos = SectionPos.of(entry.getKey());
+			BitSet affectedBlocks = entry.getValue();
+			int x = sectionPos.getX() << 4;
+			int y = sectionPos.getY() << 4;
+			int z = sectionPos.getZ() << 4;
+			for (int i = 0; i < 4096; i++) {
+				if (affectedBlocks.get(i)) {
+					BlockPos pos = new BlockPos(x + ((i >> 8) & 15), y + ((i >> 4) & 15), z + (i & 15));
+					level.setBlockAndUpdate(pos, Blocks.AIR.defaultBlockState());
+				}
+			}
+		}
+	}
+	
+	/**
+	 * Finalization of an explosion with a rule that automatically updates all affected blocks, having a huge negative impact on performance.
+	 * Best used for small explosions.
+	 */
+	private void finishLegacyExplosionWithRule(Map<Long, BitSet> editedSections, Set<Long> fullSections, ExplosionRule rule) {
+		for (long encodedPos : fullSections) {
+			SectionPos sectionPos = SectionPos.of(encodedPos);
+			LevelChunk chunk = level.getChunk(sectionPos.x(), sectionPos.z());
+			LevelChunkSection section = chunk.getSection(level.getSectionIndexFromSectionY(sectionPos.y()));
+			PalettedContainer<BlockState> states = section.getStates();
+			int x = sectionPos.getX() << 4;
+			int y = sectionPos.getY() << 4;
+			int z = sectionPos.getZ() << 4;
+			for (int i = 0; i < 4096; i++) {
+				int lx = (i >> 8) & 15;
+				int ly = (i >> 4) & 15;
+				int lz = i & 15;
+				BlockState state = states.get(lx, ly, lz);
+				if (rule.shouldApply(level, state, getPosition(), x + lx - Mth.floor(posX), y + ly - Mth.floor(posY), z + lz - Mth.floor(posZ))) {
+					BlockPos pos = new BlockPos(x + lx, y + ly, z + lz);
+					level.setBlockAndUpdate(pos, rule.getState());
+				}
+			}
+		}
+		for (Entry<Long, BitSet> entry : editedSections.entrySet()) {
+			SectionPos sectionPos = SectionPos.of(entry.getKey());
+			LevelChunk chunk = level.getChunk(sectionPos.x(), sectionPos.z());
+			LevelChunkSection section = chunk.getSection(level.getSectionIndexFromSectionY(sectionPos.y()));
+			PalettedContainer<BlockState> states = section.getStates();
+			BitSet affectedBlocks = entry.getValue();
+			int x = sectionPos.getX() << 4;
+			int y = sectionPos.getY() << 4;
+			int z = sectionPos.getZ() << 4;
+			for (int i = 0; i < 4096; i++) {
+				if (affectedBlocks.get(i)) {
+					int lx = (i >> 8) & 15;
+					int ly = (i >> 4) & 15;
+					int lz = i & 15;
+					BlockState state = states.get(lx, ly, lz);
+					if (rule.shouldApply(level, state, getPosition(), x + lx - Mth.floor(posX), y + ly - Mth.floor(posY), z + lz - Mth.floor(posZ))) {
+						BlockPos pos = new BlockPos(x + lx, y + ly, z + lz);
+						level.setBlockAndUpdate(pos, rule.getState());
+					}
+				}
+			}
+		}
+	}
+	
+	/**
+	 * 
+	 */
+	private void finishCustomExplosion(Map<Long, BitSet> editedSections, Set<Long> fullSections) {
+		for (long encodedPos : fullSections) {
+			SectionPos sectionPos = SectionPos.of(encodedPos);
+			LevelChunk chunk = level.getChunk(sectionPos.x(), sectionPos.z());
+			LevelChunkSection section = chunk.getSection(level.getSectionIndexFromSectionY(sectionPos.y()));
+			PalettedContainer<BlockState> states = section.getStates();
+			int x = sectionPos.getX() << 4;
+			int y = sectionPos.getY() << 4;
+			int z = sectionPos.getZ() << 4;
+			for (int i = 0; i < 4096; i++) {
+				int lx = (i >> 8) & 15;
+				int ly = (i >> 4) & 15;
+				int lz = i & 15;
+				BlockState state = states.get(lx, ly, lz);
+				BlockPos pos = new BlockPos(x + ((i >> 8) & 15), y + ((i >> 4) & 15), z + (i & 15));
+				customExplosionEffect.handleBlock(level, getPosition(), pos, state);
+			}
+		}
+		for (Entry<Long, BitSet> entry : editedSections.entrySet()) {
+			SectionPos sectionPos = SectionPos.of(entry.getKey());
+			LevelChunk chunk = level.getChunk(sectionPos.x(), sectionPos.z());
+			LevelChunkSection section = chunk.getSection(level.getSectionIndexFromSectionY(sectionPos.y()));
+			PalettedContainer<BlockState> states = section.getStates();
+			BitSet affectedBlocks = entry.getValue();
+			int x = sectionPos.getX() << 4;
+			int y = sectionPos.getY() << 4;
+			int z = sectionPos.getZ() << 4;
+			for (int i = 0; i < 4096; i++) {
+				if (affectedBlocks.get(i)) {
+					int lx = (i >> 8) & 15;
+					int ly = (i >> 4) & 15;
+					int lz = i & 15;
+					BlockState state = states.get(lx, ly, lz);
+					BlockPos pos = new BlockPos(x + lx, y + ly, z + lz);
+					customExplosionEffect.handleBlock(level, getPosition(), pos, state);
+				}
+			}
+		}
 	}
 	
 	/**
@@ -961,12 +1115,15 @@ public class ImprovedExplosion extends Explosion {
 	
 	/**
 	 * Spawns explosion particles in an area around the center of this explosion.
+	 * Only works on the server sided level.
 	 * Particle count, distribution, speed, and whether or not poof particles are spawned, is determined by the size of this explosion.
 	 */
 	public void spawnExplosionParticles() {
-		level.sendParticles(ParticleTypes.EXPLOSION, posX, posY + 0.5d, posZ, Math.min(size * size / 4, 5000), Math.min(size / 4d, 6d), Math.min(size / 4d, 6d), Math.min(size / 4d, 6d), 0d);
-		if (size > 2) {
-			level.sendParticles(ParticleTypes.POOF, posX, posY, posZ, Math.min(size * size, 10000), 0d, 0d, 0d, Math.min(size / 8d, 1.5d));
+		if (level instanceof ServerLevel serverLevel) {
+			serverLevel.sendParticles(ParticleTypes.EXPLOSION, posX, posY + 0.5d, posZ, Math.min(size * size / 4, 5000), Math.min(size / 4d, 6d), Math.min(size / 4d, 6d), Math.min(size / 4d, 6d), 0d);
+			if (size > 2) {
+				serverLevel.sendParticles(ParticleTypes.POOF, posX, posY, posZ, Math.min(size * size, 10000), 0d, 0d, 0d, Math.min(size / 8d, 1.5d));
+			}
 		}
 	}
 	
@@ -984,7 +1141,7 @@ public class ImprovedExplosion extends Explosion {
 	 * @param level  the level that needs to be given
 	 * @return ImprovedExplosion with no strength and position at (0, 0, 0)
 	 */
-	public static ImprovedExplosion dummyExplosion(ServerLevel level) {
+	public static ImprovedExplosion dummyExplosion(Level level) {
 		return new ImprovedExplosion(level, new Vec3(0, 0, 0), 0);
 	}
 
