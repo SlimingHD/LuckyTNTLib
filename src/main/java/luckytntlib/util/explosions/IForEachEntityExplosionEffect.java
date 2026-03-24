@@ -3,6 +3,7 @@ package luckytntlib.util.explosions;
 import net.minecraft.world.entity.Entity;
 
 /**
+ * Deprecated and will be removed in versions 1.21+. Please switch to {@link EntityExplosionEffect}.
  * 
  * An IForEachEntityExplosionEffect is used to affect individual entities gotten by an {@link ImprovedExplosion} in different ways.
  * It is usually used as a parameter of a function.

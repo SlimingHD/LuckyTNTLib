@@ -6,6 +6,7 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.Vec3;
 
 /**
+ * Deprecated and will be removed in versions 1.21+. Please switch to {@link BlockExplosionEffect}.
  * 
  * An IForEachEntityExplosionEffect is used to affect individual blocks gotten by an {@link ImprovedExplosion} 
  * or a function of the {@link ExplosionHelper} in different ways.

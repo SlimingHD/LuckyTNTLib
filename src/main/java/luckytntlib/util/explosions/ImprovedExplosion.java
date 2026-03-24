@@ -68,7 +68,7 @@ public class ImprovedExplosion extends Explosion {
 	public final double posX, posY, posZ;
 	public final int size;
 	public final ExplosionDamageCalculator damageCalculator;
-	public final boolean legacyExplosion;
+	public final boolean performsBlockUpdates;
 	private final BlockExplosionEffect customExplosionEffect;
 	
 	private Consumer<ImprovedExplosion> onExplosionFinish;
@@ -156,10 +156,10 @@ public class ImprovedExplosion extends Explosion {
 	 * @param y the y center position
 	 * @param z the z center position
 	 * @param size the radius of a sphere that is being used for ray-tracing. It influences strength and reach of the explosion
-	 * @param legacyExplosion whether or not the explosion should update all affected blocks (far slower, but updates are automatically applied). Set to true for smaller explosions
+	 * @param performsBlockUpdates whether or not the explosion should update all affected blocks (far slower, but updates are automatically applied). Set to true for smaller explosions
 	 * @param customExplosionEffect if not set to {@code null}, this will hijack the finishing of the explosion and instead call {@link #finishCustomExplosion(Map, Set)} 
 	 */
-	public ImprovedExplosion(Level level, @Nullable Entity explodingEntity, @Nullable DamageSource source, double x, double y, double z, int size, boolean legacyExplosion, @Nullable BlockExplosionEffect customExplosionEffect) {
+	public ImprovedExplosion(Level level, @Nullable Entity explodingEntity, @Nullable DamageSource source, double x, double y, double z, int size, boolean performsBlockUpdates, @Nullable BlockExplosionEffect customExplosionEffect) {
 		super(level, explodingEntity, source, null, x, y, z, size, false, BlockInteraction.DESTROY);
 		this.level = level;
 		this.posX = x;
@@ -167,7 +167,7 @@ public class ImprovedExplosion extends Explosion {
 		this.posZ = z;
 		this.size = size;
 		damageCalculator = explodingEntity == null ? new ExplosionDamageCalculator() : new EntityBasedExplosionDamageCalculator(explodingEntity);
-		this.legacyExplosion = legacyExplosion;
+		this.performsBlockUpdates = performsBlockUpdates;
 		this.customExplosionEffect = customExplosionEffect;
 	}
 	
@@ -199,7 +199,7 @@ public class ImprovedExplosion extends Explosion {
 	 * The amount of parallel explosions is limited by the user settings, making many simultaneous explosions be queued.
 	 * Functionally equivalent to the single-threaded version.
 	 */
-	protected void doImprovedBlockExplosionMultithreaded(float resistanceImpact, float randomVecLength, boolean ignoreFluidResistance, boolean fire, @Nullable ExplosionRule rule) {			
+	private void doImprovedBlockExplosionMultithreaded(float resistanceImpact, float randomVecLength, boolean ignoreFluidResistance, boolean fire, @Nullable ExplosionRule rule) {			
 		float randomVecLengthFac = 0.6f * randomVecLength;
 		float resistanceFac = 0.675f * resistanceImpact;
 		RandomSource random = level.getRandom();
@@ -228,7 +228,7 @@ public class ImprovedExplosion extends Explosion {
 	 * Ray length of any ray is dynamically reduced by the explosion resistances in its path.
 	 * Blocks in a ray's remaining path are marked, not directly affected.
 	 */
-	protected void doImprovedBlockExplosionSinglethreaded(float resistanceImpact, float randomVecLength, boolean ignoreFluidResistance, boolean fire, @Nullable ExplosionRule rule) {			
+	private void doImprovedBlockExplosionSinglethreaded(float resistanceImpact, float randomVecLength, boolean ignoreFluidResistance, boolean fire, @Nullable ExplosionRule rule) {			
 		float randomVecLengthFac = 0.6f * randomVecLength;
 		float resistanceFac = 0.3f * resistanceImpact * 2.25f;
 		RandomSource random = level.getRandom();
@@ -374,14 +374,14 @@ public class ImprovedExplosion extends Explosion {
 	 * @param fullSections  the chunk sections which are fully affected by the explosion
 	 * @param rule  an optional rule for applying effects other than destroying all marked blocks
 	 */
-	protected void finishImprovedExplosion(Map<Long, BitSet> editedSections, Set<Long> fullSections, @Nullable ExplosionRule rule) {
+	void finishImprovedExplosion(Map<Long, BitSet> editedSections, Set<Long> fullSections, @Nullable ExplosionRule rule) {
 		if (customExplosionEffect != null) {
 			finishCustomExplosion(editedSections, fullSections);
-		} else if (legacyExplosion) {
+		} else if (performsBlockUpdates) {
 			if (rule == null) {
-				finishLegacyExplosionWithoutRule(editedSections, fullSections);
+				finishUpdatingExplosionWithoutRule(editedSections, fullSections);
 			} else {
-				finishLegacyExplosionWithRule(editedSections, fullSections, rule);
+				finishUpdatingExplosionWithRule(editedSections, fullSections, rule);
 			}
 		} else if (rule == null) {
 			finishImprovedExplosionWithoutRule(editedSections, fullSections);
@@ -561,10 +561,10 @@ public class ImprovedExplosion extends Explosion {
 	}
 	
 	/**
-	 * Finalization of an explosion without a rule that automatically updates all affected blocks, having a huge negative impact on performance.
+	 * Finalization of an explosion without a rule that automatically updates all affected blocks, having a large negative impact on performance.
 	 * Best used for small explosions.
 	 */
-	private void finishLegacyExplosionWithoutRule(Map<Long, BitSet> editedSections, Set<Long> fullSections) {
+	private void finishUpdatingExplosionWithoutRule(Map<Long, BitSet> editedSections, Set<Long> fullSections) {
 		for (long encodedPos : fullSections) {
 			SectionPos sectionPos = SectionPos.of(encodedPos);
 			int x = sectionPos.getX() << 4;
@@ -591,10 +591,10 @@ public class ImprovedExplosion extends Explosion {
 	}
 	
 	/**
-	 * Finalization of an explosion with a rule that automatically updates all affected blocks, having a huge negative impact on performance.
+	 * Finalization of an explosion with a rule that automatically updates all affected blocks, having a large negative impact on performance.
 	 * Best used for small explosions.
 	 */
-	private void finishLegacyExplosionWithRule(Map<Long, BitSet> editedSections, Set<Long> fullSections, ExplosionRule rule) {
+	private void finishUpdatingExplosionWithRule(Map<Long, BitSet> editedSections, Set<Long> fullSections, ExplosionRule rule) {
 		for (long encodedPos : fullSections) {
 			SectionPos sectionPos = SectionPos.of(encodedPos);
 			LevelChunk chunk = level.getChunk(sectionPos.x(), sectionPos.z());
@@ -639,7 +639,10 @@ public class ImprovedExplosion extends Explosion {
 	}
 	
 	/**
-	 * 
+	 * Finalization of an explosion with a custom effect that is applied to each affected block.
+	 * The effect must be set in the constructor and if not set to null, will automatically lead to this function.
+	 * Due to the nature of the code being entirely injected, this method is generally the most powerful when it comes to possibilities,
+	 * but requires great care in implementation or it will suffer immensely in performance.
 	 */
 	private void finishCustomExplosion(Map<Long, BitSet> editedSections, Set<Long> fullSections) {
 		for (long encodedPos : fullSections) {
@@ -917,7 +920,7 @@ public class ImprovedExplosion extends Explosion {
 	}
 	
 	/**
-	 * Deprecated and will be removed in versions 1.21+. Please switch to {@link#doImprovedBlockExplosion(float, float, boolean, boolean, RandomSource, ExplosionRule)}, which is magnitudes more efficient.
+	 * Deprecated and will be removed in versions 1.21+. Please switch to {@link #doImprovedBlockExplosion(float, float, boolean, boolean, RandomSource, ExplosionRule)}, which is magnitudes more efficient.
 	 * 
 	 * Executes {@link ImprovedExplosion#doBlockExplosion(float, float, float, float, boolean, boolean)} with default values.
 	 */
