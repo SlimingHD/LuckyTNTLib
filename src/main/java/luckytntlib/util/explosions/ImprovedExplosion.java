@@ -1058,49 +1058,42 @@ public class ImprovedExplosion extends Explosion {
 	}
 	
 	/**
-	 * Damages and throws back all entities affected by this explosion determined by the size of this explosion.
+	 * Damages and knocks back all entities affected by this explosion.
 	 * @param knockbackStrength  multiplier to the strength of the knockback
 	 * @param damageEntities  whether or not entities should be damaged by this explosion
 	 */
 	public void doEntityExplosion(float knockbackStrength, boolean damageEntities) {
-		List<Entity> entities = level.getEntities(getExploder(), new AABB(posX - size * 2, posY - size * 2, posZ - size * 2, posX + size * 2, posY + size * 2, posZ + size * 2));
-		ForgeEventFactory.onExplosionDetonate(level, this, entities, size * 2);
-		for (Entity entity : entities) {
-			if (!entity.ignoreExplosion()) {
-				double distance = Math.sqrt(entity.distanceToSqr(getPosition())) / (size * 2);
-				if (distance <= 1f) {
-					double offX = (entity.getX() - posX);
-					double offY = (entity.getEyeY() - posY);
-					double offZ = (entity.getZ() - posZ);
-					double distance2 = Math.sqrt(offX * offX + offY * offY + offZ * offZ);
-					offX /= distance2;
-					offY /= distance2;
-					offZ /= distance2;
-					double seenPercent = getSeenPercent(getPosition(), entity);
-					float damage = (1f - (float)distance) * (float)seenPercent;
-					if (damageEntities) {
-						entity.hurt(getDamageSource(), (damage * damage + damage) / 2f * 7 * size + 1f);
-					}
-					double knockback = damage;
-					if (entity instanceof LivingEntity lEnt) {
-						knockback = ProtectionEnchantment.getExplosionKnockbackAfterDampener(lEnt, damage);
-					}
-					entity.setDeltaMovement(entity.getDeltaMovement().add(offX * knockback * knockbackStrength, offY * knockback * knockbackStrength, offZ * knockback * knockbackStrength));
-					if (entity instanceof Player) {
-						Player player = (Player)entity;
-						player.hurtMarked = true;
-						if (!player.isSpectator() && (!player.isCreative() || !player.getAbilities().flying)) {
-							getHitPlayers().put(player, new Vec3(offX * damage, offY * damage, offZ * damage));
-						}
-					}
+		doEntityExplosion((Entity entity, double distance) -> {
+			double offX = (entity.getX() - posX);
+			double offY = (entity.getEyeY() - posY);
+			double offZ = (entity.getZ() - posZ);
+			double distance2 = Math.sqrt(offX * offX + offY * offY + offZ * offZ);
+			offX /= distance2;
+			offY /= distance2;
+			offZ /= distance2;
+			double seenPercent = getSeenPercent(getPosition(), entity);
+			float damage = (1f - (float)distance) * (float)seenPercent;
+			if (damageEntities) {
+				entity.hurt(getDamageSource(), (damage * damage + damage) / 2f * 7 * size + 1f);
+			}
+			double knockback = damage;
+			if (entity instanceof LivingEntity lEnt) {
+				knockback = ProtectionEnchantment.getExplosionKnockbackAfterDampener(lEnt, damage);
+			}
+			entity.setDeltaMovement(entity.getDeltaMovement().add(offX * knockback * knockbackStrength, offY * knockback * knockbackStrength, offZ * knockback * knockbackStrength));
+			if (entity instanceof Player) {
+				Player player = (Player)entity;
+				player.hurtMarked = true;
+				if (!player.isSpectator() && (!player.isCreative() || !player.getAbilities().flying)) {
+					getHitPlayers().put(player, new Vec3(offX * damage, offY * damage, offZ * damage));
 				}
 			}
-		}
+		});
 	}
 	
 	/**
-	 * Does whatever specified in the {@link EntityExplosionEffect} to all entities inside the radius of this explosion.
-	 * The radius of this explosion is just its size.
+	 * Affects all entities in the reach of this explosion.
+	 * Each entity is handled individually by the given {@link EntityExplosionEffect}.
 	 * @param entityEffect  determines what should be done to each entity inside the radius
 	 */
 	public void doEntityExplosion(EntityExplosionEffect entityEffect) {
@@ -1130,6 +1123,10 @@ public class ImprovedExplosion extends Explosion {
 		}
 	}
 	
+	/**
+	 * Attempts to retrieve the owning entity of this explosion, if one was passed along.
+	 * @return the owning entity of this explosion, if it exists, otherwise {@code null}
+	 */
 	@Nullable
 	@Override
 	public LivingEntity getIndirectSourceEntity() {
@@ -1148,24 +1145,36 @@ public class ImprovedExplosion extends Explosion {
 		return new ImprovedExplosion(level, new Vec3(0, 0, 0), 0);
 	}
 
+	/**
+	 * Use {@link #doImprovedBlockExplosion(float, float, boolean, boolean, ExplosionRule)}, {@link #doEntityExplosion(float, boolean)}, or {@link #doEntityExplosion(EntityExplosionEffect)}.
+	 */
 	@Override
 	@Deprecated
 	public void explode() {
 	}
 	
+	/**
+	 * Performs a standard full explosion and optionally spawns particles.
+	 * It is advised to not use this in favor of {@link #doImprovedBlockExplosion(float, float, boolean, boolean, ExplosionRule)}, {@link #doEntityExplosion(float, boolean)},
+	 * {@link #doEntityExplosion(EntityExplosionEffect)}, and {@link #spawnExplosionParticles()}.
+	 */
 	@Override
 	@Deprecated
-	public void finalizeExplosion(boolean spawnParticles) {	
-		doImprovedBlockExplosion(0.25f, 0.1f, false, false, null);
-		doEntityExplosion(size / 10f, true);
+	public void finalizeExplosion(boolean spawnParticles) {
+		if (level.isClientSide()) {
+			return;
+		}
 		if (spawnParticles) {
 			spawnExplosionParticles();
 		}
+		doEntityExplosion(size / 10f, true);
+		doImprovedBlockExplosion(1f, 1f, false, false, null);
 	}
 	
 	/**
 	 * Due to performance reasons, affected blocks are no longer saved and can therefore no longer be retrieved.
-	 * @return This method will always return an empty list.
+	 * This method will therefore always return an empty list.
+	 * @return An empty list.
 	 */
 	@Override
 	@Deprecated
