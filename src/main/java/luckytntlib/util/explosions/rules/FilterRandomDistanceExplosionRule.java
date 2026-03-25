@@ -29,15 +29,6 @@ public class FilterRandomDistanceExplosionRule implements ExplosionRule {
 		this.rule = rule;
 	}
 	
-	/**
-	 * Client only constructor with defunct data, as it is not needed. Do not use on the server.
-	 */
-	private FilterRandomDistanceExplosionRule(ExplosionRule rule) {
-		this.radius = 0;
-		this.probabilityCalculator = null;
-		this.rule = rule;
-	}
-	
 	public static FilterRandomDistanceExplosionRule linearDecrease(int radius, ExplosionRule rule) {
 		return new FilterRandomDistanceExplosionRule(radius, (offX, offY, offZ, r) -> {
 			double distance = Math.sqrt(offX * offX + offY * offY + offZ * offZ);
@@ -51,6 +42,11 @@ public class FilterRandomDistanceExplosionRule implements ExplosionRule {
 			int distanceSqr = offX * offX + offY * offY + offZ * offZ;
 			return 1f - distanceSqr / (float)radiusSqr;
 		}, rule);
+	}
+	
+	@Override
+	public void setupClientData(Level level, BlockState state, Vec3 center, int offX, int offY, int offZ) {
+		rule.setupClientData(level, state, center, offX, offY, offZ);
 	}
 	
 	@Override
@@ -75,7 +71,7 @@ public class FilterRandomDistanceExplosionRule implements ExplosionRule {
 	}
 
 	public static ExplosionRule decode(JsonObject root) {
-		return new FilterRandomDistanceExplosionRule(ExplosionRule.parse(root.get("rule").getAsJsonObject()));
+		return new FilterRandomDistanceExplosionRule(1, null, ExplosionRule.parse(root.get("rule").getAsJsonObject()));
 	}
 	
 	@FunctionalInterface

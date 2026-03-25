@@ -33,7 +33,8 @@ public interface ExplosionRule {
 	}
 	
 	/**
-	 * This method determines whether the ExplosionRule will edit a block affected by an explosion at a given position
+	 * This method determines whether the ExplosionRule will edit a block affected by an explosion at a given position. <br>
+	 * If you need to calculate and/or store extra data to return the correct {@link BlockState} at {@link #getState()} on the server, you'll have to do that in this method as well.
 	 * @param level  the current {@link Level}
 	 * @param state  the {@link BlockState} being affected by an explosion
 	 * @param center  the center of the explosion affecting the given {@link BlockState}

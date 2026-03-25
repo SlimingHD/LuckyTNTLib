@@ -23,6 +23,11 @@ public class FilterBlastResistanceExplosionRule implements ExplosionRule {
 		this.rule = rule;
 	}
 	
+	@Override
+	public void setupClientData(Level level, BlockState state, Vec3 center, int offX, int offY, int offZ) {
+		rule.setupClientData(level, state, center, offX, offY, offZ);
+	}
+	
 	@SuppressWarnings("deprecation")
 	@Override
 	public boolean shouldApply(Level level, BlockState state, Vec3 center, int offX, int offY, int offZ) {

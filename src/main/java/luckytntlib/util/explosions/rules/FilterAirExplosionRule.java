@@ -20,6 +20,11 @@ public class FilterAirExplosionRule implements ExplosionRule {
 	public FilterAirExplosionRule(ExplosionRule rule) {
 		this.rule = rule;
 	}
+	
+	@Override
+	public void setupClientData(Level level, BlockState state, Vec3 center, int offX, int offY, int offZ) {
+		rule.setupClientData(level, state, center, offX, offY, offZ);
+	}
 
 	@Override
 	public boolean shouldApply(Level level, BlockState state, Vec3 center, int offX, int offY, int offZ) {

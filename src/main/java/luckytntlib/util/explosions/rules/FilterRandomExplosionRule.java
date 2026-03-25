@@ -35,6 +35,11 @@ public class FilterRandomExplosionRule implements ExplosionRule {
 	}
 	
 	@Override
+	public void setupClientData(Level level, BlockState state, Vec3 center, int offX, int offY, int offZ) {
+		rule.setupClientData(level, state, center, offX, offY, offZ);
+	}
+	
+	@Override
 	public boolean shouldApply(Level level, BlockState state, Vec3 center, int offX, int offY, int offZ) {
 		if (random.nextFloat() < probability) {
 			return rule.shouldApply(level, state, center, offX, offY, offZ);

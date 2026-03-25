@@ -23,6 +23,7 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.context.DirectionalPlaceContext;
 import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.chunk.LevelChunk;
@@ -58,6 +59,9 @@ public class ExplosionHelper {
 	 */
 	public static final DistanceCalculator CUBOID_CALCULATOR = (x, z, r, s) -> Math.abs(x) <= r * s.x && Math.abs(z) <= r * s.z ? (int)(r * r * s.y * s.y) : 0;
 	
+	
+	private ExplosionHelper() {
+	}
 	
 	/**
 	 * Removes all the blocks in a sphere around the given center position. <br>
@@ -401,12 +405,360 @@ public class ExplosionHelper {
 	}
 	
 	/**
+	 * Edits all the blocks in a sphere around the given position according to the given {@link ExplosionRule}.
+	 * This method uses the legacy way of changing the world that issues all updates when changing a block while using the new {@link ExplosionRule}. <br>
+	 * It is recommended to use {@link #createCrater(Level, Vec3, int, Vector3f, int, DistanceCalculator, ExplosionRule)} or one of its default implementations for bigger explosions.
+	 * @param level  the current {@link Level}
+	 * @param position  the center of the explosion
+	 * @param radius  the radius of the sphere
+	 * @param maxResistance  blocks with an explosion resistance lower or equal to this value will be removed, all other blocks will be untouched
+	 * @param rule  an optional {@link ExplosionRule} that determines how affected blocks will be edited. If it's {@code null}, blocks will simply be removed.
+	 */
+	public static void legacySphericalExplosion(Level level, Vec3 position, int radius, int maxResistance, @Nullable ExplosionRule rule) {
+		legacySpheroidExplosion(level, position, radius, new Vector3f(1f), maxResistance, rule);
+	}
+	
+	/**
+	 * Edits all the blocks in a spheroid around the given position according to the given {@link ExplosionRule}.
+	 * This method uses the legacy way of changing the world that issues all updates when changing a block while using the new {@link ExplosionRule}. <br>
+	 * It is recommended to use {@link #createCrater(Level, Vec3, int, Vector3f, int, DistanceCalculator, ExplosionRule)} or one of its default implementations for bigger explosions.
+	 * @param level  the current {@link Level}
+	 * @param position  the center of the explosion
+	 * @param radius  the radius of the unscaled sphere
+	 * @param scaling  a {@link Vector3f} containing the scaling for all axes
+	 * @param maxResistance  blocks with an explosion resistance lower or equal to this value will be removed, all other blocks will be untouched
+	 * @param rule  an optional {@link ExplosionRule} that determines how affected blocks will be edited. If it's {@code null}, blocks will simply be removed.
+	 */
+	public static void legacySpheroidExplosion(Level level, Vec3 position, int radius, Vector3f scaling, int maxResistance, @Nullable ExplosionRule rule) {
+		int radiusSqr = radius * radius;
+		BlockPos center = BlockPos.containing(position);
+		ImprovedExplosion dummy = ImprovedExplosion.dummyExplosion(level);
+		boolean useRule = rule != null;
+		for (int offX = (int)(-radius * scaling.x); offX <= Mth.ceil(radius * scaling.x); offX++) {
+			for (int offY = (int)(-radius * scaling.y); offY <= Mth.ceil(radius * scaling.y); offY++) {
+				for (int offZ = (int)(-radius * scaling.z); offZ <= Mth.ceil(radius * scaling.z); offZ++) {
+					int distSqr = offX * offX + offY * offY + offZ * offZ;
+					if (distSqr <= radiusSqr) {
+						BlockPos pos = center.offset(offX, offY, offZ);
+						BlockState state = level.getBlockState(pos);
+						if (state.getExplosionResistance(level, pos, dummy) <= maxResistance && (!useRule || rule.shouldApply(level, state, position, offX, offY, offZ))) {
+							level.setBlockAndUpdate(center, useRule ? rule.getState() : Blocks.AIR.defaultBlockState());
+						}
+					}
+				}
+			}
+		}
+	}
+	
+	/**
+	 * Edits all the blocks in a cube around the given position according to the given {@link ExplosionRule}.
+	 * This method uses the legacy way of changing the world that issues all updates when changing a block while using the new {@link ExplosionRule}. <br>
+	 * It is recommended to use {@link #createCrater(Level, Vec3, int, Vector3f, int, DistanceCalculator, ExplosionRule)} or one of its default implementations for bigger explosions.
+	 * @param level  the current {@link Level}
+	 * @param position  the center of the explosion
+	 * @param radius  the radius of the cube
+	 * @param maxResistance  blocks with an explosion resistance lower or equal to this value will be removed, all other blocks will be untouched
+	 * @param rule  an optional {@link ExplosionRule} that determines how affected blocks will be edited. If it's {@code null}, blocks will simply be removed.
+	 */
+	public static void legacyCubicalExplosion(Level level, Vec3 position, int radius, int maxResistance, @Nullable ExplosionRule rule) {
+		legacyCuboidExplosion(level, position, radius, new Vector3f(1f), maxResistance, rule);
+	}
+	
+	/**
+	 * Edits all the blocks in a cuboid around the given position according to the given {@link ExplosionRule}.
+	 * This method uses the legacy way of changing the world that issues all updates when changing a block while using the new {@link ExplosionRule}. <br>
+	 * It is recommended to use {@link #createCrater(Level, Vec3, int, Vector3f, int, DistanceCalculator, ExplosionRule)} or one of its default implementations for bigger explosions.
+	 * @param level  the current {@link Level}
+	 * @param position  the center of the explosion
+	 * @param radius  the radius of the unscaled cuboid
+	 * @param scaling  a {@link Vector3f} containing the scaling for all axes
+	 * @param maxResistance  blocks with an explosion resistance lower or equal to this value will be removed, all other blocks will be untouched
+	 * @param rule  an optional {@link ExplosionRule} that determines how affected blocks will be edited. If it's {@code null}, blocks will simply be removed.
+	 */
+	public static void legacyCuboidExplosion(Level level, Vec3 position, int radius, Vector3f scaling, int maxResistance, @Nullable ExplosionRule rule) {
+		BlockPos center = BlockPos.containing(position);
+		ImprovedExplosion dummy = ImprovedExplosion.dummyExplosion(level);
+		boolean useRule = rule != null;
+		for (int offX = (int)(-radius * scaling.x); offX <= Mth.ceil(radius * scaling.x); offX++) {
+			for (int offY = (int)(-radius * scaling.y); offY <= Mth.ceil(radius * scaling.y); offY++) {
+				for (int offZ = (int)(-radius * scaling.z); offZ <= Mth.ceil(radius * scaling.z); offZ++) {
+					BlockPos pos = center.offset(offX, offY, offZ);
+					BlockState state = level.getBlockState(pos);
+					if (state.getExplosionResistance(level, pos, dummy) <= maxResistance && (!useRule || rule.shouldApply(level, state, position, offX, offY, offZ))) {
+						level.setBlockAndUpdate(center, useRule ? rule.getState() : Blocks.AIR.defaultBlockState());
+					}
+				}
+			}
+		}
+	}
+	
+	/**
+	 * Edits all the blocks in a cylinder around the given position according to the given {@link ExplosionRule}.
+	 * This method uses the legacy way of changing the world that issues all updates when changing a block while using the new {@link ExplosionRule}. <br>
+	 * It is recommended to use {@link #createCrater(Level, Vec3, int, Vector3f, int, DistanceCalculator, ExplosionRule)} or one of its default implementations for bigger explosions.
+	 * @param level  the current {@link Level}
+	 * @param position  the center of the explosion
+	 * @param radius  the radius of the spherical base area of the cylinder
+	 * @param radiusY  half the height of the cylinder
+	 * @param maxResistance  blocks with an explosion resistance lower or equal to this value will be removed, all other blocks will be untouched
+	 * @param rule  an optional {@link ExplosionRule} that determines how affected blocks will be edited. If it's {@code null}, blocks will simply be removed.
+	 */
+	public static void legacyCylindricalExplosion(Level level, Vec3 position, int radius, int radiusY, int maxResistance, @Nullable ExplosionRule rule) {
+		legacyScaledCylindricalExplosion(level, position, radius, radiusY, new Vector3f(1f), maxResistance, rule);
+	}
+	
+	/**
+	 * Edits all the blocks in a scaled cylinder around the given position according to the given {@link ExplosionRule}.
+	 * This method uses the legacy way of changing the world that issues all updates when changing a block while using the new {@link ExplosionRule}. <br>
+	 * It is recommended to use {@link #createCrater(Level, Vec3, int, Vector3f, int, DistanceCalculator, ExplosionRule)} or one of its default implementations for bigger explosions.
+	 * @param level  the current {@link Level}
+	 * @param position  the center of the explosion
+	 * @param radius  the radius of the unscaled spherical base area of the cylinder
+	 * @param radiusY  half the height of the unscaled cylinder
+	 * @param scaling  a {@link Vector3f} containing the scaling for all axes
+	 * @param maxResistance  blocks with an explosion resistance lower or equal to this value will be removed, all other blocks will be untouched
+	 * @param rule  an optional {@link ExplosionRule} that determines how affected blocks will be edited. If it's {@code null}, blocks will simply be removed.
+	 */
+	public static void legacyScaledCylindricalExplosion(Level level, Vec3 position, int radius, int radiusY, Vector3f scaling, int maxResistance, @Nullable ExplosionRule rule) {
+		int radiusSqr = radius * radius;
+		BlockPos center = BlockPos.containing(position);
+		ImprovedExplosion dummy = ImprovedExplosion.dummyExplosion(level);
+		boolean useRule = rule != null;
+		for (int offX = (int)(-radius * scaling.x); offX <= Mth.ceil(radius * scaling.x); offX++) {
+			for (int offY = (int)(-radiusY * scaling.y); offY <= Mth.ceil(radiusY * scaling.y); offY++) {
+				for (int offZ = (int)(-radius * scaling.z); offZ <= Mth.ceil(radius * scaling.z); offZ++) {
+					int distSqr = offX * offX + offZ * offZ;
+					if (distSqr <= radiusSqr) {
+						BlockPos pos = center.offset(offX, offY, offZ);
+						BlockState state = level.getBlockState(pos);
+						if (state.getExplosionResistance(level, pos, dummy) <= maxResistance && (!useRule || rule.shouldApply(level, state, position, offX, offY, offZ))) {
+							level.setBlockAndUpdate(center, useRule ? rule.getState() : Blocks.AIR.defaultBlockState());
+						}
+					}
+				}
+			}
+		}
+	}
+	
+	/**
+	 * Edits all the blocks in a cylinder around the given position that are considered the top most surface block according to given {@link ExplosionRule}.
+	 * A block is considered a surface if it has a non-collidable block above it and a full top face itself. 
+	 * This method uses the legacy way of changing the world that issues all updates when changing a block while using the new {@link ExplosionRule}. <br>
+	 * It is recommended to use {@link #createCrater(Level, Vec3, int, Vector3f, int, DistanceCalculator, ExplosionRule)} or one of its default implementations for bigger explosions.
+	 * @param level  the current {@link Level}
+	 * @param position  the center of the explosion
+	 * @param radius  the radius of the spherical base area of the cylinder and half the height of the cylinder
+	 * @param maxResistance  blocks with an explosion resistance lower or equal to this value will be removed, all other blocks will be untouched
+	 * @param rule  an optional {@link ExplosionRule} that determines how affected blocks will be edited. If it's {@code null}, blocks will simply be removed.
+	 */
+	public static void legacySurfaceExplosion(Level level, Vec3 position, int radius, int maxResistance, @Nullable ExplosionRule rule) {
+		int radiusSqr = radius * radius;
+		BlockPos center = BlockPos.containing(position);
+		ImprovedExplosion dummy = ImprovedExplosion.dummyExplosion(level);
+		boolean useRule = rule != null;
+		for (int offX = -radius; offX <= radius; offX++) {
+			for (int offZ = -radius; offZ <= radius; offZ++) {
+				int distSqr = offX * offX + offZ * offZ;
+				if (distSqr <= radiusSqr) {
+					for (int offY = radius; offY >= -radius; offY--) {
+						BlockPos pos = center.offset(offX, offY, offZ);
+						BlockPos above = pos.above();
+						BlockState state = level.getBlockState(pos);
+						if (Block.isFaceFull(state.getCollisionShape(level, pos), Direction.UP) && level.getBlockState(above).getCollisionShape(level, above).isEmpty()) {
+							if (state.getExplosionResistance(level, pos, dummy) <= maxResistance && (!useRule || rule.shouldApply(level, state, position, offX, offY, offZ))) {
+								level.setBlockAndUpdate(center, useRule ? rule.getState() : Blocks.AIR.defaultBlockState());
+							}
+							break;
+						}
+					}
+				}
+			}
+		}
+	}
+	
+	/**
+	 * Edits all the blocks in a sphere around the given position according to the given {@link BlockExplosionEffect} giving you full control.
+	 * This method can be used for any case where using an {@link ExplosionRule} doesn't work. <br>
+	 * It is recommended to use {@link #createCrater(Level, Vec3, int, Vector3f, int, DistanceCalculator, ExplosionRule)} or one of its default implementations for bigger explosions.
+	 * @param level  the current {@link Level}
+	 * @param position  the center of the explosion
+	 * @param radius  the radius of the sphere
+	 * @param effect  a {@link BlockExplosionEffect} where you can fully customize what happens to each block
+	 */
+	public static void customSphericalExplosion(Level level, Vec3 position, int radius, BlockExplosionEffect effect) {
+		customSpheroidExplosion(level, position, radius, new Vector3f(1f), effect);
+	}
+	
+	/**
+	 * Edits all the blocks in a spheroid around the given position according to the given {@link BlockExplosionEffect} giving you full control.
+	 * This method can be used for any case where using an {@link ExplosionRule} doesn't work. <br>
+	 * It is recommended to use {@link #createCrater(Level, Vec3, int, Vector3f, int, DistanceCalculator, ExplosionRule)} or one of its default implementations for bigger explosions.
+	 * @param level  the current {@link Level}
+	 * @param position  the center of the explosion
+	 * @param radius  the radius of the unscaled spheroid
+	 * @param scaling  a {@link Vector3f} containing the scaling for all axes
+	 * @param effect  a {@link BlockExplosionEffect} where you can fully customize what happens to each block
+	 */
+	public static void customSpheroidExplosion(Level level, Vec3 position, int radius, Vector3f scaling, BlockExplosionEffect effect) {
+		int radiusSqr = radius * radius;
+		BlockPos center = BlockPos.containing(position);
+		for (int offX = (int)(-radius * scaling.x); offX <= Mth.ceil(radius * scaling.x); offX++) {
+			for (int offY = (int)(-radius * scaling.y); offY <= Mth.ceil(radius * scaling.y); offY++) {
+				for (int offZ = (int)(-radius * scaling.z); offZ <= Mth.ceil(radius * scaling.z); offZ++) {
+					int distSqr = offX * offX + offY * offY + offZ * offZ;
+					if (distSqr <= radiusSqr) {
+						BlockPos pos = center.offset(offX, offY, offZ);
+						BlockState state = level.getBlockState(pos);
+						effect.handleBlock(level, position, pos, state);
+					}
+				}
+			}
+		}
+	}
+	
+	/**
+	 * Edits all the blocks in a cube around the given position according to the given {@link BlockExplosionEffect} giving you full control.
+	 * This method can be used for any case where using an {@link ExplosionRule} doesn't work. <br>
+	 * It is recommended to use {@link #createCrater(Level, Vec3, int, Vector3f, int, DistanceCalculator, ExplosionRule)} or one of its default implementations for bigger explosions.
+	 * @param level  the current {@link Level}
+	 * @param position  the center of the explosion
+	 * @param radius  the radius of the cube
+	 * @param effect  a {@link BlockExplosionEffect} where you can fully customize what happens to each block
+	 */
+	public static void customCubicalExplosion(Level level, Vec3 position, int radius, BlockExplosionEffect effect) {
+		customCuboidExplosion(level, position, radius, new Vector3f(1f), effect);
+	}
+	
+	/**
+	 * Edits all the blocks in a cuboid around the given position according to the given {@link BlockExplosionEffect} giving you full control.
+	 * This method can be used for any case where using an {@link ExplosionRule} doesn't work. <br>
+	 * It is recommended to use {@link #createCrater(Level, Vec3, int, Vector3f, int, DistanceCalculator, ExplosionRule)} or one of its default implementations for bigger explosions.
+	 * @param level  the current {@link Level}
+	 * @param position  the center of the explosion
+	 * @param radius  the radius of the unscaled cuboid
+	 * @param scaling  a {@link Vector3f} containing the scaling for all axes
+	 * @param effect  a {@link BlockExplosionEffect} where you can fully customize what happens to each block
+	 */
+	public static void customCuboidExplosion(Level level, Vec3 position, int radius, Vector3f scaling, BlockExplosionEffect effect) {
+		BlockPos center = BlockPos.containing(position);
+		for (int offX = (int)(-radius * scaling.x); offX <= Mth.ceil(radius * scaling.x); offX++) {
+			for (int offY = (int)(-radius * scaling.y); offY <= Mth.ceil(radius * scaling.y); offY++) {
+				for (int offZ = (int)(-radius * scaling.z); offZ <= Mth.ceil(radius * scaling.z); offZ++) {
+					BlockPos pos = center.offset(offX, offY, offZ);
+					BlockState state = level.getBlockState(pos);
+					effect.handleBlock(level, position, pos, state);
+				}
+			}
+		}
+	}
+	
+	/**
+	 * Edits all the blocks in a cylinder around the given position according to the given {@link BlockExplosionEffect} giving you full control.
+	 * This method can be used for any case where using an {@link ExplosionRule} doesn't work. <br>
+	 * It is recommended to use {@link #createCrater(Level, Vec3, int, Vector3f, int, DistanceCalculator, ExplosionRule)} or one of its default implementations for bigger explosions.
+	 * @param level  the current {@link Level}
+	 * @param position  the center of the explosion
+	 * @param radius  the radius of the cylinders spherical base area
+	 * @param radiusY  half the height of the cylinder
+	 * @param effect  a {@link BlockExplosionEffect} where you can fully customize what happens to each block
+	 */
+	public static void customCylindricalExplosion(Level level, Vec3 position, int radius, int radiusY, BlockExplosionEffect effect) {
+		customScaledCylindricalExplosion(level, position, radius, radiusY, new Vector3f(1f), effect);
+	}
+	
+	/**
+	 * Edits all the blocks in a scaled cylinder around the given position according to the given {@link BlockExplosionEffect} giving you full control.
+	 * This method can be used for any case where using an {@link ExplosionRule} doesn't work. <br>
+	 * It is recommended to use {@link #createCrater(Level, Vec3, int, Vector3f, int, DistanceCalculator, ExplosionRule)} or one of its default implementations for bigger explosions.
+	 * @param level  the current {@link Level}
+	 * @param position  the center of the explosion
+	 * @param radius  the radius of the unscaled cylinders spherical base area
+	 * @param radiusY  half the height of the unscaled cylinder
+	 * @param scaling  a {@link Vector3f} containing the scaling for all axes
+	 * @param effect  a {@link BlockExplosionEffect} where you can fully customize what happens to each block
+	 */
+	public static void customScaledCylindricalExplosion(Level level, Vec3 position, int radius, int radiusY, Vector3f scaling, BlockExplosionEffect effect) {
+		int radiusSqr = radius * radius;
+		BlockPos center = BlockPos.containing(position);
+		for (int offX = (int)(-radius * scaling.x); offX <= Mth.ceil(radius * scaling.x); offX++) {
+			for (int offY = (int)(-radiusY * scaling.y); offY <= Mth.ceil(radiusY * scaling.y); offY++) {
+				for (int offZ = (int)(-radius * scaling.z); offZ <= Mth.ceil(radius * scaling.z); offZ++) {
+					int distSqr = offX * offX + offZ * offZ;
+					if (distSqr <= radiusSqr) {
+						BlockPos pos = center.offset(offX, offY, offZ);
+						BlockState state = level.getBlockState(pos);
+						effect.handleBlock(level, position, pos, state);
+					}
+				}
+			}
+		}
+	}
+	
+	/**
+	 * Edits all the blocks in a cylinder around the given position that are considered the top most surface block according to given {@link BlockExplosionEffect} giving you full control.
+	 * A block is considered a surface if it has a non-collidable block above it and a full top face itself. 
+	 * This method can be used for any case where using an {@link ExplosionRule} doesn't work. <br>
+	 * It is recommended to use {@link #createCrater(Level, Vec3, int, Vector3f, int, DistanceCalculator, ExplosionRule)} or one of its default implementations for bigger explosions.
+	 * @param level  the current {@link Level}
+	 * @param position  the center of the explosion
+	 * @param radius  the radius of the spherical base area of the cylinder and half the height of the cylinder
+	 * @param effect  a {@link BlockExplosionEffect} where you can fully customize what happens to each block
+	 */
+	public static void customSurfaceExplosion(Level level, Vec3 position, int radius, BlockExplosionEffect effect) {
+		int radiusSqr = radius * radius;
+		BlockPos center = BlockPos.containing(position);
+		for (int offX = -radius; offX <= radius; offX++) {
+			for (int offZ = -radius; offZ <= radius; offZ++) {
+				int distSqr = offX * offX + offZ * offZ;
+				if (distSqr <= radiusSqr) {
+					for (int offY = radius; offY >= -radius; offY--) {
+						BlockPos pos = center.offset(offX, offY, offZ);
+						BlockPos above = pos.above();
+						BlockState state = level.getBlockState(pos);
+						if (Block.isFaceFull(state.getCollisionShape(level, pos), Direction.UP) && level.getBlockState(above).getCollisionShape(level, above).isEmpty()) {
+							effect.handleBlock(level, position, pos, state);
+							break;
+						}
+					}
+				}
+			}
+		}
+	}
+	
+	/**
+	 * Encodes 3 {@code int}s between 0 and 15 into a single {@code int}
+	 * @param x  the x value to be encoded
+	 * @param y  the y value to be encoded
+	 * @param z  the z value to be encoded
+	 * @return a {@code int} that has all three values encoded into it
+	 * 
+	 * @see #decodeSectionPos(int)
+	 */
+	public static int encodeSectionPos(int x, int y, int z) {
+		return ((x & 15) << 8) | ((y & 15) << 4) | (z & 15);
+	}
+	
+	/**
+	 * Decodes a given {@code int} encoded by {@link #encodeSectionPos(int, int, int)} into 3 {@code int}s contained in a {@link Vec3i}.
+	 * @param decode  the {@code int} to be decoded
+	 * @return a {@link Vec3i} that contains all 3 decoded values
+	 * 
+	 * @see #encodeSectionPos(int, int, int)
+	 */
+	public static Vec3i decodeSectionPos(int decode) {
+		return new Vec3i((decode & 3840) >> 8, (decode & 240) >> 4, (decode & 15));
+	}
+	
+	/**
+	 * <strong><i><font color="#E00000"> This method has been deprecated and will be removed in versions for Minecraft 1.21+ </font></i></strong>
+	 * <br> <br>
 	 * Gets all blocks in a specified sphere and returns them in a HashMap consisting of {@link BlockPos} and {@link BlockState}
 	 * @param level  the current level
 	 * @param position  the center position of the sphere
 	 * @param radius  the radius of the sphere
 	 * @return a {@link HashMap} of {@link BlockPos} and {@link BlockState}
 	 */
+	@Deprecated(since = "47.2.32.2", forRemoval = true)
 	public static HashMap<BlockPos, BlockState> getBlocksInSphere(Level level, Vec3 position, int radius) {
 		HashMap<BlockPos, BlockState> blocks = new HashMap<>();
 		for(int offX = -radius; offX <= radius; offX++) {
@@ -425,12 +777,15 @@ public class ExplosionHelper {
 	}
 	
 	/**
+	 * <strong><i><font color="#E00000"> This method has been deprecated and will be removed in versions for Minecraft 1.21+ </font></i></strong>
+	 * <br> <br>
 	 * Gets all blocks in a specified cuboid and returns them in a HashMap consisting of {@link BlockPos} and {@link BlockState}
 	 * @param level  the current level
 	 * @param position  the center position of the cuboid
 	 * @param radii  the radii for the x, y and z directions
 	 * @return a {@link HashMap} of {@link BlockPos} and {@link BlockState}
 	 */
+	@Deprecated(since = "47.2.32.2", forRemoval = true)
 	public static HashMap<BlockPos, BlockState> getBlocksInCuboid(Level level, Vec3 position, Vec3 radii) {
 		HashMap<BlockPos, BlockState> blocks = new HashMap<>();
 		for(int offX = (int)-radii.x; offX <= (int)radii.x; offX++) {
@@ -446,12 +801,15 @@ public class ExplosionHelper {
 	}
 	
 	/**
+	 * <strong><i><font color="#E00000"> This method has been deprecated and will be removed in versions for Minecraft 1.21+ </font></i></strong>
+	 * <br> <br>
 	 * Gets all blocks in a specified cylinder and returns them in a HashMap consisting of {@link BlockPos} and {@link BlockState}
 	 * @param level  the current level
 	 * @param position  the center position of the cylinder
 	 * @param radius  the radius of the cylinder
 	 * @return a {@link HashMap} of {@link BlockPos} and {@link BlockState}
 	 */
+	@Deprecated(since = "47.2.32.2", forRemoval = true)
 	public static HashMap<BlockPos, BlockState> getBlocksInCylinder(Level level, Vec3 position, int radius, int radiusY) {
 		HashMap<BlockPos, BlockState> blocks = new HashMap<>();
 		for(int offX = -radius; offX <= radius; offX++) {
@@ -467,114 +825,6 @@ public class ExplosionHelper {
 			}
 		}
 		return blocks;
-	}
-	
-	/**
-	 * Gets only the top most blocks in a sphere and edits them according to the given {@link IForEachBlockExplosionEffect}. <br>
-	 * The function goes from top to bottom and the first block that is air or not solid and followed by a solid block below is considered the top most block.
-	 * @param level  the current level
-	 * @param position  the center position of the top block explosion
-	 * @param radius  the radius of the sphere
-	 * @param blockEffect  determines what should happen to the blocks gotten by this function
-	 */
-	@SuppressWarnings("removal")
-	public static void doTopBlockExplosion(Level level, Vec3 position, int radius, IForEachBlockExplosionEffect blockEffect) {
-		for(int offX = -radius; offX <= radius; offX++) {
-			for(int offZ = -radius; offZ <= radius; offZ++) {
-				topToBottom: for(int offY = radius; offY >= -radius; offY--) {
-					double distance = Math.sqrt(offX * offX + offY * offY + offZ * offZ);
-					if(distance <= radius) {
-						BlockPos pos = new BlockPos((int)position.x, (int)position.y, (int)position.z).offset(offX, offY, offZ);
-						BlockState state = level.getBlockState(pos);
-						if((level.getBlockState(pos.below()).isCollisionShapeFullBlock(level, pos.below()) || level.getBlockState(pos.below()).isFaceSturdy(level, pos.below(), Direction.UP)) && (state.isAir() || state.canBeReplaced(new DirectionalPlaceContext(level, pos, Direction.DOWN, ItemStack.EMPTY, Direction.UP))  || (!state.isCollisionShapeFullBlock(level, pos) && state.getExplosionResistance(level, pos, ImprovedExplosion.dummyExplosion((ServerLevel)level)) == 0) || state.is(BlockTags.FLOWERS))) {
-							blockEffect.doBlockExplosion(level, pos, state, distance);
-							break topToBottom;
-						}
-					}
-				}
-			}
-		}
-	}
-	
-	/**
-	 * Gets only the top most blocks in a sphere and edits them according to the given {@link IForEachBlockExplosionEffect}. <br>
-	 * The function goes from top to bottom and the block above the first block that is not air is considered the top most block. <br>
-	 * If the condition is not met it will continue to search for another top block further down
-	 * @param level  the current level
-	 * @param position  the center position of the top block explosion
-	 * @param radius  the radius of the sphere
-	 * @param condition  the condition for the top block to be considered, otherwise a new block further down will be searched for
-	 * @param blockEffect  determines what should happen to the blocks gotten by this function
-	 */
-	@SuppressWarnings("removal")
-	public static void doTopBlockExplosion(Level level, Vec3 position, int radius, IBlockExplosionCondition condition, IForEachBlockExplosionEffect blockEffect) {
-		for(int offX = -radius; offX <= radius; offX++) {
-			for(int offZ = -radius; offZ <= radius; offZ++) {
-				topToBottom: for(int offY = radius; offY >= -radius; offY--) {
-					double distance = Math.sqrt(offX * offX + offY * offY + offZ * offZ);
-					if(distance <= radius) {
-						BlockPos pos = new BlockPos((int)position.x, (int)position.y, (int)position.z).offset(offX, offY, offZ);
-						BlockState state = level.getBlockState(pos);
-						if(!level.getBlockState(pos.below()).isAir()) {
-							if(condition.conditionMet(level, pos.below(), level.getBlockState(pos.below()), Math.sqrt(offX * offX + (offY-1) * (offY-1) + offZ * offZ))) {
-								blockEffect.doBlockExplosion(level, pos, state, distance);
-								break topToBottom;
-							}
-						}
-					}
-				}
-			}
-		}
-	}
-	
-	/**
-	 * Gets all the top blocks in a sphere and edits them according to the given {@link IForEachBlockExplosionEffect}. <br>
-	 * A top block is any air or non-solid block followed by a solid block below.
-	 * @param level  the current level
-	 * @param position  the center position of the top block explosion
-	 * @param radius  the radius of the sphere
-	 * @param blockEffect  determines what should happen to the blocks gotten by this function
-	 */
-	@SuppressWarnings("removal")
-	public static void doTopBlockExplosionForAll(Level level, Vec3 position, int radius, IForEachBlockExplosionEffect blockEffect) {
-		for(int offX = -radius; offX <= radius; offX++) {
-			for(int offZ = -radius; offZ <= radius; offZ++) {
-				for(int offY = radius; offY >= -radius; offY--) {
-					double distance = Math.sqrt(offX * offX + offY * offY + offZ * offZ);
-					if(distance <= radius) {
-						BlockPos pos = new BlockPos((int)position.x, (int)position.y, (int)position.z).offset(offX, offY, offZ);
-						BlockState state = level.getBlockState(pos);
-						if((level.getBlockState(pos.below()).isCollisionShapeFullBlock(level, pos.below()) || level.getBlockState(pos.below()).isFaceSturdy(level, pos.below(), Direction.UP)) && (state.isAir() || state.canBeReplaced(new DirectionalPlaceContext(level, pos, Direction.DOWN, ItemStack.EMPTY, Direction.UP)) || (!state.isCollisionShapeFullBlock(level, pos) && state.getExplosionResistance(level, pos, ImprovedExplosion.dummyExplosion((ServerLevel)level)) == 0) || state.is(BlockTags.FLOWERS))) {
-							blockEffect.doBlockExplosion(level, pos, state, distance);
-						}
-					}
-				}
-			}
-		}
-	}
-	
-	/**
-	 * Encodes 3 {@code int}s between 0 and 15 into a single {@code int}
-	 * @param x  the x value to be encoded
-	 * @param y  the y value to be encoded
-	 * @param z  the z value to be encoded
-	 * @return a {@code int} that has all three values encoded into it
-	 * 
-	 * @see #decodeSectionPos(int)
-	 */
-	public static int encodeSectionPos(int x, int y, int z) {
-		return (short)(((x & 15) << 8) | ((y & 15) << 4) | (z & 15));
-	}
-	
-	/**
-	 * Decodes a given {@code int} encoded by {@link #encodeSectionPos(int, int, int)} into 3 {@code int}s contained in a {@link Vec3i}.
-	 * @param decode  the {@code int} to be decoded
-	 * @return a {@link Vec3i} that contains all 3 decoded values
-	 * 
-	 * @see #encodeSectionPos(int, int, int)
-	 */
-	public static Vec3i decodeSectionPos(int decode) {
-		return new Vec3i((decode & 3840) >> 8, (decode & 240) >> 4, (decode & 15));
 	}
 	
 	/**
@@ -675,6 +925,94 @@ public class ExplosionHelper {
 						BlockPos pos = new BlockPos((int)position.x, (int)position.y, (int)position.z).offset(offX, offY, offZ);
 						BlockState state = level.getBlockState(pos);
 						blockEffect.doBlockExplosion(level, pos, state, distance);
+					}
+				}
+			}
+		}
+	}
+	
+	/**
+	 * <strong><i><font color="#E00000"> This method has been deprecated and will be removed in versions for Minecraft 1.21+ </font></i></strong>
+	 * <br> <br>
+	 * Gets only the top most blocks in a sphere and edits them according to the given {@link IForEachBlockExplosionEffect}. <br>
+	 * The function goes from top to bottom and the first block that is air or not solid and followed by a solid block below is considered the top most block.
+	 * @param level  the current level
+	 * @param position  the center position of the top block explosion
+	 * @param radius  the radius of the sphere
+	 * @param blockEffect  determines what should happen to the blocks gotten by this function
+	 */
+	@Deprecated(since = "47.2.32.2", forRemoval = true)
+	public static void doTopBlockExplosion(Level level, Vec3 position, int radius, IForEachBlockExplosionEffect blockEffect) {
+		for(int offX = -radius; offX <= radius; offX++) {
+			for(int offZ = -radius; offZ <= radius; offZ++) {
+				topToBottom: for(int offY = radius; offY >= -radius; offY--) {
+					double distance = Math.sqrt(offX * offX + offY * offY + offZ * offZ);
+					if(distance <= radius) {
+						BlockPos pos = new BlockPos((int)position.x, (int)position.y, (int)position.z).offset(offX, offY, offZ);
+						BlockState state = level.getBlockState(pos);
+						if((level.getBlockState(pos.below()).isCollisionShapeFullBlock(level, pos.below()) || level.getBlockState(pos.below()).isFaceSturdy(level, pos.below(), Direction.UP)) && (state.isAir() || state.canBeReplaced(new DirectionalPlaceContext(level, pos, Direction.DOWN, ItemStack.EMPTY, Direction.UP))  || (!state.isCollisionShapeFullBlock(level, pos) && state.getExplosionResistance(level, pos, ImprovedExplosion.dummyExplosion((ServerLevel)level)) == 0) || state.is(BlockTags.FLOWERS))) {
+							blockEffect.doBlockExplosion(level, pos, state, distance);
+							break topToBottom;
+						}
+					}
+				}
+			}
+		}
+	}
+	
+	/**
+	 * <strong><i><font color="#E00000"> This method has been deprecated and will be removed in versions for Minecraft 1.21+ </font></i></strong>
+	 * <br> <br>
+	 * Gets only the top most blocks in a sphere and edits them according to the given {@link IForEachBlockExplosionEffect}. <br>
+	 * The function goes from top to bottom and the block above the first block that is not air is considered the top most block. <br>
+	 * If the condition is not met it will continue to search for another top block further down
+	 * @param level  the current level
+	 * @param position  the center position of the top block explosion
+	 * @param radius  the radius of the sphere
+	 * @param condition  the condition for the top block to be considered, otherwise a new block further down will be searched for
+	 * @param blockEffect  determines what should happen to the blocks gotten by this function
+	 */
+	@Deprecated(since = "47.2.32.2", forRemoval = true)
+	public static void doTopBlockExplosion(Level level, Vec3 position, int radius, IBlockExplosionCondition condition, IForEachBlockExplosionEffect blockEffect) {
+		for(int offX = -radius; offX <= radius; offX++) {
+			for(int offZ = -radius; offZ <= radius; offZ++) {
+				topToBottom: for(int offY = radius; offY >= -radius; offY--) {
+					double distance = Math.sqrt(offX * offX + offY * offY + offZ * offZ);
+					if(distance <= radius) {
+						BlockPos pos = new BlockPos((int)position.x, (int)position.y, (int)position.z).offset(offX, offY, offZ);
+						BlockState state = level.getBlockState(pos);
+						if(!level.getBlockState(pos.below()).isAir()) {
+							if(condition.conditionMet(level, pos.below(), level.getBlockState(pos.below()), Math.sqrt(offX * offX + (offY-1) * (offY-1) + offZ * offZ))) {
+								blockEffect.doBlockExplosion(level, pos, state, distance);
+								break topToBottom;
+							}
+						}
+					}
+				}
+			}
+		}
+	}
+	
+	/**
+	 * Gets all the top blocks in a sphere and edits them according to the given {@link IForEachBlockExplosionEffect}. <br>
+	 * A top block is any air or non-solid block followed by a solid block below.
+	 * @param level  the current level
+	 * @param position  the center position of the top block explosion
+	 * @param radius  the radius of the sphere
+	 * @param blockEffect  determines what should happen to the blocks gotten by this function
+	 */
+	@Deprecated(since = "47.2.32.2", forRemoval = true)
+	public static void doTopBlockExplosionForAll(Level level, Vec3 position, int radius, IForEachBlockExplosionEffect blockEffect) {
+		for(int offX = -radius; offX <= radius; offX++) {
+			for(int offZ = -radius; offZ <= radius; offZ++) {
+				for(int offY = radius; offY >= -radius; offY--) {
+					double distance = Math.sqrt(offX * offX + offY * offY + offZ * offZ);
+					if(distance <= radius) {
+						BlockPos pos = new BlockPos((int)position.x, (int)position.y, (int)position.z).offset(offX, offY, offZ);
+						BlockState state = level.getBlockState(pos);
+						if((level.getBlockState(pos.below()).isCollisionShapeFullBlock(level, pos.below()) || level.getBlockState(pos.below()).isFaceSturdy(level, pos.below(), Direction.UP)) && (state.isAir() || state.canBeReplaced(new DirectionalPlaceContext(level, pos, Direction.DOWN, ItemStack.EMPTY, Direction.UP)) || (!state.isCollisionShapeFullBlock(level, pos) && state.getExplosionResistance(level, pos, ImprovedExplosion.dummyExplosion((ServerLevel)level)) == 0) || state.is(BlockTags.FLOWERS))) {
+							blockEffect.doBlockExplosion(level, pos, state, distance);
+						}
 					}
 				}
 			}

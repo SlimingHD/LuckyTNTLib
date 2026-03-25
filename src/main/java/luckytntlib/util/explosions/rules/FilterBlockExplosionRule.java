@@ -35,6 +35,11 @@ public class FilterBlockExplosionRule implements ExplosionRule {
 	}
 	
 	@Override
+	public void setupClientData(Level level, BlockState state, Vec3 center, int offX, int offY, int offZ) {
+		rule.setupClientData(level, state, center, offX, offY, offZ);
+	}
+	
+	@Override
 	public boolean shouldApply(Level level, BlockState state, Vec3 center, int offX, int offY, int offZ) {
 		if (blocks != null) {
 			for (Block b : blocks) {

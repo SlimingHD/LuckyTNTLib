@@ -20,19 +20,29 @@ public class LogicExplosionRule implements ExplosionRule {
 	public static final ResourceLocation RESOURCE_LOCATION = new ResourceLocation(LuckyTNTLib.MODID, "logic");
 	
 	private final LogicOperator operator;
+	private final ExplosionRule conditionRule1;
 	@Nullable
-	private final ExplosionRule conditionRule;
+	private final ExplosionRule conditionRule2;
 	private final ExplosionRule rule;
 	
-	protected LogicExplosionRule(LogicOperator operator, @Nullable ExplosionRule conditionRule, ExplosionRule rule) {
+	protected LogicExplosionRule(LogicOperator operator, ExplosionRule conditionRule1, @Nullable ExplosionRule conditionRule2, ExplosionRule rule) {
 		this.operator = operator;
-		this.conditionRule = conditionRule;
+		this.conditionRule1 = conditionRule1;
+		this.conditionRule2 = conditionRule2;
 		this.rule = rule;
 	}
 	
 	@Override
+	public void setupClientData(Level level, BlockState state, Vec3 center, int offX, int offY, int offZ) {
+		rule.setupClientData(level, state, center, offX, offY, offZ);
+	}
+	
+	@Override
 	public boolean shouldApply(Level level, BlockState state, Vec3 center, int offX, int offY, int offZ) {
-		return operator.apply(conditionRule == null ? false : conditionRule.shouldApply(level, state, center, offX, offY, offZ), rule.shouldApply(level, state, center, offX, offY, offZ));
+		if (operator.apply(conditionRule1.shouldApply(level, state, center, offX, offY, offZ), conditionRule2 == null ? false : conditionRule2.shouldApply(level, state, center, offX, offY, offZ))) {
+			return rule.shouldApply(level, state, center, offX, offY, offZ);
+		}
+		return false;
 	}
 
 	@Override
@@ -48,57 +58,54 @@ public class LogicExplosionRule implements ExplosionRule {
 	}
 	
 	public static ExplosionRule decode(JsonObject root) {
-		return new LogicExplosionRule(LogicOperator.NOT, null, ExplosionRule.parse(root.get("conditionRule").getAsJsonObject()));
+		return new LogicExplosionRule(LogicOperator.NOT, null, null, ExplosionRule.parse(root.get("rule").getAsJsonObject()));
 	}
 	
 	/**
-	 * Creates a new {@code LogicExplosionRule} where the condition of the wrapped {@link ExplosionRule} is negated
+	 * Creates a new {@code LogicExplosionRule} where the condition of {@code conditionRule} has to be false.
+	 * If that applies, {@code rule} will determine whether to change the {@link BlockState} and provide the {@link BlockState} in that case.
 	 */
-	public static LogicExplosionRule not(ExplosionRule rule) {
-		return new LogicExplosionRule(LogicOperator.NOT, null, rule);
+	public static LogicExplosionRule not(ExplosionRule conditionRule, ExplosionRule rule) {
+		return new LogicExplosionRule(LogicOperator.NOT, conditionRule, null, rule);
 	}
 	
 	/**
-	 * Creates a new {@code LogicExplosionRule} where the condition of both wrapped {@link ExplosionRule}s have to be met.
-	 * If that applies, the {@link BlockState} will be determined by {@code rule}.
-	 * {@code conditionRule} will only be used to check whether the rule should apply.
+	 * Creates a new {@code LogicExplosionRule} where the conditions of both {@code conditionRule1} and {@code conditionRule2} have to be met.
+	 * If that applies, {@code rule} will determine whether to change the {@link BlockState} and provide the {@link BlockState} in that case.
 	 */
-	public static LogicExplosionRule and(ExplosionRule conditionRule, ExplosionRule rule) {
-		return new LogicExplosionRule(LogicOperator.AND, conditionRule, rule);
+	public static LogicExplosionRule and(ExplosionRule conditionRule1, ExplosionRule conditionRule2, ExplosionRule rule) {
+		return new LogicExplosionRule(LogicOperator.AND, conditionRule1, conditionRule2, rule);
 	}
 	
 	/**
-	 * Creates a new {@code LogicExplosionRule} where the condition of at least one of the wrapped {@link ExplosionRule}s has to be met.
-	 * If that applies, the {@link BlockState} will be determined by {@code rule}.
-	 * {@code conditionRule} will only be used to check whether the rule should apply.
+	 * Creates a new {@code LogicExplosionRule} where the condition of at least one of {@code conditionRule1} and {@code conditionRule2} has to be met.
+	 * If that applies, {@code rule} will determine whether to change the {@link BlockState} and provide the {@link BlockState} in that case.
 	 */
-	public static LogicExplosionRule or(ExplosionRule conditionRule, ExplosionRule rule) {
-		return new LogicExplosionRule(LogicOperator.OR, conditionRule, rule);
+	public static LogicExplosionRule or(ExplosionRule conditionRule1, ExplosionRule conditionRule2, ExplosionRule rule) {
+		return new LogicExplosionRule(LogicOperator.OR, conditionRule1, conditionRule2, rule);
 	}
 	
 	/**
-	 * Creates a new {@code LogicExplosionRule} where either both wrapped {@link ExplosionRule}s must apply, or neither of them.
-	 * If that condition id met, the {@link BlockState} will be determined by {@code rule}.
-	 * {@code conditionRule} will only be used to check whether the rule should apply.
+	 * Creates a new {@code LogicExplosionRule} where the conditions of both {@code conditionRule1} and {@code conditionRule2} have to return the same value.
+	 * If that applies, {@code rule} will determine whether to change the {@link BlockState} and provide the {@link BlockState} in that case.
 	 */
-	public static LogicExplosionRule equal(ExplosionRule conditionRule, ExplosionRule rule) {
-		return new LogicExplosionRule(LogicOperator.EQUAL, conditionRule, rule);
+	public static LogicExplosionRule equal(ExplosionRule conditionRule1, ExplosionRule conditionRule2, ExplosionRule rule) {
+		return new LogicExplosionRule(LogicOperator.EQUAL, conditionRule1, conditionRule2, rule);
 	}
 	
 	/**
-	 * Creates a new {@code LogicExplosionRule} where the condition of exactly one of the wrapped {@link ExplosionRule}s has to be met.
-	 * If that applies, the {@link BlockState} will be determined by {@code rule}.
-	 * {@code conditionRule} will only be used to check whether the rule should apply.
+	 * Creates a new {@code LogicExplosionRule} where the conditions of both {@code conditionRule1} and {@code conditionRule2} have to return different values.
+	 * If that applies, {@code rule} will determine whether to change the {@link BlockState} and provide the {@link BlockState} in that case.
 	 */
-	public static LogicExplosionRule xor(ExplosionRule conditionRule, ExplosionRule rule) {
-		return new LogicExplosionRule(LogicOperator.XOR, conditionRule, rule);
+	public static LogicExplosionRule xor(ExplosionRule conditionRule1, ExplosionRule conditionRule2, ExplosionRule rule) {
+		return new LogicExplosionRule(LogicOperator.XOR, conditionRule1, conditionRule2, rule);
 	}
 
 	/**
 	 * Simple utility enum that represents boolean operators
 	 */
 	public static enum LogicOperator {
-		NOT("not", (b1, b2) -> !b2),
+		NOT("not", (b1, b2) -> !b1),
 		AND("and", (b1, b2) -> b1 && b2),
 		OR("or", (b1, b2) -> b1 || b2),
 		EQUAL("equal", (b1, b2) -> b1 == b2),
