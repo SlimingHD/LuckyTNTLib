@@ -4,6 +4,7 @@ import com.google.gson.JsonObject;
 
 import luckytntlib.LuckyTNTLib;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.util.Mth;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.Vec3;
@@ -20,27 +21,32 @@ public class FilterRandomDistanceExplosionRule implements ExplosionRule {
 	private final ProbabilityCalculator probabilityCalculator;
 	private final ExplosionRule rule;
 	
-	public FilterRandomDistanceExplosionRule(int radius, ProbabilityCalculator probabilityCalculator, ExplosionRule rule) {
+	public FilterRandomDistanceExplosionRule(int startRadius, int endRadius, ProbabilityCalculator probabilityCalculator, ExplosionRule rule) {
+		this.radius = endRadius - startRadius;
 		if (radius <= 0) {
 			throw new IllegalArgumentException("Provided radius must not be 0 or negative.");
 		}
-		this.radius = radius;
 		this.probabilityCalculator = probabilityCalculator;
 		this.rule = rule;
 	}
 	
-	public static FilterRandomDistanceExplosionRule linearDecrease(int radius, ExplosionRule rule) {
-		return new FilterRandomDistanceExplosionRule(radius, (offX, offY, offZ, r) -> {
-			double distance = Math.sqrt(offX * offX + offY * offY + offZ * offZ);
-			return 1f - (float)(distance / r);
+	public static FilterRandomDistanceExplosionRule linearDecrease(int startRadius, int endRadius, ExplosionRule rule) {
+		return new FilterRandomDistanceExplosionRule(startRadius, endRadius, (offX, offY, offZ, r) -> {
+			float distance = Mth.sqrt(offX * offX + offY * offY + offZ * offZ);
+			return 1f - (distance - startRadius) / r;
 		}, rule);
 	}
 	
-	public static FilterRandomDistanceExplosionRule quadraticDecrease(int radius, ExplosionRule rule) {
-		int radiusSqr = radius * radius;
-		return new FilterRandomDistanceExplosionRule(radius, (offX, offY, offZ, r) -> {
+	/**
+	 * Generally faster than {@link #linearDecrease(int, int, ExplosionRule)}, as it omits {@link Math#sqrt(double)}, but probability fall off curve looks different. 
+	 */
+	public static FilterRandomDistanceExplosionRule quadraticDecrease(int startRadius, int endRadius, ExplosionRule rule) {
+		int startRadiusSqr = startRadius * startRadius;
+		int endRadiusSqr = endRadius * endRadius;
+		float radiusSqr = endRadiusSqr - startRadiusSqr;
+		return new FilterRandomDistanceExplosionRule(startRadius, endRadius, (offX, offY, offZ, r) -> {
 			int distanceSqr = offX * offX + offY * offY + offZ * offZ;
-			return 1f - distanceSqr / (float)radiusSqr;
+			return 1f - (distanceSqr - startRadiusSqr) / radiusSqr;
 		}, rule);
 	}
 	
@@ -71,7 +77,7 @@ public class FilterRandomDistanceExplosionRule implements ExplosionRule {
 	}
 
 	public static ExplosionRule decode(JsonObject root) {
-		return new FilterRandomDistanceExplosionRule(1, null, ExplosionRule.parse(root.get("rule").getAsJsonObject()));
+		return new FilterRandomDistanceExplosionRule(0, 1, (offX, offY, offZ, r) -> 0f, ExplosionRule.parse(root.get("rule").getAsJsonObject()));
 	}
 	
 	@FunctionalInterface
