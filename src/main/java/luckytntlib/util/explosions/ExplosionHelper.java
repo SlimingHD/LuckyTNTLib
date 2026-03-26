@@ -75,7 +75,7 @@ public class ExplosionHelper {
 	 * @see #createSpheroidCrater(Level, Vec3, int, Vector3f, int)
 	 * @see #createSpheroidCrater(Level, Vec3, int, Vector3f, int, ExplosionRule)
 	 */
-	public static void createSphericalCrater(Level level, Vec3 position, int radius, int maxResistance) {
+	public static void createSphericalCrater(Level level, Vec3 position, int radius, float maxResistance) {
 		createSphericalCrater(level, position, radius, maxResistance, null);
 	}
 	
@@ -92,7 +92,7 @@ public class ExplosionHelper {
 	 * @see #createSpheroidCrater(Level, Vec3, int, Vector3f, int)
 	 * @see #createSpheroidCrater(Level, Vec3, int, Vector3f, int, ExplosionRule)
 	 */
-	public static void createSphericalCrater(Level level, Vec3 position, int radius, int maxResistance, @Nullable ExplosionRule rule) {
+	public static void createSphericalCrater(Level level, Vec3 position, int radius, float maxResistance, @Nullable ExplosionRule rule) {
 		createSpheroidCrater(level, position, radius, new Vector3f(1), maxResistance, rule);
 	}
 	
@@ -110,7 +110,7 @@ public class ExplosionHelper {
 	 * @see #createSphericalCrater(Level, Vec3, int, int, ExplosionRule)
 	 * @see #createSpheroidCrater(Level, Vec3, int, Vector3f, int, ExplosionRule)
 	 */
-	public static void createSpheroidCrater(Level level, Vec3 position, int radius, Vector3f scaling, int maxResistance) {
+	public static void createSpheroidCrater(Level level, Vec3 position, int radius, Vector3f scaling, float maxResistance) {
 		createSpheroidCrater(level, position, radius, scaling, maxResistance, null);
 	}
 	
@@ -129,7 +129,7 @@ public class ExplosionHelper {
 	 * @see #createSphericalCrater(Level, Vec3, int, int, ExplosionRule)
 	 * @see #createSpheroidCrater(Level, Vec3, int, Vector3f, int)
 	 */
-	public static void createSpheroidCrater(Level level, Vec3 position, int radius, Vector3f scaling, int maxResistance, @Nullable ExplosionRule rule) {
+	public static void createSpheroidCrater(Level level, Vec3 position, int radius, Vector3f scaling, float maxResistance, @Nullable ExplosionRule rule) {
 		createCrater(level, position, radius, scaling, maxResistance, SPHEROID_CALCULATOR, rule);
 	}
 	
@@ -145,7 +145,7 @@ public class ExplosionHelper {
 	 * @see #createCuboidCrater(Level, Vec3, int, Vector3f, int)
 	 * @see #createCuboidCrater(Level, Vec3, int, Vector3f, int, ExplosionRule)
 	 */
-	public static void createCubicalCrater(Level level, Vec3 position, int radius, int maxResistance) {
+	public static void createCubicalCrater(Level level, Vec3 position, int radius, float maxResistance) {
 		createCubicalCrater(level, position, radius, maxResistance, null);
 	}
 	
@@ -162,7 +162,7 @@ public class ExplosionHelper {
 	 * @see #createCuboidCrater(Level, Vec3, int, Vector3f, int)
 	 * @see #createCuboidCrater(Level, Vec3, int, Vector3f, int, ExplosionRule)
 	 */
-	public static void createCubicalCrater(Level level, Vec3 position, int radius, int maxResistance, @Nullable ExplosionRule rule) {
+	public static void createCubicalCrater(Level level, Vec3 position, int radius, float maxResistance, @Nullable ExplosionRule rule) {
 		createCuboidCrater(level, position, radius, new Vector3f(1), maxResistance, rule);
 	}
 	
@@ -180,7 +180,7 @@ public class ExplosionHelper {
 	 * @see #createCubicalCrater(Level, Vec3, int, int, ExplosionRule)
 	 * @see #createCuboidCrater(Level, Vec3, int, Vector3f, int, ExplosionRule)
 	 */
-	public static void createCuboidCrater(Level level, Vec3 position, int radius, Vector3f scaling, int maxResistance) {
+	public static void createCuboidCrater(Level level, Vec3 position, int radius, Vector3f scaling, float maxResistance) {
 		createCuboidCrater(level, position, radius, scaling, maxResistance, null);
 	}
 	
@@ -199,7 +199,7 @@ public class ExplosionHelper {
 	 * @see #createCubicalCrater(Level, Vec3, int, int, ExplosionRule)
 	 * @see #createCuboidCrater(Level, Vec3, int, Vector3f, int)
 	 */
-	public static void createCuboidCrater(Level level, Vec3 position, int radius, Vector3f scaling, int maxResistance, @Nullable ExplosionRule rule) {
+	public static void createCuboidCrater(Level level, Vec3 position, int radius, Vector3f scaling, float maxResistance, @Nullable ExplosionRule rule) {
 		createCrater(level, position, radius, scaling, maxResistance, CUBOID_CALCULATOR, rule);
 	}
 	
@@ -216,7 +216,7 @@ public class ExplosionHelper {
 	 * @see #createScaledCylindricalCrater(Level, Vec3, int, int, Vector3f, int)
 	 * @see #createScaledCylindricalCrater(Level, Vec3, int, int, Vector3f, int, ExplosionRule)
 	 */
-	public static void createCylindricalCrater(Level level, Vec3 position, int radiusXZ, int radiusY, int maxResistance) {
+	public static void createCylindricalCrater(Level level, Vec3 position, int radiusXZ, int radiusY, float maxResistance) {
 		createCylindricalCrater(level, position, radiusXZ, radiusY, maxResistance, null);
 	}
 	
@@ -234,7 +234,7 @@ public class ExplosionHelper {
 	 * @see #createScaledCylindricalCrater(Level, Vec3, int, int, Vector3f, int)
 	 * @see #createScaledCylindricalCrater(Level, Vec3, int, int, Vector3f, int, ExplosionRule)
 	 */
-	public static void createCylindricalCrater(Level level, Vec3 position, int radiusXZ, int radiusY, int maxResistance, @Nullable ExplosionRule rule) {
+	public static void createCylindricalCrater(Level level, Vec3 position, int radiusXZ, int radiusY, float maxResistance, @Nullable ExplosionRule rule) {
 		createScaledCylindricalCrater(level, position, radiusXZ, radiusY, new Vector3f(1), maxResistance, rule);
 	}
 	
@@ -253,7 +253,7 @@ public class ExplosionHelper {
 	 * @see #createCylindricalCrater(Level, Vec3, int, int, int, ExplosionRule)
 	 * @see #createScaledCylindricalCrater(Level, Vec3, int, int, Vector3f, int, ExplosionRule)
 	 */
-	public static void createScaledCylindricalCrater(Level level, Vec3 position, int radiusXZ, int radiusY, Vector3f scaling, int maxResistance) {
+	public static void createScaledCylindricalCrater(Level level, Vec3 position, int radiusXZ, int radiusY, Vector3f scaling, float maxResistance) {
 		createScaledCylindricalCrater(level, position, radiusXZ, radiusY, scaling, maxResistance, null);
 	}
 	
@@ -273,7 +273,7 @@ public class ExplosionHelper {
 	 * @see #createCylindricalCrater(Level, Vec3, int, int, int, ExplosionRule)
 	 * @see #createScaledCylindricalCrater(Level, Vec3, int, int, Vector3f, int)
 	 */
-	public static void createScaledCylindricalCrater(Level level, Vec3 position, int radiusXZ, int radiusY, Vector3f scaling, int maxResistance, @Nullable ExplosionRule rule) {
+	public static void createScaledCylindricalCrater(Level level, Vec3 position, int radiusXZ, int radiusY, Vector3f scaling, float maxResistance, @Nullable ExplosionRule rule) {
 		DistanceCalculator calc = (x, z, r, s) -> Math.sqrt(x * x / s.x + z * z / s.z) <= radiusXZ ? (int)(radiusY * radiusY * s.y * s.y) : 0;
 		createCrater(level, position, radiusXZ, scaling, maxResistance, calc, rule);
 	}
@@ -308,7 +308,7 @@ public class ExplosionHelper {
 	 * @see LightUpdateHelper
 	 */
 	@SuppressWarnings("deprecation")
-	public static void createCrater(Level level, Vec3 position, int radius, Vector3f scaling, int maxResistance, DistanceCalculator calculator, @Nullable ExplosionRule rule) {
+	public static void createCrater(Level level, Vec3 position, int radius, Vector3f scaling, float maxResistance, DistanceCalculator calculator, @Nullable ExplosionRule rule) {
 		long time = System.currentTimeMillis();
 		int editedBlocks = 0;
 		if (level instanceof ServerLevel server) {
@@ -414,7 +414,7 @@ public class ExplosionHelper {
 	 * @param maxResistance  blocks with an explosion resistance lower or equal to this value will be removed, all other blocks will be untouched
 	 * @param rule  an optional {@link ExplosionRule} that determines how affected blocks will be edited. If it's {@code null}, blocks will simply be removed.
 	 */
-	public static void legacySphericalExplosion(Level level, Vec3 position, int radius, int maxResistance, @Nullable ExplosionRule rule) {
+	public static void legacySphericalExplosion(Level level, Vec3 position, int radius, float maxResistance, @Nullable ExplosionRule rule) {
 		legacySpheroidExplosion(level, position, radius, new Vector3f(1f), maxResistance, rule);
 	}
 	
@@ -429,7 +429,7 @@ public class ExplosionHelper {
 	 * @param maxResistance  blocks with an explosion resistance lower or equal to this value will be removed, all other blocks will be untouched
 	 * @param rule  an optional {@link ExplosionRule} that determines how affected blocks will be edited. If it's {@code null}, blocks will simply be removed.
 	 */
-	public static void legacySpheroidExplosion(Level level, Vec3 position, int radius, Vector3f scaling, int maxResistance, @Nullable ExplosionRule rule) {
+	public static void legacySpheroidExplosion(Level level, Vec3 position, int radius, Vector3f scaling, float maxResistance, @Nullable ExplosionRule rule) {
 		int radiusSqr = radius * radius;
 		BlockPos center = BlockPos.containing(position);
 		ImprovedExplosion dummy = ImprovedExplosion.dummyExplosion(level);
@@ -460,7 +460,7 @@ public class ExplosionHelper {
 	 * @param maxResistance  blocks with an explosion resistance lower or equal to this value will be removed, all other blocks will be untouched
 	 * @param rule  an optional {@link ExplosionRule} that determines how affected blocks will be edited. If it's {@code null}, blocks will simply be removed.
 	 */
-	public static void legacyCubicalExplosion(Level level, Vec3 position, int radius, int maxResistance, @Nullable ExplosionRule rule) {
+	public static void legacyCubicalExplosion(Level level, Vec3 position, int radius, float maxResistance, @Nullable ExplosionRule rule) {
 		legacyCuboidExplosion(level, position, radius, new Vector3f(1f), maxResistance, rule);
 	}
 	
@@ -475,7 +475,7 @@ public class ExplosionHelper {
 	 * @param maxResistance  blocks with an explosion resistance lower or equal to this value will be removed, all other blocks will be untouched
 	 * @param rule  an optional {@link ExplosionRule} that determines how affected blocks will be edited. If it's {@code null}, blocks will simply be removed.
 	 */
-	public static void legacyCuboidExplosion(Level level, Vec3 position, int radius, Vector3f scaling, int maxResistance, @Nullable ExplosionRule rule) {
+	public static void legacyCuboidExplosion(Level level, Vec3 position, int radius, Vector3f scaling, float maxResistance, @Nullable ExplosionRule rule) {
 		BlockPos center = BlockPos.containing(position);
 		ImprovedExplosion dummy = ImprovedExplosion.dummyExplosion(level);
 		boolean useRule = rule != null;
@@ -503,7 +503,7 @@ public class ExplosionHelper {
 	 * @param maxResistance  blocks with an explosion resistance lower or equal to this value will be removed, all other blocks will be untouched
 	 * @param rule  an optional {@link ExplosionRule} that determines how affected blocks will be edited. If it's {@code null}, blocks will simply be removed.
 	 */
-	public static void legacyCylindricalExplosion(Level level, Vec3 position, int radius, int radiusY, int maxResistance, @Nullable ExplosionRule rule) {
+	public static void legacyCylindricalExplosion(Level level, Vec3 position, int radius, int radiusY, float maxResistance, @Nullable ExplosionRule rule) {
 		legacyScaledCylindricalExplosion(level, position, radius, radiusY, new Vector3f(1f), maxResistance, rule);
 	}
 	
@@ -519,7 +519,7 @@ public class ExplosionHelper {
 	 * @param maxResistance  blocks with an explosion resistance lower or equal to this value will be removed, all other blocks will be untouched
 	 * @param rule  an optional {@link ExplosionRule} that determines how affected blocks will be edited. If it's {@code null}, blocks will simply be removed.
 	 */
-	public static void legacyScaledCylindricalExplosion(Level level, Vec3 position, int radius, int radiusY, Vector3f scaling, int maxResistance, @Nullable ExplosionRule rule) {
+	public static void legacyScaledCylindricalExplosion(Level level, Vec3 position, int radius, int radiusY, Vector3f scaling, float maxResistance, @Nullable ExplosionRule rule) {
 		int radiusSqr = radius * radius;
 		BlockPos center = BlockPos.containing(position);
 		ImprovedExplosion dummy = ImprovedExplosion.dummyExplosion(level);
@@ -551,7 +551,7 @@ public class ExplosionHelper {
 	 * @param maxResistance  blocks with an explosion resistance lower or equal to this value will be removed, all other blocks will be untouched
 	 * @param rule  an optional {@link ExplosionRule} that determines how affected blocks will be edited. If it's {@code null}, blocks will simply be removed.
 	 */
-	public static void legacySurfaceExplosion(Level level, Vec3 position, int radius, int maxResistance, @Nullable ExplosionRule rule) {
+	public static void legacySurfaceExplosion(Level level, Vec3 position, int radius, float maxResistance, @Nullable ExplosionRule rule) {
 		int radiusSqr = radius * radius;
 		BlockPos center = BlockPos.containing(position);
 		ImprovedExplosion dummy = ImprovedExplosion.dummyExplosion(level);
