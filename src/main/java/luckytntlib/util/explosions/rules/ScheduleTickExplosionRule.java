@@ -1,0 +1,59 @@
+package luckytntlib.util.explosions.rules;
+
+import com.google.gson.JsonObject;
+
+import luckytntlib.LuckyTNTLib;
+import net.minecraft.core.BlockPos;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.phys.Vec3;
+
+/**
+ * This {@link ExplosionRule} schedules a server-sided tick update for every block that will be placed.
+ */
+public class ScheduleTickExplosionRule implements ExplosionRule {
+
+	public static final ResourceLocation RESOURCE_LOCATION = new ResourceLocation(LuckyTNTLib.MODID, "schedule_tick");
+	
+	private final ExplosionRule rule;
+	
+	private BlockState appliedState;
+	private Level currentLevel;
+	
+	public ScheduleTickExplosionRule(ExplosionRule rule) {
+		this.rule = rule;
+	}
+	
+	@Override
+	public void setupClientData(Level level, BlockState state, Vec3 center, int offX, int offY, int offZ) {
+		currentLevel = level;
+	}
+	
+	@Override
+	public boolean shouldApply(Level level, BlockState state, Vec3 center, int offX, int offY, int offZ) {
+		if (rule.shouldApply(level, state, center, offX, offY, offZ)) {
+			appliedState = rule.getState();
+			currentLevel = level;
+			level.scheduleTick(BlockPos.containing(center).offset(offX, offY, offZ), state.getBlock(), 1);
+			return true;
+		}
+		return false;
+	}
+
+	@Override
+	public BlockState getState() {
+		return currentLevel.isClientSide() ? rule.getState() : appliedState;
+	}
+
+	@Override
+	public JsonObject encode(JsonObject root) {
+		root.addProperty("type", RESOURCE_LOCATION.toString());
+		root.add("rule", rule.encode(new JsonObject()));
+		return root;
+	}
+	
+	public static ExplosionRule decode(JsonObject root) {
+		return new ScheduleTickExplosionRule(ExplosionRule.parse(root.get("rule").getAsJsonObject()));
+	}
+}

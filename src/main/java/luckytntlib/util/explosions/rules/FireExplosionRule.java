@@ -44,19 +44,17 @@ public class FireExplosionRule implements ExplosionRule {
 		if (probability != 1 && level.getRandom().nextFloat() > probability) {
 			return false;
 		}
+		currentPos = BlockPos.containing(center).offset(offX, offY, offZ);
+		currentLevel = level;
 		if (!BaseFireBlock.canBePlacedAt(level, currentPos, Direction.DOWN)) {
 			return false;
 		}
-		currentPos = BlockPos.containing(center).offset(offX, offY, offZ);
-		currentLevel = level;
+		level.scheduleTick(currentPos, Blocks.FIRE, 1);
 		return true;
 	}
 	
 	@Override
 	public BlockState getState() {
-		if (!currentLevel.isClientSide()) {
-			currentLevel.scheduleTick(currentPos, Blocks.FIRE, 1);
-		}
 		return BaseFireBlock.getState(currentLevel, currentPos);
 	}
 	

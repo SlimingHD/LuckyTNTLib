@@ -35,14 +35,14 @@ public class StackedPrimedTNTEffect extends PrimedTNTEffect {
 	
 	@Override
 	public void explosionTick(IExplosiveEntity entity) {
-		for(PrimedTNTEffect effect : effects) {
+		for (PrimedTNTEffect effect : effects) {
 			effect.explosionTick(entity);
 		}
 	}
 	
 	@Override
 	public void serverExplosion(IExplosiveEntity entity) {
-		for(PrimedTNTEffect effect : effects) {
+		for (PrimedTNTEffect effect : effects) {
 			effect.serverExplosion(entity);
 		}
 	}
