@@ -19,22 +19,17 @@ public class ScheduleTickExplosionRule implements ExplosionRule {
 	private final ExplosionRule rule;
 	
 	private BlockState appliedState;
-	private Level currentLevel;
+	private boolean clientSide = true;
 	
 	public ScheduleTickExplosionRule(ExplosionRule rule) {
 		this.rule = rule;
 	}
 	
 	@Override
-	public void setupClientData(Level level, BlockState state, Vec3 center, int offX, int offY, int offZ) {
-		currentLevel = level;
-	}
-	
-	@Override
 	public boolean shouldApply(Level level, BlockState state, Vec3 center, int offX, int offY, int offZ) {
 		if (rule.shouldApply(level, state, center, offX, offY, offZ)) {
 			appliedState = rule.getState();
-			currentLevel = level;
+			clientSide = false;
 			level.scheduleTick(BlockPos.containing(center).offset(offX, offY, offZ), state.getBlock(), 1);
 			return true;
 		}
@@ -43,7 +38,7 @@ public class ScheduleTickExplosionRule implements ExplosionRule {
 
 	@Override
 	public BlockState getState() {
-		return currentLevel.isClientSide() ? rule.getState() : appliedState;
+		return clientSide ? rule.getState() : appliedState;
 	}
 
 	@Override
