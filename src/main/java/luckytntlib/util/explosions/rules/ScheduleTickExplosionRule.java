@@ -26,6 +26,11 @@ public class ScheduleTickExplosionRule implements ExplosionRule {
 	}
 	
 	@Override
+	public void setupClientData(Level level, BlockState state, Vec3 center, int offX, int offY, int offZ) {
+		rule.setupClientData(level, state, center, offX, offY, offZ);
+	}
+	
+	@Override
 	public boolean shouldApply(Level level, BlockState state, Vec3 center, int offX, int offY, int offZ) {
 		if (rule.shouldApply(level, state, center, offX, offY, offZ)) {
 			appliedState = rule.getState();

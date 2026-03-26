@@ -10,6 +10,7 @@ import com.google.gson.JsonObject;
 
 import luckytntlib.LuckyTNTLib;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.tags.TagKey;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.state.BlockState;
@@ -27,11 +28,14 @@ public class FilterBlockExplosionRule implements ExplosionRule {
 	private final Collection<Block> blocks;
 	@Nullable
 	private final Collection<BlockState> states;
+	@Nullable
+	private final Collection<TagKey<Block>> tags;
 	
-	protected FilterBlockExplosionRule(ExplosionRule rule, @Nullable Collection<Block> blocks, @Nullable Collection<BlockState> states) {
+	protected FilterBlockExplosionRule(ExplosionRule rule, @Nullable Collection<Block> blocks, @Nullable Collection<BlockState> states, @Nullable Collection<TagKey<Block>> tags) {
 		this.rule = rule;
 		this.blocks = blocks;
 		this.states = states;
+		this.tags = tags;
 	}
 	
 	@Override
@@ -41,6 +45,13 @@ public class FilterBlockExplosionRule implements ExplosionRule {
 	
 	@Override
 	public boolean shouldApply(Level level, BlockState state, Vec3 center, int offX, int offY, int offZ) {
+		if (tags != null) {
+			for (TagKey<Block> tag : tags) {
+				if (state.is(tag)) {
+					return rule.shouldApply(level, state, center, offX, offY, offZ);
+				}
+			}
+		}
 		if (blocks != null) {
 			for (Block b : blocks) {
 				if (state.is(b)) {
@@ -67,15 +78,19 @@ public class FilterBlockExplosionRule implements ExplosionRule {
 	}
 	
 	public static ExplosionRule decode(JsonObject root) {
-		return new FilterBlockExplosionRule(ExplosionRule.parse(root.get("rule").getAsJsonObject()), null, null);
+		return new FilterBlockExplosionRule(ExplosionRule.parse(root.get("rule").getAsJsonObject()), null, null, null);
 	}
 	
 	public static FilterBlockExplosionRule applyOnlyWhen(Block block, ExplosionRule ruleToWrap) {
-		return new FilterBlockExplosionRule(ruleToWrap, List.of(block), null);
+		return new FilterBlockExplosionRule(ruleToWrap, List.of(block), null, null);
 	}
 	
 	public static FilterBlockExplosionRule applyOnlyWhen(BlockState state, ExplosionRule ruleToWrap) {
-		return new FilterBlockExplosionRule(ruleToWrap, null, List.of(state));
+		return new FilterBlockExplosionRule(ruleToWrap, null, List.of(state), null);
+	}
+	
+	public static FilterBlockExplosionRule applyOnlyWhen(TagKey<Block> tag, ExplosionRule ruleToWrap) {
+		return new FilterBlockExplosionRule(ruleToWrap, null, null, List.of(tag));
 	}
 	
 	public static Builder builder() {
@@ -86,6 +101,7 @@ public class FilterBlockExplosionRule implements ExplosionRule {
 		
 		private Collection<Block> blocks = new LinkedList<>();
 		private Collection<BlockState> states = new LinkedList<>();
+		private Collection<TagKey<Block>> tags = new LinkedList<>();
 		
 		private Builder() {
 		}
@@ -118,8 +134,18 @@ public class FilterBlockExplosionRule implements ExplosionRule {
 			return this;
 		}
 		
+		@SuppressWarnings("unchecked")
+		public Builder filterForTags(TagKey<Block>... tagsToFilter) {
+			return filterForTags(List.of(tagsToFilter));
+		}
+		
+		public Builder filterForTags(Collection<TagKey<Block>> tagsToFilter) {
+			tags.addAll(tagsToFilter);
+			return this;
+		}
+		
 		public FilterBlockExplosionRule build(ExplosionRule ruleToWrap) {
-			return new FilterBlockExplosionRule(ruleToWrap, blocks, states);
+			return new FilterBlockExplosionRule(ruleToWrap, blocks, states, tags);
 		}
 	}
 }

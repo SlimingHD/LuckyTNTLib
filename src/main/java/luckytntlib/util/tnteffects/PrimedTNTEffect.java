@@ -11,7 +11,6 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.util.Mth;
-import net.minecraft.world.entity.Entity;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
@@ -46,9 +45,9 @@ public abstract class PrimedTNTEffect {
 		 */
 		if (entity instanceof PrimedLTNT || entity instanceof LivingPrimedLTNT || entity instanceof LTNTMinecart) {
 			if (entity.getTNTFuse() <= 0) {
-				if (entity.getLevel() instanceof ServerLevel) {
+				if (!entity.getLevel().isClientSide()) {
 					if (playsSound()) {
-						level.playSound((Entity)entity, new BlockPos(toBlockPos(entity.getPos())), SoundEvents.GENERIC_EXPLODE, SoundSource.BLOCKS, 4f, (1f + (level.random.nextFloat() - level.random.nextFloat()) * 0.2f) * 0.7f);
+						playExplosionSound(entity);
 					}
 					serverExplosion(entity);
 				}
@@ -66,9 +65,9 @@ public abstract class PrimedTNTEffect {
 					ent.setTNTFuse(0);
 				}
 				if (ent.getTNTFuse() == 0) {
-					if (ent.level() instanceof ServerLevel) {
+					if (!entity.getLevel().isClientSide()) {
 						if (playsSound()) {
-							level.playSound((Entity)entity, new BlockPos(toBlockPos(entity.getPos())), SoundEvents.GENERIC_EXPLODE, SoundSource.BLOCKS, 4f, (1f + (level.random.nextFloat() - level.random.nextFloat()) * 0.2f) * 0.7f);
+							playExplosionSound(entity);
 						}
 						serverExplosion(entity);
 					}
@@ -76,9 +75,9 @@ public abstract class PrimedTNTEffect {
 				}
 			}
 			else if (airFuse() && entity.getTNTFuse() == 0) {
-				if (ent.level() instanceof ServerLevel) {
+				if (!entity.getLevel().isClientSide()) {
 					if (playsSound()) {
-						level.playSound((Entity)entity, new BlockPos(toBlockPos(entity.getPos())), SoundEvents.GENERIC_EXPLODE, SoundSource.BLOCKS, 4f, (1f + (level.random.nextFloat() - level.random.nextFloat()) * 0.2f) * 0.7f);
+						playExplosionSound(entity);
 					}
 					serverExplosion(entity);
 				}
@@ -93,6 +92,11 @@ public abstract class PrimedTNTEffect {
 		if (level.isClientSide) {
 			spawnParticles(entity);
 		}
+	}
+	
+	public void playExplosionSound(IExplosiveEntity entity) {
+		Level level = entity.getLevel();
+		level.playSound(null, toBlockPos(entity.getPos()), SoundEvents.GENERIC_EXPLODE, SoundSource.BLOCKS, 4f, (1f + (level.getRandom().nextFloat() - level.getRandom().nextFloat()) * 0.2f) * 0.7f);		
 	}
 	
 	/**
