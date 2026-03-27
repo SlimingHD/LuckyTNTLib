@@ -319,10 +319,10 @@ public class ExplosionHelper {
 			long worldSeed = server.getSeed();
 			ChunkPos pos = new ChunkPos(Mth.floor(position.x) >> 4, Mth.floor(position.z) >> 4);
 			SingleThreadedRandomSource random = new SingleThreadedRandomSource(0);
-			BlockPos center = new BlockPos(Mth.floor(position.x), Mth.floor(position.y), Mth.floor(position.z));
+			BlockPos center = BlockPos.containing(position);
 			boolean useRule = rule != null;
 			
-			PacketHandler.CHANNEL.send(PacketDistributor.DIMENSION.with(() -> server.dimension()), new ClientboundSetupExplosionPacket(rule, position));
+			PacketHandler.CHANNEL.send(PacketDistributor.DIMENSION.with(() -> server.dimension()), new ClientboundSetupExplosionPacket(rule, position, worldSeed));
 			
 			float scale = Math.max(scaling.x, scaling.z);
 			int chunkRadius = (int)Math.ceil((float)(radius * scale) / 16f) + 1;
@@ -352,28 +352,39 @@ public class ExplosionHelper {
 								int dyMax = calculator.getMaxYDistanceSqr(dx, dz, radius, scaling);
 								for (int j = 0; j < 16; j++) {
 									int dy = height + j - center.getY();
-									if (dy * dy < dyMax) {
-										BlockState state = states.get(i, j, k);
+									if (dy * dy >= dyMax) {
+										continue;
+									}
+									
+									BlockState state = states.get(i, j, k);
+									if (Math.max(state.getBlock().getExplosionResistance(), state.getFluidState().getExplosionResistance()) > maxResistance) {
+										continue;
+									}
+									
+									if (useRule) {
 										random.setSeed(explosionSeed(worldSeed, center, dx, dy, dz));
-										if (Math.max(state.getBlock().getExplosionResistance(), state.getFluidState().getExplosionResistance()) <= maxResistance && (!useRule || rule.shouldApply(level, state, position, dx, dy, dz))) {
-											states.set(i, j, k, useRule ? rule.getState() : Blocks.AIR.defaultBlockState());
+									}
+									BlockState newState = useRule ? rule.getState(level, state, position, dx, dy, dz, random) : Blocks.AIR.defaultBlockState();
+									if (newState == null) {
+										continue;
+									}
+									
+									states.set(i, j, k, newState);
 
-											BlockPos blockpos = new BlockPos((chunkPos.x << 4) + i, height + j, (chunkPos.z << 4) + k);
-											state.getBlock().wasExploded(server, blockpos, dummyExplosion);
-											chunk.removeBlockEntity(blockpos);
+									BlockPos blockpos = new BlockPos((chunkPos.x << 4) + i, height + j, (chunkPos.z << 4) + k);
+									state.getBlock().wasExploded(server, blockpos, dummyExplosion);
+									chunk.removeBlockEntity(blockpos);
 
-											changed.set(encodeSectionPos(i, j, k));
-											++editedBlocks;
+									changed.set(encodeSectionPos(i, j, k));
+									++editedBlocks;
 
-											if (!chunkEdited) {
-												chunkEdited = true;
-												chunks.put(chunk, new BitSet());
-											}
-											if (!sectionChanged) {
-												sectionChanged = true;
-												chunks.get(chunk).set(height / 16 - (server.getMinSection() - 1));
-											}
-										}
+									if (!chunkEdited) {
+										chunkEdited = true;
+										chunks.put(chunk, new BitSet());
+									}
+									if (!sectionChanged) {
+										sectionChanged = true;
+										chunks.get(chunk).set(height / 16 - (server.getMinSection() - 1));
 									}
 								}
 							}
@@ -408,17 +419,6 @@ public class ExplosionHelper {
 		}
 	}
 	
-	public static long explosionSeed(long baseSeed, BlockPos center, int offX, int offY, int offZ) {
-		long seed = baseSeed ^
-				    ((long)center.getX() * -7046029288634856825l) ^
-				    ((long)center.getY() * -4417276706812531889l) ^
-				    ((long)center.getZ() * 1609587929392839161l) ^
-				    ((long)offX * 1609587929392839161l) ^
-				    ((long)offY * -8796714831421723037l) ^
-				    ((long)offZ * 2870177450012600261l);
-		return RandomSupport.mixStafford13(seed);
-	}
-	
 	/**
 	 * Edits all the blocks in a sphere around the given position according to the given {@link ExplosionRule}.
 	 * This method uses the legacy way of changing the world that issues all updates when changing a block while using the new {@link ExplosionRule}. <br>
@@ -444,21 +444,37 @@ public class ExplosionHelper {
 	 * @param maxResistance  blocks with an explosion resistance lower or equal to this value will be removed, all other blocks will be untouched
 	 * @param rule  an optional {@link ExplosionRule} that determines how affected blocks will be edited. If it's {@code null}, blocks will simply be removed.
 	 */
+	@SuppressWarnings("deprecation")
 	public static void legacySpheroidExplosion(Level level, Vec3 position, int radius, Vector3f scaling, float maxResistance, @Nullable ExplosionRule rule) {
-		int radiusSqr = radius * radius;
-		BlockPos center = BlockPos.containing(position);
-		ImprovedExplosion dummy = ImprovedExplosion.dummyExplosion(level);
-		boolean useRule = rule != null;
-		for (int offX = (int)(-radius * scaling.x); offX <= Mth.ceil(radius * scaling.x); offX++) {
-			for (int offY = (int)(-radius * scaling.y); offY <= Mth.ceil(radius * scaling.y); offY++) {
-				for (int offZ = (int)(-radius * scaling.z); offZ <= Mth.ceil(radius * scaling.z); offZ++) {
-					int distSqr = offX * offX + offY * offY + offZ * offZ;
-					if (distSqr <= radiusSqr) {
+		if (level instanceof ServerLevel server) {
+			int radiusSqr = radius * radius;
+			BlockPos center = BlockPos.containing(position);
+			SingleThreadedRandomSource random = new SingleThreadedRandomSource(0);
+			long worldSeed = server.getSeed();
+			boolean useRule = rule != null;
+			for (int offX = (int)(-radius * scaling.x); offX <= Mth.ceil(radius * scaling.x); offX++) {
+				for (int offY = (int)(-radius * scaling.y); offY <= Mth.ceil(radius * scaling.y); offY++) {
+					for (int offZ = (int)(-radius * scaling.z); offZ <= Mth.ceil(radius * scaling.z); offZ++) {
+						int distSqr = offX * offX + offY * offY + offZ * offZ;
+						if (distSqr > radiusSqr) {
+							continue;
+						}
+						
 						BlockPos pos = center.offset(offX, offY, offZ);
 						BlockState state = level.getBlockState(pos);
-						if (state.getExplosionResistance(level, pos, dummy) <= maxResistance && (!useRule || rule.shouldApply(level, state, position, offX, offY, offZ))) {
-							level.setBlockAndUpdate(center, useRule ? rule.getState() : Blocks.AIR.defaultBlockState());
+						if (Math.max(state.getBlock().getExplosionResistance(), state.getFluidState().getExplosionResistance()) > maxResistance) {
+							continue;
 						}
+						
+						if (useRule) {
+							random.setSeed(explosionSeed(worldSeed, center, offX, offY, offZ));
+						}
+						BlockState newState = useRule ? rule.getState(level, state, position, offX, offY, offZ, random) : Blocks.AIR.defaultBlockState();
+						if (newState == null) {
+							continue;
+						}
+						
+						level.setBlockAndUpdate(pos, newState);
 					}
 				}
 			}
@@ -490,17 +506,31 @@ public class ExplosionHelper {
 	 * @param maxResistance  blocks with an explosion resistance lower or equal to this value will be removed, all other blocks will be untouched
 	 * @param rule  an optional {@link ExplosionRule} that determines how affected blocks will be edited. If it's {@code null}, blocks will simply be removed.
 	 */
+	@SuppressWarnings("deprecation")
 	public static void legacyCuboidExplosion(Level level, Vec3 position, int radius, Vector3f scaling, float maxResistance, @Nullable ExplosionRule rule) {
-		BlockPos center = BlockPos.containing(position);
-		ImprovedExplosion dummy = ImprovedExplosion.dummyExplosion(level);
-		boolean useRule = rule != null;
-		for (int offX = (int)(-radius * scaling.x); offX <= Mth.ceil(radius * scaling.x); offX++) {
-			for (int offY = (int)(-radius * scaling.y); offY <= Mth.ceil(radius * scaling.y); offY++) {
-				for (int offZ = (int)(-radius * scaling.z); offZ <= Mth.ceil(radius * scaling.z); offZ++) {
-					BlockPos pos = center.offset(offX, offY, offZ);
-					BlockState state = level.getBlockState(pos);
-					if (state.getExplosionResistance(level, pos, dummy) <= maxResistance && (!useRule || rule.shouldApply(level, state, position, offX, offY, offZ))) {
-						level.setBlockAndUpdate(center, useRule ? rule.getState() : Blocks.AIR.defaultBlockState());
+		if (level instanceof ServerLevel server) {
+			BlockPos center = BlockPos.containing(position);
+			SingleThreadedRandomSource random = new SingleThreadedRandomSource(0);
+			long worldSeed = server.getSeed();
+			boolean useRule = rule != null;
+			for (int offX = (int)(-radius * scaling.x); offX <= Mth.ceil(radius * scaling.x); offX++) {
+				for (int offY = (int)(-radius * scaling.y); offY <= Mth.ceil(radius * scaling.y); offY++) {
+					for (int offZ = (int)(-radius * scaling.z); offZ <= Mth.ceil(radius * scaling.z); offZ++) {
+						BlockPos pos = center.offset(offX, offY, offZ);
+						BlockState state = level.getBlockState(pos);
+						if (Math.max(state.getBlock().getExplosionResistance(), state.getFluidState().getExplosionResistance()) > maxResistance) {
+							continue;
+						}
+						
+						if (useRule) {
+							random.setSeed(explosionSeed(worldSeed, center, offX, offY, offZ));
+						}
+						BlockState newState = useRule ? rule.getState(level, state, position, offX, offY, offZ, random) : Blocks.AIR.defaultBlockState();
+						if (newState == null) {
+							continue;
+						}
+						
+						level.setBlockAndUpdate(pos, newState);
 					}
 				}
 			}
@@ -534,21 +564,37 @@ public class ExplosionHelper {
 	 * @param maxResistance  blocks with an explosion resistance lower or equal to this value will be removed, all other blocks will be untouched
 	 * @param rule  an optional {@link ExplosionRule} that determines how affected blocks will be edited. If it's {@code null}, blocks will simply be removed.
 	 */
+	@SuppressWarnings("deprecation")
 	public static void legacyScaledCylindricalExplosion(Level level, Vec3 position, int radius, int radiusY, Vector3f scaling, float maxResistance, @Nullable ExplosionRule rule) {
-		int radiusSqr = radius * radius;
-		BlockPos center = BlockPos.containing(position);
-		ImprovedExplosion dummy = ImprovedExplosion.dummyExplosion(level);
-		boolean useRule = rule != null;
-		for (int offX = (int)(-radius * scaling.x); offX <= Mth.ceil(radius * scaling.x); offX++) {
-			for (int offY = (int)(-radiusY * scaling.y); offY <= Mth.ceil(radiusY * scaling.y); offY++) {
-				for (int offZ = (int)(-radius * scaling.z); offZ <= Mth.ceil(radius * scaling.z); offZ++) {
-					int distSqr = offX * offX + offZ * offZ;
-					if (distSqr <= radiusSqr) {
+		if (level instanceof ServerLevel server) {
+			int radiusSqr = radius * radius;
+			BlockPos center = BlockPos.containing(position);
+			SingleThreadedRandomSource random = new SingleThreadedRandomSource(0);
+			long worldSeed = server.getSeed();
+			boolean useRule = rule != null;
+			for (int offX = (int)(-radius * scaling.x); offX <= Mth.ceil(radius * scaling.x); offX++) {
+				for (int offY = (int)(-radiusY * scaling.y); offY <= Mth.ceil(radiusY * scaling.y); offY++) {
+					for (int offZ = (int)(-radius * scaling.z); offZ <= Mth.ceil(radius * scaling.z); offZ++) {
+						int distSqr = offX * offX + offZ * offZ;
+						if (distSqr > radiusSqr) {
+							continue;
+						}
+						
 						BlockPos pos = center.offset(offX, offY, offZ);
 						BlockState state = level.getBlockState(pos);
-						if (state.getExplosionResistance(level, pos, dummy) <= maxResistance && (!useRule || rule.shouldApply(level, state, position, offX, offY, offZ))) {
-							level.setBlockAndUpdate(center, useRule ? rule.getState() : Blocks.AIR.defaultBlockState());
+						if (Math.max(state.getBlock().getExplosionResistance(), state.getFluidState().getExplosionResistance()) > maxResistance) {
+							continue;
 						}
+						
+						if (useRule) {
+							random.setSeed(explosionSeed(worldSeed, center, offX, offY, offZ));
+						}
+						BlockState newState = useRule ? rule.getState(level, state, position, offX, offY, offZ, random) : Blocks.AIR.defaultBlockState();
+						if (newState == null) {
+							continue;
+						}
+						
+						level.setBlockAndUpdate(pos, newState);
 					}
 				}
 			}
@@ -566,25 +612,44 @@ public class ExplosionHelper {
 	 * @param maxResistance  blocks with an explosion resistance lower or equal to this value will be removed, all other blocks will be untouched
 	 * @param rule  an optional {@link ExplosionRule} that determines how affected blocks will be edited. If it's {@code null}, blocks will simply be removed.
 	 */
+	@SuppressWarnings("deprecation")
 	public static void legacySurfaceExplosion(Level level, Vec3 position, int radius, float maxResistance, @Nullable ExplosionRule rule) {
-		int radiusSqr = radius * radius;
-		BlockPos center = BlockPos.containing(position);
-		ImprovedExplosion dummy = ImprovedExplosion.dummyExplosion(level);
-		boolean useRule = rule != null;
-		for (int offX = -radius; offX <= radius; offX++) {
-			for (int offZ = -radius; offZ <= radius; offZ++) {
-				int distSqr = offX * offX + offZ * offZ;
-				if (distSqr <= radiusSqr) {
+		if (level instanceof ServerLevel server) {
+			int radiusSqr = radius * radius;
+			BlockPos center = BlockPos.containing(position);
+			SingleThreadedRandomSource random = new SingleThreadedRandomSource(0);
+			long worldSeed = server.getSeed();
+			boolean useRule = rule != null;
+			for (int offX = -radius; offX <= radius; offX++) {
+				for (int offZ = -radius; offZ <= radius; offZ++) {
+					int distSqr = offX * offX + offZ * offZ;
+					if (distSqr > radiusSqr) {
+						continue;
+					}
+					
 					for (int offY = radius; offY >= -radius; offY--) {
 						BlockPos pos = center.offset(offX, offY, offZ);
-						BlockPos above = pos.above();
 						BlockState state = level.getBlockState(pos);
-						if (Block.isFaceFull(state.getCollisionShape(level, pos), Direction.UP) && level.getBlockState(above).getCollisionShape(level, above).isEmpty()) {
-							if (state.getExplosionResistance(level, pos, dummy) <= maxResistance && (!useRule || rule.shouldApply(level, state, position, offX, offY, offZ))) {
-								level.setBlockAndUpdate(center, useRule ? rule.getState() : Blocks.AIR.defaultBlockState());
-							}
-							break;
+						if (Math.max(state.getBlock().getExplosionResistance(), state.getFluidState().getExplosionResistance()) > maxResistance) {
+							continue;
 						}
+
+						BlockPos above = pos.above();
+						if (!Block.isFaceFull(state.getCollisionShape(level, pos), Direction.UP) || !level.getBlockState(above).getCollisionShape(level, above).isEmpty()) {
+							continue;
+						}
+						
+						
+						if (useRule) {
+							random.setSeed(explosionSeed(worldSeed, center, offX, offY, offZ));
+						}
+						BlockState newState = useRule ? rule.getState(level, state, position, offX, offY, offZ, random) : Blocks.AIR.defaultBlockState();
+						if (newState == null) {
+							continue;
+						}
+						
+						level.setBlockAndUpdate(pos, newState);
+						break;
 					}
 				}
 			}
@@ -738,6 +803,21 @@ public class ExplosionHelper {
 				}
 			}
 		}
+	}
+	
+	/**
+	 * Creates a seed that is based on the supplied block position as well as a base seed. <br>
+	 * Used to synchronize random number generators without explicitly sending anything but {@code baseSeed}.
+	 */
+	public static long explosionSeed(long baseSeed, BlockPos center, int offX, int offY, int offZ) {
+		long seed = baseSeed ^
+				    ((long)center.getX() * -7046029288634856825l) ^
+				    ((long)center.getY() * -4417276706812531889l) ^
+				    ((long)center.getZ() * 1609587929392839161l) ^
+				    ((long)offX * 1609587929392839161l) ^
+				    ((long)offY * -8796714831421723037l) ^
+				    ((long)offZ * 2870177450012600261l);
+		return RandomSupport.mixStafford13(seed);
 	}
 	
 	/**

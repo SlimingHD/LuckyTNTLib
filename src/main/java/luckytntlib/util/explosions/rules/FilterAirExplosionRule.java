@@ -1,9 +1,12 @@
 package luckytntlib.util.explosions.rules;
 
+import javax.annotation.Nullable;
+
 import com.google.gson.JsonObject;
 
 import luckytntlib.LuckyTNTLib;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.util.RandomSource;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.Vec3;
@@ -22,21 +25,12 @@ public class FilterAirExplosionRule implements ExplosionRule {
 	}
 	
 	@Override
-	public void setupClientData(Level level, BlockState state, Vec3 center, int offX, int offY, int offZ) {
-		rule.setupClientData(level, state, center, offX, offY, offZ);
-	}
-
-	@Override
-	public boolean shouldApply(Level level, BlockState state, Vec3 center, int offX, int offY, int offZ) {
+	@Nullable
+	public BlockState getState(Level level, BlockState state, Vec3 center, int offX, int offY, int offZ, RandomSource random) {
 		if (state.isAir()) {
-			return false;
+			return null;
 		}
-		return rule.shouldApply(level, state, center, offX, offY, offZ);
-	}
-	
-	@Override
-	public BlockState getState() {
-		return rule.getState();
+		return rule.getState(level, state, center, offX, offY, offZ, random);
 	}
 
 	@Override

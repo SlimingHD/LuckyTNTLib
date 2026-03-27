@@ -8,6 +8,7 @@ import luckytntlib.registry.ExplosionRuleRegistry;
 import luckytntlib.util.explosions.ExplosionHelper;
 import luckytntlib.util.explosions.ImprovedExplosion;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.util.RandomSource;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.Vec3;
@@ -19,41 +20,21 @@ import net.minecraft.world.phys.Vec3;
 public interface ExplosionRule {
 	
 	/**
-	 * This method can be used to calculate and/or store additional data one the client to return the correct {@link BlockState} with {@link #getState()}
+	 * This method determines the state that is to be placed at the supplied position. <br>
+	 * If the rule should not apply at the supplied position, return value must be {@code null}. 
+	 * <p>
+	 * <strong><i><font color="#E00000"> This method has to examine the same behavior on both logical sides! </font></i></strong>
 	 * @param level  the current {@link Level}
 	 * @param state  the {@link BlockState} being affected by an explosion
 	 * @param center  the center of the explosion affecting the given {@link BlockState}
 	 * @param offX  the offset of the given {@link BlockState} to the center of the explosion on the x axis
 	 * @param offY  the offset of the given {@link BlockState} to the center of the explosion on the y axis
 	 * @param offZ  the offset of the given {@link BlockState} to the center of the explosion on the z axis
-	 * 
-	 * @apiNote this method will be called before {@link #getState()} only on the client-side
+	 * @param random  if you need random numbers, you should use this {@link RandomSource} because its automatically synchronized between server and client
+	 * @return a {@link BlockState} that will be placed at the supplied position if the rule applies. If the rule doesn't apply, returns {@code null}.
 	 */
-	default void setupClientData(Level level, BlockState state, Vec3 center, int offX, int offY, int offZ) {
-	}
-	
-	/**
-	 * This method determines whether the ExplosionRule will edit a block affected by an explosion at a given position. <br>
-	 * If you need to calculate and/or store extra data to return the correct {@link BlockState} at {@link #getState()} on the server, you'll have to do that in this method as well.
-	 * @param level  the current {@link Level}
-	 * @param state  the {@link BlockState} being affected by an explosion
-	 * @param center  the center of the explosion affecting the given {@link BlockState}
-	 * @param offX  the offset of the given {@link BlockState} to the center of the explosion on the x axis
-	 * @param offY  the offset of the given {@link BlockState} to the center of the explosion on the y axis
-	 * @param offZ  the offset of the given {@link BlockState} to the center of the explosion on the z axis
-	 * @return {@code true} if this rule should edit the world at the given position and {@code false} otherwise. <br>
-	 * If an ExplosionRule decides to apply at a given position, no other rule that could theoretically also apply to the same position will be able to do so.
-	 * 
-	 * @apiNote this method will only ever be called on the server-side
-	 */
-	boolean shouldApply(Level level, BlockState state, Vec3 center, int offX, int offY, int offZ);
-	
-	/**
-	 * Returns a {@link BlockState} that will be placed in the world. <br>
-	 * Should only ever be called and used if {@link #shouldApply(Level, BlockState, Vec3, int, int, int)} returned {@code true} for a given position.
-	 * @return a {@link BlockState} that will be placed in the world
-	 */
-	BlockState getState();
+	@Nullable
+	BlockState getState(Level level, BlockState state, Vec3 center, int offX, int offY, int offZ, RandomSource random);
 	
 	/**
 	 * Encodes all data relevant to the rule on the client into the given {@link JsonObject}.
@@ -69,7 +50,7 @@ public interface ExplosionRule {
 	 * @see ExplosionRuleRegistry
 	 * @see ExplosionRuleRegistry <br>
 	 * @see <i> Implementation examples: </i>
-	 * @see DistanceExplosionRule#decode(JsonObject)
+	 * @see FilterDistanceExplosionRule#decode(JsonObject)
 	 * @see FilterAirExplosionRule#decode(JsonObject)
 	 * @see FilterBlockExplosionRule#decode(JsonObject)
 	 * @see RandomBlockExplosionRule#decode(JsonObject)

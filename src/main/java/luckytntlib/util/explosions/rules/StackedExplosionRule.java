@@ -8,6 +8,7 @@ import com.google.gson.JsonObject;
 
 import luckytntlib.LuckyTNTLib;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.util.RandomSource;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.Vec3;
@@ -21,7 +22,6 @@ public class StackedExplosionRule implements ExplosionRule {
 	public static final ResourceLocation RESOURCE_LOCATION = new ResourceLocation(LuckyTNTLib.MODID, "stacked");
 
 	private final ExplosionRule[] rules;
-	private int applyingRuleIndex = 0;
 	
 	public StackedExplosionRule(Collection<ExplosionRule> rules) {
 		this.rules = rules.toArray(new ExplosionRule[0]);
@@ -32,29 +32,14 @@ public class StackedExplosionRule implements ExplosionRule {
 	}
 	
 	@Override
-	public void setupClientData(Level level, BlockState state, Vec3 center, int offX, int offY, int offZ) {
+	public BlockState getState(Level level, BlockState state, Vec3 center, int offX, int offY, int offZ, RandomSource random) {
 		for (int i = 0; i < rules.length; i++) {
-			if (rules[i].shouldApply(level, state, center, offX, offY, offZ)) {
-				applyingRuleIndex = i;
-				return;
+			BlockState ret = rules[i].getState(level, state, center, offX, offY, offZ, random);
+			if (ret != null) {
+				return ret;
 			}
 		}
-	}
-
-	@Override
-	public boolean shouldApply(Level level, BlockState state, Vec3 center, int offX, int offY, int offZ) {
-		for (int i = 0; i < rules.length; i++) {
-			if (rules[i].shouldApply(level, state, center, offX, offY, offZ)) {
-				applyingRuleIndex = i;
-				return true;
-			}
-		}
-		return false;
-	}
-	
-	@Override
-	public BlockState getState() {
-		return rules[applyingRuleIndex].getState();
+		return null;
 	}
 
 	@Override

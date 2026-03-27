@@ -1,13 +1,12 @@
 package luckytntlib.util.explosions.rules;
 
-import java.util.Optional;
-
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.mojang.serialization.JsonOps;
 
 import luckytntlib.LuckyTNTLib;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.util.RandomSource;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
@@ -25,14 +24,9 @@ public class SimpleExplosionRule implements ExplosionRule {
 	public SimpleExplosionRule(BlockState state) {
 		this.state = state;
 	}
-
-	@Override
-	public boolean shouldApply(Level level, BlockState state, Vec3 center, int offX, int offY, int offZ) {
-		return true;
-	}
 	
 	@Override
-	public BlockState getState() {
+	public BlockState getState(Level level, BlockState state, Vec3 center, int offX, int offY, int offZ, RandomSource random) {
 		return state;
 	}
 
@@ -47,10 +41,9 @@ public class SimpleExplosionRule implements ExplosionRule {
 	}
 
 	public static ExplosionRule decode(JsonObject root) {
-		BlockState state = Blocks.AIR.defaultBlockState();
-		Optional<BlockState> optional = BlockState.CODEC.parse(JsonOps.COMPRESSED, root.get("state")).get().left();
-		if (optional.isPresent()) {
-			state = optional.get();
+		BlockState state = BlockState.CODEC.parse(JsonOps.COMPRESSED, root.get("state")).get().left().orElseGet(() -> null);
+		if (state == null) {
+			state = Blocks.AIR.defaultBlockState();
 		}
 		
 		return new SimpleExplosionRule(state);

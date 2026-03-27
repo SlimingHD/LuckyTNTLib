@@ -1,6 +1,6 @@
 package luckytntlib.util.explosions.rules;
 
-import java.util.Optional;
+import javax.annotation.Nullable;
 
 import com.google.gson.JsonObject;
 import com.mojang.serialization.JsonOps;
@@ -8,6 +8,7 @@ import com.mojang.serialization.JsonOps;
 import luckytntlib.LuckyTNTLib;
 import net.minecraft.core.BlockPos;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.util.RandomSource;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
@@ -25,15 +26,14 @@ public class CanSurviveExplosionRule implements ExplosionRule {
 	public CanSurviveExplosionRule(BlockState stateToPlace) {
 		this.stateToPlace = stateToPlace;
 	}
-	
-	@Override
-	public boolean shouldApply(Level level, BlockState state, Vec3 center, int offX, int offY, int offZ) {
-		return stateToPlace.canSurvive(level, BlockPos.containing(center).offset(offX, offY, offZ));
-	}
 
 	@Override
-	public BlockState getState() {
-		return stateToPlace;
+	@Nullable
+	public BlockState getState(Level level, BlockState state, Vec3 center, int offX, int offY, int offZ, RandomSource random) {
+		if (stateToPlace.canSurvive(level, BlockPos.containing(center).offset(offX, offY, offZ))) {
+			return stateToPlace;
+		}
+		return null;
 	}
 
 	@Override
@@ -44,10 +44,9 @@ public class CanSurviveExplosionRule implements ExplosionRule {
 	}
 	
 	public static ExplosionRule decode(JsonObject root) {
-		BlockState state = Blocks.AIR.defaultBlockState();
-		Optional<BlockState> optional = BlockState.CODEC.parse(JsonOps.COMPRESSED, root.get("state").getAsJsonObject()).result();
-		if (optional.isPresent()) {
-			state = optional.get();
+		BlockState state = BlockState.CODEC.parse(JsonOps.COMPRESSED, root.get("state").getAsJsonObject()).result().orElseGet(() -> null);
+		if (state == null) {
+			state = Blocks.AIR.defaultBlockState();
 		}
 		return new CanSurviveExplosionRule(state);
 	}

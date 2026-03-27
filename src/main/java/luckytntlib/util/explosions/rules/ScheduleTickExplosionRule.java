@@ -1,10 +1,13 @@
 package luckytntlib.util.explosions.rules;
 
+import javax.annotation.Nullable;
+
 import com.google.gson.JsonObject;
 
 import luckytntlib.LuckyTNTLib;
 import net.minecraft.core.BlockPos;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.util.RandomSource;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.Vec3;
@@ -18,32 +21,18 @@ public class ScheduleTickExplosionRule implements ExplosionRule {
 	
 	private final ExplosionRule rule;
 	
-	private BlockState appliedState;
-	private boolean clientSide = true;
-	
 	public ScheduleTickExplosionRule(ExplosionRule rule) {
 		this.rule = rule;
 	}
-	
-	@Override
-	public void setupClientData(Level level, BlockState state, Vec3 center, int offX, int offY, int offZ) {
-		rule.setupClientData(level, state, center, offX, offY, offZ);
-	}
-	
-	@Override
-	public boolean shouldApply(Level level, BlockState state, Vec3 center, int offX, int offY, int offZ) {
-		if (rule.shouldApply(level, state, center, offX, offY, offZ)) {
-			appliedState = rule.getState();
-			clientSide = false;
-			level.scheduleTick(BlockPos.containing(center).offset(offX, offY, offZ), state.getBlock(), 1);
-			return true;
-		}
-		return false;
-	}
 
 	@Override
-	public BlockState getState() {
-		return clientSide ? rule.getState() : appliedState;
+	@Nullable
+	public BlockState getState(Level level, BlockState state, Vec3 center, int offX, int offY, int offZ, RandomSource random) {
+		BlockState ret = rule.getState(level, state, center, offX, offY, offZ, random);
+		if (ret != null) {
+			level.scheduleTick(BlockPos.containing(center).offset(offX, offY, offZ), state.getBlock(), 1);
+		}
+		return ret;
 	}
 
 	@Override

@@ -1,9 +1,12 @@
 package luckytntlib.util.explosions.rules;
 
+import javax.annotation.Nullable;
+
 import com.google.gson.JsonObject;
 
 import luckytntlib.LuckyTNTLib;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.util.RandomSource;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.Vec3;
@@ -17,14 +20,10 @@ public class NeverExplosionRule implements ExplosionRule {
 
 	public NeverExplosionRule() {
 	}
-	
-	@Override
-	public boolean shouldApply(Level level, BlockState state, Vec3 center, int offX, int offY, int offZ) {
-		return false;
-	}
 
 	@Override
-	public BlockState getState() {
+	@Nullable
+	public BlockState getState(Level level, BlockState state, Vec3 center, int offX, int offY, int offZ, RandomSource random) {
 		return null;
 	}
 

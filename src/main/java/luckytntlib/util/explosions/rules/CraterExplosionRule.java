@@ -1,9 +1,12 @@
 package luckytntlib.util.explosions.rules;
 
+import javax.annotation.Nullable;
+
 import com.google.gson.JsonObject;
 
 import luckytntlib.LuckyTNTLib;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.util.RandomSource;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
@@ -19,17 +22,13 @@ public class CraterExplosionRule implements ExplosionRule {
 
 	public CraterExplosionRule() {
 	}
-
-	@Override
-	public boolean shouldApply(Level level, BlockState state, Vec3 center, int offX, int offY, int offZ) {
-		if (state.isAir()) {
-			return false;
-		}
-		return true;
-	}
 	
 	@Override
-	public BlockState getState() {
+	@Nullable
+	public BlockState getState(Level level, BlockState state, Vec3 center, int offX, int offY, int offZ, RandomSource random) {
+		if (state.isAir()) {
+			return null;
+		}
 		return Blocks.AIR.defaultBlockState();
 	}
 

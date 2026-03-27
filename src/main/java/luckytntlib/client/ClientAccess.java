@@ -18,6 +18,7 @@ import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.chunk.LevelChunk;
 import net.minecraft.world.level.chunk.PalettedContainer;
+import net.minecraft.world.level.levelgen.SingleThreadedRandomSource;
 import net.minecraft.world.level.lighting.ChunkSkyLightSources;
 import net.minecraft.world.level.lighting.LevelLightEngine;
 import net.minecraft.world.phys.Vec3;
@@ -28,6 +29,7 @@ public class ClientAccess {
 	private static ExplosionRule currentRule;
 	@Nullable
 	private static Vec3 currentCenter;
+	private static long levelSeed;
 
 	private static Field heightmapField;
 	
@@ -65,17 +67,26 @@ public class ClientAccess {
 			Vec3 center = currentCenter;
 			BlockPos centerPos = center == null ? null : BlockPos.containing(center);
 			boolean useRule = rule != null && center != null;
+			long worldSeed = levelSeed;
+			SingleThreadedRandomSource random = useRule ? new SingleThreadedRandomSource(0) : null;
+			
 			if (allAffected) {
 				for (int s = 0; s < 4096; s++) {
 					Vec3i secpos = ExplosionHelper.decodeSectionPos(s);
 					BlockPos blockpos = new BlockPos((pos.getX() << 4) + secpos.getX(), ((pos.getY() + level.getMinSection()) << 4) + secpos.getY(), (pos.getZ() << 4) + secpos.getZ());
 					
+					int offX = 0;
+					int offY = 0;
+					int offZ = 0;
 					if (useRule) {
-						rule.setupClientData(level, states.get(secpos.getX(), secpos.getY(), secpos.getZ()), center, pos.getX() - centerPos.getX(), pos.getY() - centerPos.getY(), pos.getZ() - centerPos.getZ());
+						offX = pos.getX() - centerPos.getX();
+						offY = pos.getY() - centerPos.getY();
+						offZ = pos.getZ() - centerPos.getZ();
+						random.setSeed(ExplosionHelper.explosionSeed(worldSeed, centerPos, offX, offY, offZ));
 					}
 
 					chunk.removeBlockEntity(blockpos);
-					states.set(secpos.getX(), secpos.getY(), secpos.getZ(), useRule ? rule.getState() : Blocks.AIR.defaultBlockState());
+					states.set(secpos.getX(), secpos.getY(), secpos.getZ(), useRule ? rule.getState(level, states.get(secpos.getX(), secpos.getY(), secpos.getZ()), center, offX, offY, offZ, random) : Blocks.AIR.defaultBlockState());
 				}
 			} else {
 				for (int s = 0; s < 4096; ++s) {
@@ -85,12 +96,18 @@ public class ClientAccess {
 					Vec3i secpos = ExplosionHelper.decodeSectionPos(s);
 					BlockPos blockpos = new BlockPos((pos.getX() << 4) + secpos.getX(), ((pos.getY() + level.getMinSection()) << 4) + secpos.getY(), (pos.getZ() << 4) + secpos.getZ());
 					
+					int offX = 0;
+					int offY = 0;
+					int offZ = 0;
 					if (useRule) {
-						rule.setupClientData(level, states.get(secpos.getX(), secpos.getY(), secpos.getZ()), center, pos.getX() - centerPos.getX(), pos.getY() - centerPos.getY(), pos.getZ() - centerPos.getZ());
+						offX = pos.getX() - centerPos.getX();
+						offY = pos.getY() - centerPos.getY();
+						offZ = pos.getZ() - centerPos.getZ();
+						random.setSeed(ExplosionHelper.explosionSeed(worldSeed, centerPos, offX, offY, offZ));
 					}
 
 					chunk.removeBlockEntity(blockpos);
-					states.set(secpos.getX(), secpos.getY(), secpos.getZ(), useRule ? rule.getState() : Blocks.AIR.defaultBlockState());
+					states.set(secpos.getX(), secpos.getY(), secpos.getZ(), useRule ? rule.getState(level, states.get(secpos.getX(), secpos.getY(), secpos.getZ()), center, offX, offY, offZ, random) : Blocks.AIR.defaultBlockState());
 				}
 			}
 		}
@@ -129,8 +146,9 @@ public class ClientAccess {
 		}
 	}
 	
-	public static void setupExplosion(@Nullable ExplosionRule rule, @Nullable Vec3 center) {
+	public static void setupExplosion(@Nullable ExplosionRule rule, @Nullable Vec3 center, long seed) {
 		currentRule = rule;
 		currentCenter = center;
+		levelSeed = seed;
 	}
 }

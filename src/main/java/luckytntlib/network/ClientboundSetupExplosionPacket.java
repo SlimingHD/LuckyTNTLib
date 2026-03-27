@@ -35,21 +35,25 @@ public class ClientboundSetupExplosionPacket {
 	private final ExplosionRule rule;
 	@Nullable
 	private final Vec3 center;
+	private final long seed;
 	
-	public ClientboundSetupExplosionPacket(@Nullable ExplosionRule rule, @Nullable Vec3 center) {
+	public ClientboundSetupExplosionPacket(@Nullable ExplosionRule rule, @Nullable Vec3 center, long seed) {
 		this.rule = rule;
 		this.center = rule == null ? null : center;
+		this.seed = seed;
 	}
 	
 	public ClientboundSetupExplosionPacket(FriendlyByteBuf buffer) {
 		if (buffer.readBoolean()) {
 			rule = null;
 			center = null;
+			seed = 0l;
 			return;
 		}
 		JsonObject root = GsonHelper.parse(buffer.readUtf());
 		rule = ExplosionRule.parse(root);
 		center = new Vec3(buffer.readDouble(), buffer.readDouble(), buffer.readDouble());
+		seed = buffer.readLong();
 	}
 	
 	public void encode(FriendlyByteBuf buffer) {
@@ -62,10 +66,11 @@ public class ClientboundSetupExplosionPacket {
 		buffer.writeDouble(center.x);
 		buffer.writeDouble(center.y);
 		buffer.writeDouble(center.z);
+		buffer.writeLong(seed);
 	}
 	
 	public void handle(Supplier<NetworkEvent.Context> ctx) {
-		ctx.get().enqueueWork(() -> DistExecutor.unsafeRunWhenOn(Dist.CLIENT, () -> () -> ClientAccess.setupExplosion(rule, center)));
+		ctx.get().enqueueWork(() -> DistExecutor.unsafeRunWhenOn(Dist.CLIENT, () -> () -> ClientAccess.setupExplosion(rule, center, seed)));
 		ctx.get().setPacketHandled(true);
 	}
 }

@@ -1,9 +1,12 @@
 package luckytntlib.util.explosions.rules;
 
+import javax.annotation.Nullable;
+
 import com.google.gson.JsonObject;
 
 import luckytntlib.LuckyTNTLib;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.util.RandomSource;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.Vec3;
@@ -11,62 +14,62 @@ import net.minecraft.world.phys.Vec3;
 /**
  * An {@link ExplosionRule} that filters for positions that meet a condition related to distance
  */
-public class DistanceExplosionRule implements ExplosionRule {
+public class FilterDistanceExplosionRule implements ExplosionRule {
 	
 	public static final ResourceLocation RESOURCE_LOCATION = new ResourceLocation(LuckyTNTLib.MODID, "distance");
 
 	private final ExplosionRule rule;
 	private final DistanceComparator comparator;
 	
-	protected DistanceExplosionRule(ExplosionRule rule, DistanceComparator comparator) {
+	protected FilterDistanceExplosionRule(ExplosionRule rule, DistanceComparator comparator) {
 		this.rule = rule;
 		this.comparator = comparator;
 	}
-	
-	@Override
-	public boolean shouldApply(Level level, BlockState state, Vec3 center, int offX, int offY, int offZ) {
-		return comparator.withinRange(offX, offY, offZ) && rule.shouldApply(level, state, center, offX, offY, offZ);
-	}
 
 	@Override
-	public BlockState getState() {
-		return rule.getState();
+	@Nullable
+	public BlockState getState(Level level, BlockState state, Vec3 center, int offX, int offY, int offZ, RandomSource random) {
+		if (comparator.withinRange(offX, offY, offZ)) {
+			return rule.getState(level, state, center, offX, offY, offZ, random);
+		}
+		return null;
 	}
 
 	@Override
 	public JsonObject encode(JsonObject root) {
 		root.addProperty("type", RESOURCE_LOCATION.toString());
 		root.add("rule", rule.encode(new JsonObject()));
+		comparator.write(root);
 		return root;
 	}
 	
 	public static ExplosionRule decode(JsonObject root) {
-		return new DistanceExplosionRule(ExplosionRule.parse(root.get("rule").getAsJsonObject()), null);
+		return new FilterDistanceExplosionRule(ExplosionRule.parse(root.get("rule").getAsJsonObject()), DistanceComparator.parse(root));
 	}
 	
 	/**
 	 * Creates a {@code DistanceExplosionRule} that will apply the wrapped {@link ExplosionRule} if the distance is bigger than or equal to the given value
 	 */
-	public static DistanceExplosionRule greaterEqual(int minDistance, ExplosionRule ruleToWrap) {
-		return new DistanceExplosionRule(ruleToWrap, new DistanceComparator(DistanceComparingStrategy.GREATER_THAN, minDistance, 0));
+	public static FilterDistanceExplosionRule greaterEqual(int minDistance, ExplosionRule ruleToWrap) {
+		return new FilterDistanceExplosionRule(ruleToWrap, new DistanceComparator(DistanceComparingStrategy.GREATER_THAN, minDistance, 0));
 	}
 	
 	/**
 	 * Creates a {@code DistanceExplosionRule} that will apply the wrapped {@link ExplosionRule} if the distance is smaller than or equal to the given value
 	 */
-	public static DistanceExplosionRule lessEqual(int maxDistance, ExplosionRule ruleToWrap) {
-		return new DistanceExplosionRule(ruleToWrap, new DistanceComparator(DistanceComparingStrategy.SMALLER_THAN, 0, maxDistance));
+	public static FilterDistanceExplosionRule lessEqual(int maxDistance, ExplosionRule ruleToWrap) {
+		return new FilterDistanceExplosionRule(ruleToWrap, new DistanceComparator(DistanceComparingStrategy.SMALLER_THAN, 0, maxDistance));
 	}
 	
 	/**
 	 * Creates a {@code DistanceExplosionRule} that will apply the wrapped {@link ExplosionRule} if the distance is in between the given values or equal to either of them
 	 */
-	public static DistanceExplosionRule inBetween(int minDistance, int maxDistance, ExplosionRule ruleToWrap) {
-		return new DistanceExplosionRule(ruleToWrap, new DistanceComparator(DistanceComparingStrategy.GREATER_THAN, minDistance, maxDistance));
+	public static FilterDistanceExplosionRule inBetween(int minDistance, int maxDistance, ExplosionRule ruleToWrap) {
+		return new FilterDistanceExplosionRule(ruleToWrap, new DistanceComparator(DistanceComparingStrategy.GREATER_THAN, minDistance, maxDistance));
 	}
 	
 	/**
-	 * Used to determine when a {@link DistanceExplosionRule} should apply by evaluating the distance of a position to the center of an explosion
+	 * Used to determine when a {@link FilterDistanceExplosionRule} should apply by evaluating the distance of a position to the center of an explosion
 	 */
 	public static class DistanceComparator {
 
@@ -96,6 +99,25 @@ public class DistanceExplosionRule implements ExplosionRule {
 		
 		public boolean withinRange(int offX, int offY, int offZ) {
 			return strategy.getDistanceEvaluator().withinRange(offX, offY, offZ, minDistance, maxDistance);
+		}
+		
+		/**
+		 * Encodes the {@code DistanceComparator} into the supplied {@link JsonObject}
+		 */
+		public void write(JsonObject root) {
+			JsonObject encodedComparator = new JsonObject();
+			encodedComparator.addProperty("strategy", strategy.getName());
+			encodedComparator.addProperty("minDistance", minDistance);
+			encodedComparator.addProperty("maxDistance", maxDistance);
+			root.add("comparator", encodedComparator);
+		}
+		
+		/**
+		 * Reassembles a {@code DistanceComparator} encoded into a supplied {@link JsonObject} by {@link #write(JsonObject)}
+		 */
+		public static DistanceComparator parse(JsonObject root) {
+			JsonObject encodedComparator = root.get("comparator").getAsJsonObject();
+			return new DistanceComparator(DistanceComparingStrategy.byName(encodedComparator.get("strategy").getAsString()), encodedComparator.get("minDistance").getAsInt(), encodedComparator.get("maxDistance").getAsInt());
 		}
 	}
 	

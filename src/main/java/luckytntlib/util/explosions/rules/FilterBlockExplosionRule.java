@@ -6,15 +6,21 @@ import java.util.List;
 
 import javax.annotation.Nullable;
 
+import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
+import com.mojang.serialization.JsonOps;
 
 import luckytntlib.LuckyTNTLib;
+import net.minecraft.core.registries.Registries;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.tags.TagKey;
+import net.minecraft.util.RandomSource;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.Vec3;
+import net.minecraftforge.registries.ForgeRegistries;
 
 /**
  * {@link ExplosionRule} that only applies if a block affected by an explosion is a certain block or in a specific state.
@@ -37,48 +43,88 @@ public class FilterBlockExplosionRule implements ExplosionRule {
 		this.states = states;
 		this.tags = tags;
 	}
-	
+
 	@Override
-	public void setupClientData(Level level, BlockState state, Vec3 center, int offX, int offY, int offZ) {
-		rule.setupClientData(level, state, center, offX, offY, offZ);
-	}
-	
-	@Override
-	public boolean shouldApply(Level level, BlockState state, Vec3 center, int offX, int offY, int offZ) {
+	@Nullable
+	public BlockState getState(Level level, BlockState state, Vec3 center, int offX, int offY, int offZ, RandomSource random) {
 		if (tags != null) {
 			for (TagKey<Block> tag : tags) {
 				if (state.is(tag)) {
-					return rule.shouldApply(level, state, center, offX, offY, offZ);
+					return rule.getState(level, state, center, offX, offY, offZ, random);
 				}
 			}
 		}
 		if (blocks != null) {
 			for (Block b : blocks) {
 				if (state.is(b)) {
-					return rule.shouldApply(level, state, center, offX, offY, offZ);
+					return rule.getState(level, state, center, offX, offY, offZ, random);
 				}
 			}
 		}
 		if (states != null && states.contains(state)) {
-			return rule.shouldApply(level, state, center, offX, offY, offZ);
+			return rule.getState(level, state, center, offX, offY, offZ, random);
 		}
-		return false;
-	}
-
-	@Override
-	public BlockState getState() {
-		return rule.getState();
+		return null;
 	}
 
 	@Override
 	public JsonObject encode(JsonObject root) {
 		root.addProperty("type", RESOURCE_LOCATION.toString());
 		root.add("rule", rule.encode(new JsonObject()));
+		
+		JsonArray encodedBlocks = new JsonArray();
+		for (Block block : blocks) {
+			ResourceLocation location = ForgeRegistries.BLOCKS.getKey(block);
+			if (location == null) {
+				location = new ResourceLocation("air");
+			}
+			encodedBlocks.add(location.toString());
+		}
+		root.add("blocks", encodedBlocks);
+		
+		JsonArray encodedStates = new JsonArray();
+		for (BlockState state : states) {
+			encodedStates.add(BlockState.CODEC.encodeStart(JsonOps.COMPRESSED, state).getOrThrow(false, s -> {}));
+		}
+		root.add("states", encodedStates);
+		
+		JsonArray encodedTags = new JsonArray();
+		for (TagKey<Block> tag : tags) {
+			encodedTags.add(tag.location().toString());
+		}
+		root.add("tags", encodedTags);
+		
 		return root;
 	}
 	
 	public static ExplosionRule decode(JsonObject root) {
-		return new FilterBlockExplosionRule(ExplosionRule.parse(root.get("rule").getAsJsonObject()), null, null, null);
+		JsonArray encodedBlocks = root.get("blocks").getAsJsonArray();
+		LinkedList<Block> blocks = new LinkedList<>();
+		for (int i = 0; i < encodedBlocks.size(); i++) {
+			Block block = ForgeRegistries.BLOCKS.getValue(new ResourceLocation(encodedBlocks.get(i).getAsString()));
+			if (block == null) {
+				block = Blocks.AIR;
+			}
+			blocks.add(block);
+		}
+		
+		JsonArray encodedStates = root.get("states").getAsJsonArray();
+		LinkedList<BlockState> states = new LinkedList<>();
+		for (int i = 0; i < encodedStates.size(); i++) {
+			BlockState state = BlockState.CODEC.parse(JsonOps.COMPRESSED, encodedStates.get(i)).get().left().orElseGet(() -> null);
+			if (state == null) {
+				state = Blocks.AIR.defaultBlockState();
+			}
+			states.add(state);
+		}
+		
+		JsonArray encodedTags = root.get("tags").getAsJsonArray();
+		LinkedList<TagKey<Block>> tags = new LinkedList<>();
+		for (int i = 0; i < encodedTags.size(); i++) {
+			tags.add(TagKey.create(Registries.BLOCK, new ResourceLocation(encodedTags.get(i).getAsString())));
+		}
+		
+		return new FilterBlockExplosionRule(ExplosionRule.parse(root.get("rule").getAsJsonObject()), blocks.size() > 0 ? blocks : null, states.size() > 0 ? states : null, tags.size() > 0 ? tags : null);
 	}
 	
 	public static FilterBlockExplosionRule applyOnlyWhen(Block block, ExplosionRule ruleToWrap) {

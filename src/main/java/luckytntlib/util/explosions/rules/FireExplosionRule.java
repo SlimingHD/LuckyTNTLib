@@ -1,11 +1,14 @@
 package luckytntlib.util.explosions.rules;
 
+import javax.annotation.Nullable;
+
 import com.google.gson.JsonObject;
 
 import luckytntlib.LuckyTNTLib;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.util.RandomSource;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.BaseFireBlock;
 import net.minecraft.world.level.block.Blocks;
@@ -22,49 +25,32 @@ public class FireExplosionRule implements ExplosionRule {
 	
 	private final float probability;
 	
-	private Level currentLevel;
-	private BlockPos currentPos;
-	
 	public FireExplosionRule(float probability) {
 		this.probability = probability;
 	}
 	
-	public FireExplosionRule() {
-		probability = 1f;
-	}
-	
 	@Override
-	public void setupClientData(Level level, BlockState state, Vec3 center, int offX, int offY, int offZ) {
-		currentPos = BlockPos.containing(center).offset(offX, offY, offZ);
-		currentLevel = level;
-	}
-	
-	@Override
-	public boolean shouldApply(Level level, BlockState state, Vec3 center, int offX, int offY, int offZ) {
+	@Nullable
+	public BlockState getState(Level level, BlockState state, Vec3 center, int offX, int offY, int offZ, RandomSource random) {
 		if (probability != 1 && level.getRandom().nextFloat() > probability) {
-			return false;
+			return null;
 		}
-		currentPos = BlockPos.containing(center).offset(offX, offY, offZ);
-		currentLevel = level;
-		if (!BaseFireBlock.canBePlacedAt(level, currentPos, Direction.DOWN)) {
-			return false;
+		BlockPos pos = BlockPos.containing(center).offset(offX, offY, offZ);
+		if (!BaseFireBlock.canBePlacedAt(level, pos, Direction.DOWN)) {
+			return null;
 		}
-		level.scheduleTick(currentPos, Blocks.FIRE, 1);
-		return true;
-	}
-	
-	@Override
-	public BlockState getState() {
-		return BaseFireBlock.getState(currentLevel, currentPos);
+		level.scheduleTick(pos, Blocks.FIRE, 1);
+		return BaseFireBlock.getState(level, pos);
 	}
 	
 	@Override
 	public JsonObject encode(JsonObject root) {
 		root.addProperty("type", RESOURCE_LOCATION.toString());
+		root.addProperty("probability", probability);
 		return root;
 	}
 	
 	public static ExplosionRule decode(JsonObject root) {
-		return new FireExplosionRule();
+		return new FireExplosionRule(root.get("probability").getAsFloat());
 	}
 }

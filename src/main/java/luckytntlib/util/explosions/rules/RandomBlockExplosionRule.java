@@ -1,8 +1,6 @@
 package luckytntlib.util.explosions.rules;
 
 import java.util.ArrayList;
-import java.util.Optional;
-import java.util.Random;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
@@ -11,8 +9,8 @@ import com.mojang.serialization.JsonOps;
 import luckytntlib.LuckyTNTLib;
 import luckytntlib.util.RandomList;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraft.world.level.Level;
 import net.minecraft.util.RandomSource;
+import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.Vec3;
@@ -24,29 +22,14 @@ public class RandomBlockExplosionRule implements ExplosionRule {
 
 	public static final ResourceLocation RESOURCE_LOCATION = new ResourceLocation(LuckyTNTLib.MODID, "random_block");
 	
-	private static final Random RANDOM = new Random();
-	
 	private final RandomList<BlockState> states;
-	private final RandomSource random;
-	private final long seed;
 	
 	public RandomBlockExplosionRule(RandomList<BlockState> states) {
-		this(states, RANDOM.nextLong());
-	}
-	
-	public RandomBlockExplosionRule(RandomList<BlockState> states, long seed) {
 		this.states = states;
-		this.random = RandomSource.create(seed);
-		this.seed = seed;
-	}
-	
-	@Override
-	public boolean shouldApply(Level level, BlockState state, Vec3 center, int offX, int offY, int offZ) {
-		return true;
 	}
 
 	@Override
-	public BlockState getState() {
+	public BlockState getState(Level level, BlockState state, Vec3 center, int offX, int offY, int offZ, RandomSource random) {
 		return states.getRandomItem(random);
 	}
 
@@ -66,8 +49,6 @@ public class RandomBlockExplosionRule implements ExplosionRule {
 		}
 		root.add("weights", jsonWeights);
 		
-		root.addProperty("seed", seed);
-		
 		return root;
 	}
 
@@ -75,10 +56,9 @@ public class RandomBlockExplosionRule implements ExplosionRule {
 		JsonArray jsonStates = root.get("states").getAsJsonArray();
 		ArrayList<BlockState> states = new ArrayList<>(jsonStates.size());
 		for (int i = 0; i < jsonStates.size(); i++) {
-			BlockState state = Blocks.AIR.defaultBlockState();
-			Optional<BlockState> optional = BlockState.CODEC.parse(JsonOps.COMPRESSED, jsonStates.get(i)).result();
-			if (optional.isPresent()) {
-				state = optional.get();
+			BlockState state = BlockState.CODEC.parse(JsonOps.COMPRESSED, jsonStates.get(i)).result().orElseGet(() -> null);
+			if (state == null) {
+				state = Blocks.AIR.defaultBlockState();
 			}
 			states.add(state);
 		}
@@ -89,8 +69,6 @@ public class RandomBlockExplosionRule implements ExplosionRule {
 			weights.add(jsonWeights.get(i).getAsFloat());
 		}
 		
-		long seed = root.get("seed").getAsLong();
-		
-		return new RandomBlockExplosionRule(new RandomList<BlockState>(states, weights), seed);
+		return new RandomBlockExplosionRule(new RandomList<BlockState>(states, weights));
 	}
 }

@@ -4,6 +4,7 @@ import com.google.gson.JsonObject;
 
 import luckytntlib.LuckyTNTLib;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.util.RandomSource;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
@@ -18,14 +19,9 @@ public class AlwaysExplosionRule implements ExplosionRule {
 
 	public AlwaysExplosionRule() {
 	}
-	
-	@Override
-	public boolean shouldApply(Level level, BlockState state, Vec3 center, int offX, int offY, int offZ) {
-		return true;
-	}
 
 	@Override
-	public BlockState getState() {
+	public BlockState getState(Level level, BlockState state, Vec3 center, int offX, int offY, int offZ, RandomSource random) {
 		return Blocks.AIR.defaultBlockState();
 	}
 

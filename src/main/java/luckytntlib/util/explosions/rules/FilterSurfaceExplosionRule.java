@@ -6,6 +6,7 @@ import luckytntlib.LuckyTNTLib;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.util.RandomSource;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.state.BlockState;
@@ -32,42 +33,33 @@ public class FilterSurfaceExplosionRule implements ExplosionRule {
 		this.targetSurface = targetSurface;
 		this.rule = rule;
 	}
-	
+
 	@Override
-	public void setupClientData(Level level, BlockState state, Vec3 center, int offX, int offY, int offZ) {
-		rule.setupClientData(level, state, center, offX, offY, offZ);
-	}
-	
-	@Override
-	public boolean shouldApply(Level level, BlockState state, Vec3 center, int offX, int offY, int offZ) {
+	public BlockState getState(Level level, BlockState state, Vec3 center, int offX, int offY, int offZ, RandomSource random) {
 		BlockPos pos = BlockPos.containing(center).offset(offX, offY, offZ);
 		if (targetSurface) {
 			BlockPos above = pos.above();
 			if (Block.isFaceFull(state.getCollisionShape(level, pos), Direction.UP) && level.getBlockState(above).getCollisionShape(level, above).isEmpty()) {
-				return rule.shouldApply(level, state, center, offX, offY, offZ);
+				return rule.getState(level, state, center, offX, offY, offZ, random);
 			}
 		} else {
 			BlockPos below = pos.below();
 			if (state.getCollisionShape(level, pos).isEmpty() && Block.isFaceFull(level.getBlockState(below).getCollisionShape(level, below), Direction.UP)) {
-				return rule.shouldApply(level, state, center, offX, offY, offZ);
+				return rule.getState(level, state, center, offX, offY, offZ, random);
 			}
 		}
-		return false;
-	}
-
-	@Override
-	public BlockState getState() {
-		return rule.getState();
+		return null;
 	}
 
 	@Override
 	public JsonObject encode(JsonObject root) {
 		root.addProperty("type", RESOURCE_LOCATION.toString());
+		root.addProperty("surface", targetSurface);
 		root.add("rule", rule.encode(new JsonObject()));
 		return root;
 	}
 
 	public static ExplosionRule decode(JsonObject root) {
-		return new FilterSurfaceExplosionRule(false, ExplosionRule.parse(root.get("rule").getAsJsonObject()));
+		return new FilterSurfaceExplosionRule(root.get("surface").getAsBoolean(), ExplosionRule.parse(root.get("rule").getAsJsonObject()));
 	}
 }

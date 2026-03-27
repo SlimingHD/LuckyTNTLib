@@ -47,6 +47,7 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.chunk.LevelChunk;
 import net.minecraft.world.level.chunk.LevelChunkSection;
 import net.minecraft.world.level.chunk.PalettedContainer;
+import net.minecraft.world.level.levelgen.SingleThreadedRandomSource;
 import net.minecraft.world.level.material.FluidState;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
@@ -399,7 +400,7 @@ public class ImprovedExplosion extends Explosion {
 	 */
 	private void finishImprovedExplosionWithoutRule(Map<Long, BitSet> editedSections, Set<Long> fullSections) {
 		HashMap<LevelChunk, BitSet> chunks = new HashMap<>();
-		PacketHandler.CHANNEL.send(PacketDistributor.ALL.noArg(), new ClientboundSetupExplosionPacket(null, null));
+		PacketHandler.CHANNEL.send(PacketDistributor.ALL.noArg(), new ClientboundSetupExplosionPacket(null, null, 0));
 		
 		for (long encodedPos : fullSections) {
 			SectionPos pos = SectionPos.of(encodedPos);
@@ -464,8 +465,12 @@ public class ImprovedExplosion extends Explosion {
 	 * Block and sky light will be updated correctly and efficiently.
 	 */
 	private void finishImprovedExplosionWithRule(Map<Long, BitSet> editedSections, Set<Long> fullSections, ExplosionRule rule) {
+		long worldSeed = ((ServerLevel)level).getSeed();
+		SingleThreadedRandomSource random = new SingleThreadedRandomSource(0);
+		BlockPos center = BlockPos.containing(getPosition());
+		
 		HashMap<LevelChunk, BitSet> chunks = new HashMap<>();
-		PacketHandler.CHANNEL.send(PacketDistributor.ALL.noArg(), new ClientboundSetupExplosionPacket(rule, new Vec3(posX, posY, posZ)));
+		PacketHandler.CHANNEL.send(PacketDistributor.ALL.noArg(), new ClientboundSetupExplosionPacket(rule, new Vec3(posX, posY, posZ), worldSeed));
 
 		for (long encodedPos : fullSections) {
 			SectionPos pos = SectionPos.of(encodedPos);
@@ -483,11 +488,19 @@ public class ImprovedExplosion extends Explosion {
 				int x = (pos.x() << 4) + xl;
 				int y = (pos.y() << 4) + yl;
 				int z = (pos.z() << 4) + zl;
+				int offX = x - center.getX();
+				int offY = y - center.getY();
+				int offZ = z - center.getZ();
+				
 				BlockState state = states.get(xl, yl, zl);
-				if (rule.shouldApply(level, state, getPosition(), x - Mth.floor(posX), y - Mth.floor(posY), z - Mth.floor(posZ))) {
+				
+				random.setSeed(ExplosionHelper.explosionSeed(worldSeed, center, offX, offY, offZ));
+				BlockState newState = rule.getState(level, state, getPosition(), offX, offY, offZ, random);
+				
+				if (newState != null) {
 					BlockPos blockpos = new BlockPos(x, y, z);
 					state.getBlock().wasExploded(level, blockpos, this);
-					states.set(xl, yl, zl, rule.getState());
+					states.set(xl, yl, zl, newState);
 					chunk.removeBlockEntity(blockpos);
 				} else {
 					if (changed == null) {
@@ -531,11 +544,19 @@ public class ImprovedExplosion extends Explosion {
 					int x = (pos.x() << 4) + xl;
 					int y = (pos.y() << 4) + yl;
 					int z = (pos.z() << 4) + zl;
+					int offX = x - center.getX();
+					int offY = y - center.getY();
+					int offZ = z - center.getZ();
+					
 					BlockState state = states.get(xl, yl, zl);
-					if (rule.shouldApply(level, state, getPosition(), x - Mth.floor(posX), y - Mth.floor(posY), z - Mth.floor(posZ))) {
+					
+					random.setSeed(ExplosionHelper.explosionSeed(worldSeed, center, offX, offY, offZ));
+					BlockState newState = rule.getState(level, state, getPosition(), offX, offY, offZ, random);
+					
+					if (newState != null) {
 						BlockPos blockpos = new BlockPos(x, y, z);
 						state.getBlock().wasExploded(level, blockpos, this);
-						states.set(xl, yl, zl, rule.getState());
+						states.set(xl, yl, zl, newState);
 						chunk.removeBlockEntity(blockpos);
 					} else {
 						affectedBlocks.set(s, false);
@@ -594,6 +615,10 @@ public class ImprovedExplosion extends Explosion {
 	 * Best used for small explosions.
 	 */
 	private void finishUpdatingExplosionWithRule(Map<Long, BitSet> editedSections, Set<Long> fullSections, ExplosionRule rule) {
+		long worldSeed = ((ServerLevel)level).getSeed();
+		SingleThreadedRandomSource random = new SingleThreadedRandomSource(0);
+		BlockPos center = BlockPos.containing(getPosition());
+		
 		for (long encodedPos : fullSections) {
 			SectionPos sectionPos = SectionPos.of(encodedPos);
 			LevelChunk chunk = level.getChunk(sectionPos.x(), sectionPos.z());
@@ -606,10 +631,18 @@ public class ImprovedExplosion extends Explosion {
 				int lx = (i >> 8) & 15;
 				int ly = (i >> 4) & 15;
 				int lz = i & 15;
+				int offX = x + lx - center.getX();
+				int offY = y + ly - center.getY();
+				int offZ = z + lz - center.getZ();
+				
 				BlockState state = states.get(lx, ly, lz);
-				if (rule.shouldApply(level, state, getPosition(), x + lx - Mth.floor(posX), y + ly - Mth.floor(posY), z + lz - Mth.floor(posZ))) {
+				
+				random.setSeed(ExplosionHelper.explosionSeed(worldSeed, center, offX, offY, offZ));
+				BlockState newState = rule.getState(level, state, getPosition(), offX, offY, offZ, random);
+				
+				if (newState != null) {
 					BlockPos pos = new BlockPos(x + lx, y + ly, z + lz);
-					level.setBlockAndUpdate(pos, rule.getState());
+					level.setBlockAndUpdate(pos, newState);
 				}
 			}
 		}
@@ -627,10 +660,18 @@ public class ImprovedExplosion extends Explosion {
 					int lx = (i >> 8) & 15;
 					int ly = (i >> 4) & 15;
 					int lz = i & 15;
+					int offX = x + lx - center.getX();
+					int offY = y + ly - center.getY();
+					int offZ = z + lz - center.getZ();
+					
 					BlockState state = states.get(lx, ly, lz);
-					if (rule.shouldApply(level, state, getPosition(), x + lx - Mth.floor(posX), y + ly - Mth.floor(posY), z + lz - Mth.floor(posZ))) {
+					
+					random.setSeed(ExplosionHelper.explosionSeed(worldSeed, center, offX, offY, offZ));
+					BlockState newState = rule.getState(level, state, getPosition(), offX, offY, offZ, random);
+					
+					if (newState != null) {
 						BlockPos pos = new BlockPos(x + lx, y + ly, z + lz);
-						level.setBlockAndUpdate(pos, rule.getState());
+						level.setBlockAndUpdate(pos, newState);
 					}
 				}
 			}

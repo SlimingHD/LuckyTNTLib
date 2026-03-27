@@ -8,6 +8,7 @@ import com.google.gson.JsonObject;
 
 import luckytntlib.LuckyTNTLib;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.util.RandomSource;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.Vec3;
@@ -31,34 +32,31 @@ public class LogicExplosionRule implements ExplosionRule {
 		this.conditionRule2 = conditionRule2;
 		this.rule = rule;
 	}
-	
-	@Override
-	public void setupClientData(Level level, BlockState state, Vec3 center, int offX, int offY, int offZ) {
-		rule.setupClientData(level, state, center, offX, offY, offZ);
-	}
-	
-	@Override
-	public boolean shouldApply(Level level, BlockState state, Vec3 center, int offX, int offY, int offZ) {
-		if (operator.apply(conditionRule1.shouldApply(level, state, center, offX, offY, offZ), conditionRule2 == null ? false : conditionRule2.shouldApply(level, state, center, offX, offY, offZ))) {
-			return rule.shouldApply(level, state, center, offX, offY, offZ);
-		}
-		return false;
-	}
 
 	@Override
-	public BlockState getState() {
-		return rule.getState();
+	public BlockState getState(Level level, BlockState state, Vec3 center, int offX, int offY, int offZ, RandomSource random) {
+		if (operator.apply(conditionRule1.getState(level, state, center, offX, offY, offZ, random) != null, conditionRule2 == null ? false : conditionRule2.getState(level, state, center, offX, offY, offZ, random) != null)) {
+			return rule.getState(level, state, center, offX, offY, offZ, random);
+		}
+		return null;
 	}
 
 	@Override
 	public JsonObject encode(JsonObject root) {
 		root.addProperty("type", RESOURCE_LOCATION.toString());
+		root.addProperty("operator", operator.getName());
+		root.add("conditionRule1", conditionRule1.encode(new JsonObject()));
+		if (conditionRule2 == null) {
+			root.addProperty("ruleNull", true);
+		} else {
+			root.add("conditionRule2", conditionRule2.encode(new JsonObject()));
+		}
 		root.add("rule", rule.encode(new JsonObject()));
 		return root;
 	}
 	
 	public static ExplosionRule decode(JsonObject root) {
-		return new LogicExplosionRule(LogicOperator.NOT, null, null, ExplosionRule.parse(root.get("rule").getAsJsonObject()));
+		return new LogicExplosionRule(LogicOperator.byName(root.get("operator").getAsString()), ExplosionRule.parse(root.get("conditionRule1").getAsJsonObject()), root.has("ruleNull") ? null : ExplosionRule.parse(root.get("conditionRule2").getAsJsonObject()), ExplosionRule.parse(root.get("rule").getAsJsonObject()));
 	}
 	
 	/**

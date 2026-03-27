@@ -1,9 +1,12 @@
 package luckytntlib.util.explosions.rules;
 
+import javax.annotation.Nullable;
+
 import com.google.gson.JsonObject;
 
 import luckytntlib.LuckyTNTLib;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.util.RandomSource;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.Vec3;
@@ -22,34 +25,26 @@ public class FilterBlastResistanceExplosionRule implements ExplosionRule {
 		this.maxResistance = maxResistance;
 		this.rule = rule;
 	}
-	
-	@Override
-	public void setupClientData(Level level, BlockState state, Vec3 center, int offX, int offY, int offZ) {
-		rule.setupClientData(level, state, center, offX, offY, offZ);
-	}
-	
+
 	@SuppressWarnings("deprecation")
 	@Override
-	public boolean shouldApply(Level level, BlockState state, Vec3 center, int offX, int offY, int offZ) {
-		if (state.getBlock().getExplosionResistance() <= maxResistance) {
-			return rule.shouldApply(level, state, center, offX, offY, offZ);
+	@Nullable
+	public BlockState getState(Level level, BlockState state, Vec3 center, int offX, int offY, int offZ, RandomSource random) {
+		if (Math.max(state.getBlock().getExplosionResistance(), state.getFluidState().getExplosionResistance()) <= maxResistance) {
+			return rule.getState(level, state, center, offX, offY, offZ, random);
 		}
-		return false;
-	}
-
-	@Override
-	public BlockState getState() {
-		return rule.getState();
+		return null;
 	}
 
 	@Override
 	public JsonObject encode(JsonObject root) {
 		root.addProperty("type", RESOURCE_LOCATION.toString());
+		root.addProperty("resistance", maxResistance);
 		root.add("rule", rule.encode(new JsonObject()));
 		return root;
 	}
 
 	public static ExplosionRule decode(JsonObject root) {
-		return new FilterBlastResistanceExplosionRule(0f, ExplosionRule.parse(root.get("rule").getAsJsonObject()));
+		return new FilterBlastResistanceExplosionRule(root.get("resistance").getAsFloat(), ExplosionRule.parse(root.get("rule").getAsJsonObject()));
 	}
 }
