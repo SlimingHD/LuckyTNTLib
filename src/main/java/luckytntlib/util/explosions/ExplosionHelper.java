@@ -448,6 +448,7 @@ public class ExplosionHelper {
 		if (level instanceof ServerLevel server) {
 			int radiusSqr = radius * radius;
 			BlockPos center = BlockPos.containing(position);
+			ImprovedExplosion dummy = ImprovedExplosion.dummyExplosion(level);
 			SingleThreadedRandomSource random = new SingleThreadedRandomSource(0);
 			long worldSeed = server.getSeed();
 			boolean useRule = rule != null;
@@ -473,6 +474,7 @@ public class ExplosionHelper {
 							continue;
 						}
 						
+						state.getBlock().wasExploded(level, pos, dummy);
 						level.setBlockAndUpdate(pos, newState);
 					}
 				}
@@ -509,6 +511,7 @@ public class ExplosionHelper {
 	public static void legacyCuboidExplosion(Level level, Vec3 position, int radius, Vector3f scaling, float maxResistance, @Nullable ExplosionRule rule) {
 		if (level instanceof ServerLevel server) {
 			BlockPos center = BlockPos.containing(position);
+			ImprovedExplosion dummy = ImprovedExplosion.dummyExplosion(level);
 			SingleThreadedRandomSource random = new SingleThreadedRandomSource(0);
 			long worldSeed = server.getSeed();
 			boolean useRule = rule != null;
@@ -528,7 +531,8 @@ public class ExplosionHelper {
 						if (newState == null) {
 							continue;
 						}
-						
+
+						state.getBlock().wasExploded(level, pos, dummy);
 						level.setBlockAndUpdate(pos, newState);
 					}
 				}
@@ -568,6 +572,7 @@ public class ExplosionHelper {
 		if (level instanceof ServerLevel server) {
 			int radiusSqr = radius * radius;
 			BlockPos center = BlockPos.containing(position);
+			ImprovedExplosion dummy = ImprovedExplosion.dummyExplosion(level);
 			SingleThreadedRandomSource random = new SingleThreadedRandomSource(0);
 			long worldSeed = server.getSeed();
 			boolean useRule = rule != null;
@@ -592,7 +597,8 @@ public class ExplosionHelper {
 						if (newState == null) {
 							continue;
 						}
-						
+
+						state.getBlock().wasExploded(level, pos, dummy);
 						level.setBlockAndUpdate(pos, newState);
 					}
 				}
@@ -616,6 +622,7 @@ public class ExplosionHelper {
 		if (level instanceof ServerLevel server) {
 			int radiusSqr = radius * radius;
 			BlockPos center = BlockPos.containing(position);
+			ImprovedExplosion dummy = ImprovedExplosion.dummyExplosion(level);
 			SingleThreadedRandomSource random = new SingleThreadedRandomSource(0);
 			long worldSeed = server.getSeed();
 			boolean useRule = rule != null;
@@ -646,7 +653,8 @@ public class ExplosionHelper {
 						if (newState == null) {
 							continue;
 						}
-						
+
+						state.getBlock().wasExploded(level, pos, dummy);
 						level.setBlockAndUpdate(pos, newState);
 						break;
 					}
