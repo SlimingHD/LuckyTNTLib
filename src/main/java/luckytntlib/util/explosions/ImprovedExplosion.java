@@ -362,7 +362,7 @@ public class ImprovedExplosion extends Explosion {
 	/**
 	 * Sets a consumer of this explosion that will execute after {@link #finishImprovedExplosion(Map, Set, ExplosionRule)}.
 	 * <p>
-	 * Due to the possibility of explosions being mutli-threaded if their size is larger than or equal to {@code 30},
+	 * Due to the possibility of explosions being mutli-threaded if their size is larger than or equal to {@code 60},
 	 * having a way to perform an action after the explosion has finished editing the world is crucial, as multi-threaded explosions will
 	 * not block the main thread.
 	 * @param onExplosionFinish  the action to perform once the explosion has been finished.
@@ -596,7 +596,9 @@ public class ImprovedExplosion extends Explosion {
 			int z = sectionPos.getZ() << 4;
 			for (int i = 0; i < 4096; i++) {
 				BlockPos pos = new BlockPos(x + ((i >> 8) & 15), y + ((i >> 4) & 15), z + (i & 15));
+				BlockState state = level.getBlockState(pos);
 				level.setBlockAndUpdate(pos, Blocks.AIR.defaultBlockState());
+				state.getBlock().wasExploded(level, pos, this);
 			}
 		}
 		for (Entry<Long, BitSet> entry : editedSections.entrySet()) {
@@ -608,7 +610,9 @@ public class ImprovedExplosion extends Explosion {
 			for (int i = 0; i < 4096; i++) {
 				if (affectedBlocks.get(i)) {
 					BlockPos pos = new BlockPos(x + ((i >> 8) & 15), y + ((i >> 4) & 15), z + (i & 15));
+					BlockState state = level.getBlockState(pos);
 					level.setBlockAndUpdate(pos, Blocks.AIR.defaultBlockState());
+					state.getBlock().wasExploded(level, pos, this);
 				}
 			}
 		}
@@ -647,6 +651,7 @@ public class ImprovedExplosion extends Explosion {
 				if (newState != null) {
 					BlockPos pos = new BlockPos(x + lx, y + ly, z + lz);
 					level.setBlockAndUpdate(pos, newState);
+					state.getBlock().wasExploded(level, pos, this);
 				}
 			}
 		}
@@ -676,6 +681,7 @@ public class ImprovedExplosion extends Explosion {
 					if (newState != null) {
 						BlockPos pos = new BlockPos(x + lx, y + ly, z + lz);
 						level.setBlockAndUpdate(pos, newState);
+						state.getBlock().wasExploded(level, pos, this);
 					}
 				}
 			}

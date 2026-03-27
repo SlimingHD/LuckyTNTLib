@@ -474,8 +474,8 @@ public class ExplosionHelper {
 							continue;
 						}
 						
-						state.getBlock().wasExploded(level, pos, dummy);
 						level.setBlockAndUpdate(pos, newState);
+						state.getBlock().wasExploded(level, pos, dummy);
 					}
 				}
 			}
@@ -532,8 +532,8 @@ public class ExplosionHelper {
 							continue;
 						}
 
-						state.getBlock().wasExploded(level, pos, dummy);
 						level.setBlockAndUpdate(pos, newState);
+						state.getBlock().wasExploded(level, pos, dummy);
 					}
 				}
 			}
@@ -598,8 +598,8 @@ public class ExplosionHelper {
 							continue;
 						}
 
-						state.getBlock().wasExploded(level, pos, dummy);
 						level.setBlockAndUpdate(pos, newState);
+						state.getBlock().wasExploded(level, pos, dummy);
 					}
 				}
 			}
@@ -654,8 +654,8 @@ public class ExplosionHelper {
 							continue;
 						}
 
-						state.getBlock().wasExploded(level, pos, dummy);
 						level.setBlockAndUpdate(pos, newState);
+						state.getBlock().wasExploded(level, pos, dummy);
 						break;
 					}
 				}
