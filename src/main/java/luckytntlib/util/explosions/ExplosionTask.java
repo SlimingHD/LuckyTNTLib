@@ -11,7 +11,6 @@ import it.unimi.dsi.fastutil.longs.Long2ObjectMap;
 import it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.SectionPos;
-import net.minecraft.world.level.ExplosionDamageCalculator;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.chunk.LevelChunkSection;
@@ -30,7 +29,6 @@ public class ExplosionTask extends RecursiveTask<Long2ObjectMap<BitSet>> {
 	
 	private final ExplosionThread explosionThread;
 	private final ImprovedExplosion explosion;
-	private final ExplosionDamageCalculator damageCalculator;
 	private final Level level;
 	private final float x, y, z;
 	private final float resistanceFac;
@@ -41,7 +39,6 @@ public class ExplosionTask extends RecursiveTask<Long2ObjectMap<BitSet>> {
 	ExplosionTask(ExplosionThread explosionThread, ImprovedExplosion explosion, float resistanceFac, boolean ignoreFluids, int allowedSize, List<Vector3f> vectors) {
 		this.explosionThread = explosionThread;
 		this.explosion = explosion;
-		this.damageCalculator = explosion.damageCalculator;
 		this.level = explosion.level;
 		this.x = (float)explosion.posX;
 		this.y = (float)explosion.posY;
@@ -84,6 +81,7 @@ public class ExplosionTask extends RecursiveTask<Long2ObjectMap<BitSet>> {
 	/**
 	 * Functionally equivalent to the singlethreaded method.
 	 */
+	@SuppressWarnings("deprecation")
 	private Long2ObjectMap<BitSet> calculate() {
 		Long2ObjectMap<BitSet> editedSections = new Long2ObjectOpenHashMap<BitSet>();
 
@@ -99,7 +97,6 @@ public class ExplosionTask extends RecursiveTask<Long2ObjectMap<BitSet>> {
 			int lastPosY = -10000;
 			int lastPosZ = 0;
 			BlockPos.MutableBlockPos pos = new BlockPos.MutableBlockPos();
-			BlockPos.MutableBlockPos innerPos = new BlockPos.MutableBlockPos();
 			long sectionPos;
 			long lastSectionPos = Long.MAX_VALUE;
 			boolean sectionEmpty = false;
@@ -142,9 +139,7 @@ public class ExplosionTask extends RecursiveTask<Long2ObjectMap<BitSet>> {
 							for (int y = 0; y < 16; y++) {
 								for (int z = 0; z < 16; z++) {
 									currentBlockState = section.getBlockState(x, y, z);
-									innerPos.set((chunkX << 4) + x, (chunkY << 4) + y, (chunkZ << 4) + z);
-									explosionResistances[x << 8 | y << 4 | z] = ignoreFluids && !currentBlockState.getFluidState().isEmpty() ? 0f : damageCalculator.getBlockExplosionResistance(explosion, level, innerPos, currentBlockState, currentBlockState.getFluidState()).orElse(0f);
-								}
+									explosionResistances[x << 8 | y << 4 | z] = ignoreFluids && !currentBlockState.getFluidState().isEmpty() ? 0f : Math.max(currentBlockState.getBlock().getExplosionResistance(), currentBlockState.getFluidState().getExplosionResistance());								}
 							}
 						}
 						return explosionResistances;

@@ -29,6 +29,8 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.chunk.LevelChunk;
 import net.minecraft.world.level.chunk.LevelChunkSection;
 import net.minecraft.world.level.chunk.PalettedContainer;
+import net.minecraft.world.level.levelgen.RandomSupport;
+import net.minecraft.world.level.levelgen.SingleThreadedRandomSource;
 import net.minecraft.world.phys.Vec3;
 import net.minecraftforge.network.PacketDistributor;
 
@@ -314,7 +316,9 @@ public class ExplosionHelper {
 		if (level instanceof ServerLevel server) {
 			ImprovedExplosion dummyExplosion = ImprovedExplosion.dummyExplosion(server);
 			HashMap<LevelChunk, BitSet> chunks = new HashMap<LevelChunk, BitSet>();
+			long worldSeed = server.getSeed();
 			ChunkPos pos = new ChunkPos(Mth.floor(position.x) >> 4, Mth.floor(position.z) >> 4);
+			SingleThreadedRandomSource random = new SingleThreadedRandomSource(0);
 			BlockPos center = new BlockPos(Mth.floor(position.x), Mth.floor(position.y), Mth.floor(position.z));
 			boolean useRule = rule != null;
 			
@@ -326,7 +330,6 @@ public class ExplosionHelper {
 				for (int z = -chunkRadius; z <= chunkRadius; z++) {
 					ChunkPos chunkPos = new ChunkPos(pos.x + x, pos.z + z);
 					LevelChunk chunk = server.getChunk(chunkPos.x, chunkPos.z);
-					
 					chunk.setLoaded(true);
 
 					boolean chunkEdited = false;
@@ -351,7 +354,8 @@ public class ExplosionHelper {
 									int dy = height + j - center.getY();
 									if (dy * dy < dyMax) {
 										BlockState state = states.get(i, j, k);
-										if (state.getBlock().getExplosionResistance() <= maxResistance && (!useRule || rule.shouldApply(level, state, position, dx, dy, dz))) {
+										random.setSeed(explosionSeed(worldSeed, center, dx, dy, dz));
+										if (Math.max(state.getBlock().getExplosionResistance(), state.getFluidState().getExplosionResistance()) <= maxResistance && (!useRule || rule.shouldApply(level, state, position, dx, dy, dz))) {
 											states.set(i, j, k, useRule ? rule.getState() : Blocks.AIR.defaultBlockState());
 
 											BlockPos blockpos = new BlockPos((chunkPos.x << 4) + i, height + j, (chunkPos.z << 4) + k);
@@ -402,6 +406,17 @@ public class ExplosionHelper {
 			System.out.println("total time: " + (System.currentTimeMillis() - time));
 			System.out.println("total affected blocks: " + editedBlocks);
 		}
+	}
+	
+	public static long explosionSeed(long baseSeed, BlockPos center, int offX, int offY, int offZ) {
+		long seed = baseSeed ^
+				    ((long)center.getX() * -7046029288634856825l) ^
+				    ((long)center.getY() * -4417276706812531889l) ^
+				    ((long)center.getZ() * 1609587929392839161l) ^
+				    ((long)offX * 1609587929392839161l) ^
+				    ((long)offY * -8796714831421723037l) ^
+				    ((long)offZ * 2870177450012600261l);
+		return RandomSupport.mixStafford13(seed);
 	}
 	
 	/**

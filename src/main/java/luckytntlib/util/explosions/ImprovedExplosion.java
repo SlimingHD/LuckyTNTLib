@@ -228,6 +228,7 @@ public class ImprovedExplosion extends Explosion {
 	 * Ray length of any ray is dynamically reduced by the explosion resistances in its path.
 	 * Blocks in a ray's remaining path are marked, not directly affected.
 	 */
+	@SuppressWarnings("deprecation")
 	private void doImprovedBlockExplosionSinglethreaded(float resistanceImpact, float randomVecLength, boolean ignoreFluidResistance, boolean fire, @Nullable ExplosionRule rule) {			
 		float randomVecLengthFac = 0.6f * randomVecLength;
 		float resistanceFac = 0.3f * resistanceImpact * 2.25f;
@@ -267,7 +268,6 @@ public class ImprovedExplosion extends Explosion {
 			int lastPosY = -10000;
 			int lastPosZ = 0;
 			BlockPos.MutableBlockPos pos = new BlockPos.MutableBlockPos();
-			BlockPos.MutableBlockPos innerPos = new BlockPos.MutableBlockPos();
 			long sectionPos;
 			long lastSectionPos = Long.MAX_VALUE;
 			boolean sectionEmpty = false;
@@ -314,8 +314,7 @@ public class ImprovedExplosion extends Explosion {
 							for (int y = 0; y < 16; y++) {
 								for (int z = 0; z < 16; z++) {
 									currentBlockState = section.getBlockState(x, y, z);
-									innerPos.set((chunkX << 4) + x, (chunkY << 4) + y, (chunkZ << 4) + z);
-									explosionResistances[x << 8 | y << 4 | z] = ignoreFluidResistance && !currentBlockState.getFluidState().isEmpty() ? 0f : damageCalculator.getBlockExplosionResistance(this, level, innerPos, currentBlockState, currentBlockState.getFluidState()).orElse(0f);
+									explosionResistances[x << 8 | y << 4 | z] = ignoreFluidResistance && !currentBlockState.getFluidState().isEmpty() ? 0f : Math.max(currentBlockState.getBlock().getExplosionResistance(), currentBlockState.getFluidState().getExplosionResistance());
 								}
 							}
 						}
