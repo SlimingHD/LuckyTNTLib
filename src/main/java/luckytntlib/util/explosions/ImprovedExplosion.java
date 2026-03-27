@@ -47,6 +47,7 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.chunk.LevelChunk;
 import net.minecraft.world.level.chunk.LevelChunkSection;
 import net.minecraft.world.level.chunk.PalettedContainer;
+import net.minecraft.world.level.levelgen.SingleThreadedRandomSource;
 import net.minecraft.world.level.material.FluidState;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
@@ -202,7 +203,9 @@ public class ImprovedExplosion extends Explosion {
 	private void doImprovedBlockExplosionMultithreaded(float resistanceImpact, float randomVecLength, boolean ignoreFluidResistance, boolean fire, @Nullable ExplosionRule rule) {			
 		float randomVecLengthFac = 0.6f * randomVecLength;
 		float resistanceFac = 0.675f * resistanceImpact;
-		RandomSource random = level.getRandom();
+		ServerLevel serverLevel = (ServerLevel)level;
+		long worldSeed = serverLevel.getSeed();
+		SingleThreadedRandomSource random = new SingleThreadedRandomSource(ExplosionHelper.explosionSeed(worldSeed, BlockPos.containing(getPosition()), 0, 0, 0));
 
 		List<Vector3f> vectors = new ArrayList<Vector3f>((int)(4 * size * size * Math.PI + 10));
 		
@@ -232,7 +235,9 @@ public class ImprovedExplosion extends Explosion {
 	private void doImprovedBlockExplosionSinglethreaded(float resistanceImpact, float randomVecLength, boolean ignoreFluidResistance, boolean fire, @Nullable ExplosionRule rule) {			
 		float randomVecLengthFac = 0.6f * randomVecLength;
 		float resistanceFac = 0.3f * resistanceImpact * 2.25f;
-		RandomSource random = level.getRandom();
+		ServerLevel serverLevel = (ServerLevel)level;
+		long worldSeed = serverLevel.getSeed();
+		SingleThreadedRandomSource random = new SingleThreadedRandomSource(ExplosionHelper.explosionSeed(worldSeed, BlockPos.containing(getPosition()), 0, 0, 0));
 		
 		List<Vector3f> vectors = new ArrayList<Vector3f>((int)(4 * size * size * Math.PI + 10));
 		
