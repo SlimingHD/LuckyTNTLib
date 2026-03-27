@@ -4,11 +4,9 @@ import com.google.gson.JsonObject;
 
 import luckytntlib.LuckyTNTLib;
 import net.minecraft.core.BlockPos;
-import net.minecraft.core.Direction;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.level.Level;
-import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.Vec3;
 
@@ -39,12 +37,12 @@ public class FilterSurfaceExplosionRule implements ExplosionRule {
 		BlockPos pos = BlockPos.containing(center).offset(offX, offY, offZ);
 		if (targetSurface) {
 			BlockPos above = pos.above();
-			if (Block.isFaceFull(state.getCollisionShape(level, pos), Direction.UP) && level.getBlockState(above).getCollisionShape(level, above).isEmpty()) {
+			if (!state.getCollisionShape(level, pos).isEmpty() && level.getBlockState(above).getCollisionShape(level, above).isEmpty()) {
 				return rule.getState(level, state, center, offX, offY, offZ, random);
 			}
 		} else {
 			BlockPos below = pos.below();
-			if (state.getCollisionShape(level, pos).isEmpty() && Block.isFaceFull(level.getBlockState(below).getCollisionShape(level, below), Direction.UP)) {
+			if (state.getCollisionShape(level, pos).isEmpty() && !level.getBlockState(below).getCollisionShape(level, below).isEmpty()) {
 				return rule.getState(level, state, center, offX, offY, offZ, random);
 			}
 		}

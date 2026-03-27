@@ -23,7 +23,6 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.context.DirectionalPlaceContext;
 import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.Level;
-import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.chunk.LevelChunk;
@@ -635,7 +634,7 @@ public class ExplosionHelper {
 						}
 
 						BlockPos above = pos.above();
-						if (!Block.isFaceFull(state.getCollisionShape(level, pos), Direction.UP) || !level.getBlockState(above).getCollisionShape(level, above).isEmpty()) {
+						if (state.getCollisionShape(level, pos).isEmpty() || !level.getBlockState(above).getCollisionShape(level, above).isEmpty()) {
 							continue;
 						}
 						
@@ -795,7 +794,7 @@ public class ExplosionHelper {
 						BlockPos pos = center.offset(offX, offY, offZ);
 						BlockPos above = pos.above();
 						BlockState state = level.getBlockState(pos);
-						if (Block.isFaceFull(state.getCollisionShape(level, pos), Direction.UP) && level.getBlockState(above).getCollisionShape(level, above).isEmpty()) {
+						if (!state.getCollisionShape(level, pos).isEmpty() && level.getBlockState(above).getCollisionShape(level, above).isEmpty()) {
 							effect.handleBlock(level, position, pos, state);
 							break;
 						}
