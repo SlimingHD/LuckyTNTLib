@@ -602,7 +602,7 @@ public class ExplosionHelper {
 	
 	/**
 	 * Edits all the blocks in a cylinder around the given position that are considered the top most surface block according to given {@link ExplosionRule}.
-	 * A block is considered a surface if it has a non-collidable block above it and a full top face itself. 
+	 * A block is considered a surface if it has a non-collidable block above it is collidable itself. 
 	 * This method uses the legacy way of changing the world that issues all updates when changing a block while using the new {@link ExplosionRule}. <br>
 	 * It is recommended to use {@link #createCrater(Level, Vec3, int, Vector3f, int, DistanceCalculator, ExplosionRule)} or one of its default implementations for bigger explosions.
 	 * @param level  the current {@link Level}
@@ -775,7 +775,7 @@ public class ExplosionHelper {
 	
 	/**
 	 * Edits all the blocks in a cylinder around the given position that are considered the top most surface block according to given {@link BlockExplosionEffect} giving you full control.
-	 * A block is considered a surface if it has a non-collidable block above it and a full top face itself. 
+	 * A block is considered a surface if it has a non-collidable block above it is collidable itself. 
 	 * This method can be used for any case where using an {@link ExplosionRule} doesn't work. <br>
 	 * It is recommended to use {@link #createCrater(Level, Vec3, int, Vector3f, int, DistanceCalculator, ExplosionRule)} or one of its default implementations for bigger explosions.
 	 * @param level  the current {@link Level}

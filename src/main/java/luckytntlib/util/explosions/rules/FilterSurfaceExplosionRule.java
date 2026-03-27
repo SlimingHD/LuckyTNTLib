@@ -11,7 +11,7 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.Vec3;
 
 /**
- * {@link ExplosionRule} that only applies if a block is considered to be a surface (have a non-collidable block above it and have a full top face itself).
+ * {@link ExplosionRule} that only applies if a block is considered to be a surface (have a non-collidable block above it and be collidable itself).
  */
 public class FilterSurfaceExplosionRule implements ExplosionRule {
 	
