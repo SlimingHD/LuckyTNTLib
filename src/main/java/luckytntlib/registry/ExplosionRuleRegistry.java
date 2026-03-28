@@ -54,5 +54,6 @@ public class ExplosionRuleRegistry {
 		event.register(EXPLOSION_RULES_KEY, AlwaysExplosionRule.RESOURCE_LOCATION, () -> AlwaysExplosionRule::decode);
 		event.register(EXPLOSION_RULES_KEY, ScheduleTickExplosionRule.RESOURCE_LOCATION, () -> ScheduleTickExplosionRule::decode);
 		event.register(EXPLOSION_RULES_KEY, CanSurviveExplosionRule.RESOURCE_LOCATION, () -> CanSurviveExplosionRule::decode);
+		event.register(EXPLOSION_RULES_KEY, FilterCollidableExplosionRule.RESOURCE_LOCATION, () -> FilterCollidableExplosionRule::decode);
 	}
 }
