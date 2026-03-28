@@ -180,9 +180,9 @@ public class FilterBlockExplosionRule implements ExplosionRule {
 			return this;
 		}
 		
-		@SuppressWarnings("unchecked")
-		public Builder filterForTags(TagKey<Block>... tagsToFilter) {
-			return filterForTags(List.of(tagsToFilter));
+		public Builder filterForTag(TagKey<Block> tagToFilter) {
+			tags.add(tagToFilter);
+			return this;
 		}
 		
 		public Builder filterForTags(Collection<TagKey<Block>> tagsToFilter) {
