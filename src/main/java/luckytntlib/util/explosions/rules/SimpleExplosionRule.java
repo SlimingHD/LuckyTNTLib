@@ -34,14 +34,14 @@ public class SimpleExplosionRule implements ExplosionRule {
 	public JsonObject encode(JsonObject root) {
 		root.addProperty("type", RESOURCE_LOCATION.toString());
 		
-		JsonElement encodedBlockState = BlockState.CODEC.encodeStart(JsonOps.COMPRESSED, state).getOrThrow(false, s -> {});
+		JsonElement encodedBlockState = BlockState.CODEC.encodeStart(JsonOps.INSTANCE, state).getOrThrow(false, s -> {});
 		root.add("state", encodedBlockState);
 		
 		return root;
 	}
 
 	public static ExplosionRule decode(JsonObject root) {
-		BlockState state = BlockState.CODEC.parse(JsonOps.COMPRESSED, root.get("state")).get().left().orElseGet(() -> null);
+		BlockState state = BlockState.CODEC.parse(JsonOps.INSTANCE, root.get("state")).get().left().orElseGet(() -> null);
 		if (state == null) {
 			state = Blocks.AIR.defaultBlockState();
 		}

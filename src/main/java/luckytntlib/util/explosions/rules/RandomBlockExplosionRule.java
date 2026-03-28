@@ -39,7 +39,7 @@ public class RandomBlockExplosionRule implements ExplosionRule {
 		
 		JsonArray jsonStates = new JsonArray();
 		for (BlockState state : states.getItems()) {
-			jsonStates.add(BlockState.CODEC.encodeStart(JsonOps.COMPRESSED, state).getOrThrow(false, s -> {}));
+			jsonStates.add(BlockState.CODEC.encodeStart(JsonOps.INSTANCE, state).getOrThrow(false, s -> {}));
 		}
 		root.add("states", jsonStates);
 		
@@ -56,7 +56,7 @@ public class RandomBlockExplosionRule implements ExplosionRule {
 		JsonArray jsonStates = root.get("states").getAsJsonArray();
 		ArrayList<BlockState> states = new ArrayList<>(jsonStates.size());
 		for (int i = 0; i < jsonStates.size(); i++) {
-			BlockState state = BlockState.CODEC.parse(JsonOps.COMPRESSED, jsonStates.get(i)).result().orElseGet(() -> null);
+			BlockState state = BlockState.CODEC.parse(JsonOps.INSTANCE, jsonStates.get(i)).result().orElseGet(() -> null);
 			if (state == null) {
 				state = Blocks.AIR.defaultBlockState();
 			}

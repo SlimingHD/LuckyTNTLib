@@ -39,12 +39,12 @@ public class CanSurviveExplosionRule implements ExplosionRule {
 	@Override
 	public JsonObject encode(JsonObject root) {
 		root.addProperty("type", RESOURCE_LOCATION.toString());
-		root.add("state", BlockState.CODEC.encodeStart(JsonOps.COMPRESSED, stateToPlace).getOrThrow(false, s -> {}));
+		root.add("state", BlockState.CODEC.encodeStart(JsonOps.INSTANCE, stateToPlace).getOrThrow(false, s -> {}));
 		return root;
 	}
 	
 	public static ExplosionRule decode(JsonObject root) {
-		BlockState state = BlockState.CODEC.parse(JsonOps.COMPRESSED, root.get("state").getAsJsonObject()).result().orElseGet(() -> null);
+		BlockState state = BlockState.CODEC.parse(JsonOps.INSTANCE, root.get("state").getAsJsonObject()).result().orElseGet(() -> null);
 		if (state == null) {
 			state = Blocks.AIR.defaultBlockState();
 		}

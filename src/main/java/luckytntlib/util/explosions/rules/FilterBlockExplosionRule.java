@@ -84,7 +84,7 @@ public class FilterBlockExplosionRule implements ExplosionRule {
 		
 		JsonArray encodedStates = new JsonArray();
 		for (BlockState state : states) {
-			encodedStates.add(BlockState.CODEC.encodeStart(JsonOps.COMPRESSED, state).getOrThrow(false, s -> {}));
+			encodedStates.add(BlockState.CODEC.encodeStart(JsonOps.INSTANCE, state).getOrThrow(false, s -> {}));
 		}
 		root.add("states", encodedStates);
 		
@@ -111,7 +111,7 @@ public class FilterBlockExplosionRule implements ExplosionRule {
 		JsonArray encodedStates = root.get("states").getAsJsonArray();
 		LinkedList<BlockState> states = new LinkedList<>();
 		for (int i = 0; i < encodedStates.size(); i++) {
-			BlockState state = BlockState.CODEC.parse(JsonOps.COMPRESSED, encodedStates.get(i)).get().left().orElseGet(() -> null);
+			BlockState state = BlockState.CODEC.parse(JsonOps.INSTANCE, encodedStates.get(i)).get().left().orElseGet(() -> null);
 			if (state == null) {
 				state = Blocks.AIR.defaultBlockState();
 			}
