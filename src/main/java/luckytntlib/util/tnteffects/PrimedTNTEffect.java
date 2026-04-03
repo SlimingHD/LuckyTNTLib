@@ -95,8 +95,11 @@ public abstract class PrimedTNTEffect {
 	}
 	
 	public void playExplosionSound(IExplosiveEntity entity) {
-		Level level = entity.getLevel();
-		level.playSound(null, toBlockPos(entity.getPos()), SoundEvents.GENERIC_EXPLODE, SoundSource.BLOCKS, 4f, (1f + (level.getRandom().nextFloat() - level.getRandom().nextFloat()) * 0.2f) * 0.7f);		
+		playExplosionSound(entity.getLevel(), entity.getPos());	
+	}
+	
+	public void playExplosionSound(Level level, Vec3 pos) {
+		level.playSound(null, toBlockPos(pos), SoundEvents.GENERIC_EXPLODE, SoundSource.BLOCKS, 4f, (1f + (level.getRandom().nextFloat() - level.getRandom().nextFloat()) * 0.2f) * 0.7f);		
 	}
 	
 	/**
