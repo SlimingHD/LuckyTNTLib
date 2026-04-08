@@ -12,6 +12,9 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.Vec3;
 
+/**
+ * An {@link ExplosionRule} that only applies a wrapped {@link ExplosionRule} if the given {@link BlockState} has a collision shape that encompasses a full block
+ */
 public class FilterFullBlockExplosionRule implements ExplosionRule {
 	
 	public static final ResourceLocation RESOURCE_LOCATION = new ResourceLocation(LuckyTNTLib.MODID, "filter_full_block");

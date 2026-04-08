@@ -1,7 +1,5 @@
 package luckytntlib.util.explosions.rules;
 
-import javax.annotation.Nullable;
-
 import com.google.gson.JsonObject;
 
 import luckytntlib.LuckyTNTLib;
@@ -12,19 +10,19 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.Vec3;
 
 /**
- * An {@link ExplosionRule} that never applies. Used to break out of conditional paths.
+ * An {@link ExplosionRule} that always returns the provided state.
+ * Useful for exceptions to alterations or copying blocks for offset positions.
  */
-public class NeverExplosionRule implements ExplosionRule {
+public class CopyBlockExplosionRule implements ExplosionRule {
+
+	public static final ResourceLocation RESOURCE_LOCATION = new ResourceLocation(LuckyTNTLib.MODID, "copy_block");
 	
-	public static final ResourceLocation RESOURCE_LOCATION = new ResourceLocation(LuckyTNTLib.MODID, "never");
-
-	public NeverExplosionRule() {
+	public CopyBlockExplosionRule() {
 	}
-
+	
 	@Override
-	@Nullable
 	public BlockState getState(Level level, BlockState state, Vec3 center, int offX, int offY, int offZ, RandomSource random) {
-		return null;
+		return state;
 	}
 
 	@Override
@@ -34,6 +32,6 @@ public class NeverExplosionRule implements ExplosionRule {
 	}
 
 	public static ExplosionRule decode(JsonObject root) {
-		return new NeverExplosionRule();
+		return new CopyBlockExplosionRule();
 	}
 }
