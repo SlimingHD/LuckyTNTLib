@@ -356,7 +356,7 @@ public class ExplosionHelper {
 									}
 									
 									BlockState state = states.get(i, j, k);
-									if (Math.max(state.getBlock().getExplosionResistance(), state.getFluidState().getExplosionResistance()) > maxResistance) {
+									if ((!useRule && state.isAir()) || Math.max(state.getBlock().getExplosionResistance(), state.getFluidState().getExplosionResistance()) > maxResistance) {
 										continue;
 									}
 									

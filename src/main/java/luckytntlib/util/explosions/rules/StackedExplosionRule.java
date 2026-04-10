@@ -3,6 +3,8 @@ package luckytntlib.util.explosions.rules;
 import java.util.Collection;
 import java.util.LinkedList;
 
+import javax.annotation.Nullable;
+
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 
@@ -32,6 +34,7 @@ public class StackedExplosionRule implements ExplosionRule {
 	}
 	
 	@Override
+	@Nullable
 	public BlockState getState(Level level, BlockState state, Vec3 center, int offX, int offY, int offZ, RandomSource random) {
 		for (int i = 0; i < rules.length; i++) {
 			BlockState ret = rules[i].getState(level, state, center, offX, offY, offZ, random);

@@ -37,7 +37,7 @@ public class ExplosionRuleRegistry {
 	 */
 	@SubscribeEvent
 	public static void onRegister(RegisterEvent event) {
-		event.register(EXPLOSION_RULES_KEY, SimpleExplosionRule.RESOURCE_LOCATION, () -> SimpleExplosionRule::decode);
+		event.register(EXPLOSION_RULES_KEY, BlockExplosionRule.RESOURCE_LOCATION, () -> BlockExplosionRule::decode);
 		event.register(EXPLOSION_RULES_KEY, FilterDistanceExplosionRule.RESOURCE_LOCATION, () -> FilterDistanceExplosionRule::decode);
 		event.register(EXPLOSION_RULES_KEY, StackedExplosionRule.RESOURCE_LOCATION, () -> StackedExplosionRule::decode);
 		event.register(EXPLOSION_RULES_KEY, FilterAirExplosionRule.RESOURCE_LOCATION, () -> FilterAirExplosionRule::decode);

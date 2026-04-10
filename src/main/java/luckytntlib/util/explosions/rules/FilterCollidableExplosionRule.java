@@ -1,5 +1,7 @@
 package luckytntlib.util.explosions.rules;
 
+import javax.annotation.Nullable;
+
 import com.google.gson.JsonObject;
 
 import luckytntlib.LuckyTNTLib;
@@ -24,6 +26,7 @@ public class FilterCollidableExplosionRule implements ExplosionRule {
 	}
 	
 	@Override
+	@Nullable
 	public BlockState getState(Level level, BlockState state, Vec3 center, int offX, int offY, int offZ, RandomSource random) {
 		if (!state.getCollisionShape(level, BlockPos.containing(center).offset(offX, offY, offZ)).isEmpty()) {
 			return rule.getState(level, state, center, offX, offY, offZ, random);

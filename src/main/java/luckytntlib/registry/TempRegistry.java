@@ -1,23 +1,13 @@
 package luckytntlib.registry;
 
-import java.util.List;
-
 import luckytntlib.LuckyTNTLib;
 import luckytntlib.block.LTNTBlock;
 import luckytntlib.entity.PrimedLTNT;
 import luckytntlib.util.IExplosiveEntity;
 import luckytntlib.util.explosions.ExplosionHelper;
 import luckytntlib.util.explosions.ImprovedExplosion;
-import luckytntlib.util.explosions.rules.AlwaysExplosionRule;
-import luckytntlib.util.explosions.rules.ExplosionRule;
-import luckytntlib.util.explosions.rules.FilterAirExplosionRule;
-import luckytntlib.util.explosions.rules.FilterBlockExplosionRule;
-import luckytntlib.util.explosions.rules.FilterFullBlockExplosionRule;
-import luckytntlib.util.explosions.rules.LogicExplosionRule;
 import luckytntlib.util.tnteffects.PrimedTNTEffect;
 import luckytntlib.util.tnteffects.TNTXStrengthEffect;
-import net.minecraft.server.level.ServerLevel;
-import net.minecraft.tags.BlockTags;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.item.Item;
@@ -54,18 +44,7 @@ public class TempRegistry {
 		
 		@Override
 		public void serverExplosion(IExplosiveEntity ent) {
-			ExplosionRule rule = new FilterAirExplosionRule(
-				LogicExplosionRule.or(
-					FilterBlockExplosionRule.builder().filterForTags(List.of(BlockTags.LEAVES, BlockTags.LOGS)).build(new AlwaysExplosionRule()), 
-					LogicExplosionRule.not(
-						new FilterFullBlockExplosionRule(new AlwaysExplosionRule()), 
-						new AlwaysExplosionRule()
-					), 
-					new AlwaysExplosionRule()
-				)
-			);
-			
-			ExplosionHelper.createSphericalCrater(ent.getLevel(), ent.getPos(), 150, 5000f, rule);
+			ExplosionHelper.createSphericalCrater(ent.getLevel(), ent.getPos(), 150, 5000f);
 		}
 	}
 	
@@ -73,7 +52,7 @@ public class TempRegistry {
 		
 		@Override
 		public void serverExplosion(IExplosiveEntity ent) {
-			ImprovedExplosion explosion = new ImprovedExplosion((ServerLevel)ent.getLevel(), (Entity)ent, null, ent.getPos(), 300);
+			ImprovedExplosion explosion = new ImprovedExplosion(ent.getLevel(), (Entity)ent, null, ent.getPos(), 300);
 			explosion.doEntityExplosion(1f, true);
 			long time = System.currentTimeMillis();
 			explosion.doImprovedBlockExplosion(0.167f, 0.05f, true, false, null);

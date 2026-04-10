@@ -34,6 +34,7 @@ public class LogicExplosionRule implements ExplosionRule {
 	}
 
 	@Override
+	@Nullable
 	public BlockState getState(Level level, BlockState state, Vec3 center, int offX, int offY, int offZ, RandomSource random) {
 		if (operator.apply(conditionRule1.getState(level, state, center, offX, offY, offZ, random) != null, conditionRule2 == null ? false : conditionRule2.getState(level, state, center, offX, offY, offZ, random) != null)) {
 			return rule.getState(level, state, center, offX, offY, offZ, random);

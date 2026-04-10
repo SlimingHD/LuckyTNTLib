@@ -15,26 +15,26 @@ import net.minecraft.world.phys.Vec3;
 /**
  * {@link ExplosionRule} that provides a given {@link BlockState} for placement
  */
-public class SimpleExplosionRule implements ExplosionRule {
+public class BlockExplosionRule implements ExplosionRule {
 
 	public static final ResourceLocation RESOURCE_LOCATION = new ResourceLocation(LuckyTNTLib.MODID, "simple");
 	
-	private final BlockState state;
+	private final BlockState stateToPlace;
 	
-	public SimpleExplosionRule(BlockState state) {
-		this.state = state;
+	public BlockExplosionRule(BlockState stateToPlace) {
+		this.stateToPlace = stateToPlace;
 	}
 	
 	@Override
 	public BlockState getState(Level level, BlockState state, Vec3 center, int offX, int offY, int offZ, RandomSource random) {
-		return state;
+		return stateToPlace;
 	}
 
 	@Override
 	public JsonObject encode(JsonObject root) {
 		root.addProperty("type", RESOURCE_LOCATION.toString());
 		
-		JsonElement encodedBlockState = BlockState.CODEC.encodeStart(JsonOps.INSTANCE, state).getOrThrow(false, s -> {});
+		JsonElement encodedBlockState = BlockState.CODEC.encodeStart(JsonOps.INSTANCE, stateToPlace).getOrThrow(false, s -> {});
 		root.add("state", encodedBlockState);
 		
 		return root;
@@ -46,6 +46,6 @@ public class SimpleExplosionRule implements ExplosionRule {
 			state = Blocks.AIR.defaultBlockState();
 		}
 		
-		return new SimpleExplosionRule(state);
+		return new BlockExplosionRule(state);
 	}
 }
