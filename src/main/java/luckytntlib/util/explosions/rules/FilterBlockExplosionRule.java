@@ -72,59 +72,74 @@ public class FilterBlockExplosionRule implements ExplosionRule {
 		root.addProperty("type", RESOURCE_LOCATION.toString());
 		root.add("rule", rule.encode(new JsonObject()));
 		
-		JsonArray encodedBlocks = new JsonArray();
-		for (Block block : blocks) {
-			ResourceLocation location = ForgeRegistries.BLOCKS.getKey(block);
-			if (location == null) {
-				location = new ResourceLocation("air");
+		if (blocks != null) {
+			JsonArray encodedBlocks = new JsonArray();
+			for (Block block : blocks) {
+				ResourceLocation location = ForgeRegistries.BLOCKS.getKey(block);
+				if (location == null) {
+					location = new ResourceLocation("air");
+				}
+				encodedBlocks.add(location.toString());
 			}
-			encodedBlocks.add(location.toString());
+			root.add("blocks", encodedBlocks);
 		}
-		root.add("blocks", encodedBlocks);
+
+		if (states != null) {
+			JsonArray encodedStates = new JsonArray();
+			for (BlockState state : states) {
+				encodedStates.add(BlockState.CODEC.encodeStart(JsonOps.INSTANCE, state).getOrThrow(false, s -> {}));
+			}
+			root.add("states", encodedStates);
+		}
 		
-		JsonArray encodedStates = new JsonArray();
-		for (BlockState state : states) {
-			encodedStates.add(BlockState.CODEC.encodeStart(JsonOps.INSTANCE, state).getOrThrow(false, s -> {}));
+		if (tags != null) { 
+			JsonArray encodedTags = new JsonArray();
+			for (TagKey<Block> tag : tags) {
+				encodedTags.add(tag.location().toString());
+			}
+			root.add("tags", encodedTags);
 		}
-		root.add("states", encodedStates);
-		
-		JsonArray encodedTags = new JsonArray();
-		for (TagKey<Block> tag : tags) {
-			encodedTags.add(tag.location().toString());
-		}
-		root.add("tags", encodedTags);
 		
 		return root;
 	}
 	
 	public static ExplosionRule decode(JsonObject root) {
-		JsonArray encodedBlocks = root.get("blocks").getAsJsonArray();
-		LinkedList<Block> blocks = new LinkedList<>();
-		for (int i = 0; i < encodedBlocks.size(); i++) {
-			Block block = ForgeRegistries.BLOCKS.getValue(new ResourceLocation(encodedBlocks.get(i).getAsString()));
-			if (block == null) {
-				block = Blocks.AIR;
+		LinkedList<Block> blocks = null;
+		if (root.has("blocks")) {
+			JsonArray encodedBlocks = root.get("blocks").getAsJsonArray();
+			blocks = new LinkedList<>();
+			for (int i = 0; i < encodedBlocks.size(); i++) {
+				Block block = ForgeRegistries.BLOCKS.getValue(new ResourceLocation(encodedBlocks.get(i).getAsString()));
+				if (block == null) {
+					block = Blocks.AIR;
+				}
+				blocks.add(block);
 			}
-			blocks.add(block);
 		}
-		
-		JsonArray encodedStates = root.get("states").getAsJsonArray();
-		LinkedList<BlockState> states = new LinkedList<>();
-		for (int i = 0; i < encodedStates.size(); i++) {
-			BlockState state = BlockState.CODEC.parse(JsonOps.INSTANCE, encodedStates.get(i)).get().left().orElseGet(() -> null);
-			if (state == null) {
-				state = Blocks.AIR.defaultBlockState();
+
+		LinkedList<BlockState> states = null;
+		if (root.has("states")) {
+			JsonArray encodedStates = root.get("states").getAsJsonArray();
+			states = new LinkedList<>();
+			for (int i = 0; i < encodedStates.size(); i++) {
+				BlockState state = BlockState.CODEC.parse(JsonOps.INSTANCE, encodedStates.get(i)).get().left().orElseGet(() -> null);
+				if (state == null) {
+					state = Blocks.AIR.defaultBlockState();
+				}
+				states.add(state);
 			}
-			states.add(state);
+		}
+
+		LinkedList<TagKey<Block>> tags = null;
+		if (root.has("tags")) {
+			JsonArray encodedTags = root.get("tags").getAsJsonArray();
+			tags = new LinkedList<>();
+			for (int i = 0; i < encodedTags.size(); i++) {
+				tags.add(TagKey.create(Registries.BLOCK, new ResourceLocation(encodedTags.get(i).getAsString())));
+			}
 		}
 		
-		JsonArray encodedTags = root.get("tags").getAsJsonArray();
-		LinkedList<TagKey<Block>> tags = new LinkedList<>();
-		for (int i = 0; i < encodedTags.size(); i++) {
-			tags.add(TagKey.create(Registries.BLOCK, new ResourceLocation(encodedTags.get(i).getAsString())));
-		}
-		
-		return new FilterBlockExplosionRule(ExplosionRule.parse(root.get("rule").getAsJsonObject()), blocks.size() > 0 ? blocks : null, states.size() > 0 ? states : null, tags.size() > 0 ? tags : null);
+		return new FilterBlockExplosionRule(ExplosionRule.parse(root.get("rule").getAsJsonObject()), blocks, states, tags);
 	}
 	
 	public static FilterBlockExplosionRule applyOnlyWhen(Block block, ExplosionRule ruleToWrap) {

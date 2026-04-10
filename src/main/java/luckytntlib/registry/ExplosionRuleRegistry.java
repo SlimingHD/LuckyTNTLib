@@ -29,7 +29,7 @@ public class ExplosionRuleRegistry {
 	
 	@SubscribeEvent
 	public static void onCreateRegistries(NewRegistryEvent event) {
-		EXPLOSION_RULES = event.create(RegistryBuilder.<Function<JsonObject, ExplosionRule>>of(EXPLOSION_RULES_KEY.location()).setDefaultKey(SimpleExplosionRule.RESOURCE_LOCATION));
+		EXPLOSION_RULES = event.create(RegistryBuilder.<Function<JsonObject, ExplosionRule>>of(EXPLOSION_RULES_KEY.location()).setDefaultKey(AlwaysExplosionRule.RESOURCE_LOCATION));
 	}
 	
 	/**

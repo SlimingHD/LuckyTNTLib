@@ -1,14 +1,23 @@
 package luckytntlib.registry;
 
+import java.util.List;
+
 import luckytntlib.LuckyTNTLib;
 import luckytntlib.block.LTNTBlock;
 import luckytntlib.entity.PrimedLTNT;
 import luckytntlib.util.IExplosiveEntity;
 import luckytntlib.util.explosions.ExplosionHelper;
 import luckytntlib.util.explosions.ImprovedExplosion;
+import luckytntlib.util.explosions.rules.AlwaysExplosionRule;
+import luckytntlib.util.explosions.rules.ExplosionRule;
+import luckytntlib.util.explosions.rules.FilterAirExplosionRule;
+import luckytntlib.util.explosions.rules.FilterBlockExplosionRule;
+import luckytntlib.util.explosions.rules.FilterFullBlockExplosionRule;
+import luckytntlib.util.explosions.rules.LogicExplosionRule;
 import luckytntlib.util.tnteffects.PrimedTNTEffect;
 import luckytntlib.util.tnteffects.TNTXStrengthEffect;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.tags.BlockTags;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.item.Item;
@@ -45,7 +54,18 @@ public class TempRegistry {
 		
 		@Override
 		public void serverExplosion(IExplosiveEntity ent) {
-			ExplosionHelper.createSphericalCrater(ent.getLevel(), ent.getPos(), 150, 5000);
+			ExplosionRule rule = new FilterAirExplosionRule(
+				LogicExplosionRule.or(
+					FilterBlockExplosionRule.builder().filterForTags(List.of(BlockTags.LEAVES, BlockTags.LOGS)).build(new AlwaysExplosionRule()), 
+					LogicExplosionRule.not(
+						new FilterFullBlockExplosionRule(new AlwaysExplosionRule()), 
+						new AlwaysExplosionRule()
+					), 
+					new AlwaysExplosionRule()
+				)
+			);
+			
+			ExplosionHelper.createSphericalCrater(ent.getLevel(), ent.getPos(), 150, 5000f, rule);
 		}
 	}
 	
@@ -53,8 +73,6 @@ public class TempRegistry {
 		
 		@Override
 		public void serverExplosion(IExplosiveEntity ent) {
-			//ExplosionRule rule = new FilterAirExplosionRule(new StackedExplosionRule(new DistanceExplosionRule(new RandomBlockExplosionRule(RandomList.<BlockState>floatBuilder().addEntry(Blocks.RED_WOOL.defaultBlockState(), 0.95f).addEntry(Blocks.LIME_WOOL.defaultBlockState(), 0.05f).build()), new DistanceComparator(DistanceComparingStrategy.SMALLER_THAN, 0, 75)), new DistanceExplosionRule(new RandomBlockExplosionRule(RandomList.ofEqualProbability(Blocks.YELLOW_WOOL.defaultBlockState(), Blocks.PURPLE_WOOL.defaultBlockState())), new DistanceComparator(DistanceComparingStrategy.BETWEEN, 85, 120))));
-
 			ImprovedExplosion explosion = new ImprovedExplosion((ServerLevel)ent.getLevel(), (Entity)ent, null, ent.getPos(), 300);
 			explosion.doEntityExplosion(1f, true);
 			long time = System.currentTimeMillis();
