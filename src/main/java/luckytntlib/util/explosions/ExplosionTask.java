@@ -79,7 +79,7 @@ public class ExplosionTask extends RecursiveTask<Long2ObjectMap<BitSet>> {
 	}
 
 	/**
-	 * Functionally equivalent to the singlethreaded method.
+	 * Functionally equivalent to the single-threaded method.
 	 */
 	@SuppressWarnings("deprecation")
 	private Long2ObjectMap<BitSet> calculate() {

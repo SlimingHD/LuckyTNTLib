@@ -22,6 +22,8 @@ public class MultithreadingConfigScreen extends Screen {
 	Button multithreadExplosions = null;
 	ForgeSlider maxExplosionThreads = null;
 	Button maxExplosionThreadsResetButton = null;
+	ForgeSlider multithreadingThreshold = null;
+	Button multithreadingThresholdResetButton = null;
 	
 	HeaderAndFooterLayout layout = new HeaderAndFooterLayout(this, 20, 40);
 	
@@ -49,6 +51,10 @@ public class MultithreadingConfigScreen extends Screen {
 		maxExplosionThreads.setTooltip(Tooltip.create(Component.translatable("luckytntlib.config.max_explosion_threads_tooltip")));
 		rows.addChild(new CenteredStringWidget(Component.translatable("luckytntlib.config.max_explosion_threads"), font));
 		rows.addChild(maxExplosionThreadsResetButton = new Button.Builder(Component.translatable("luckytntlib.config.reset"), button -> resetIntValue(LuckyTNTLibConfigValues.MAX_EXPLOSION_THREADS, maxExplosionThreads)).width(100).build());
+		rows.addChild(multithreadingThreshold = new ForgeSlider(0, 0, 100, 20, Component.empty(), Component.empty(), 60, 300, LuckyTNTLibConfigValues.MULTITHREADING_THRESHOLD.get(), true));
+		multithreadingThreshold.setTooltip(Tooltip.create(Component.translatable("luckytntlib.config.multithreading_threshold_tooltip")));
+		rows.addChild(new CenteredStringWidget(Component.translatable("luckytntlib.config.multithreading_threshold"), font));
+		rows.addChild(multithreadingThresholdResetButton = new Button.Builder(Component.translatable("luckytntlib.config.reset"), button -> resetIntValue(LuckyTNTLibConfigValues.MULTITHREADING_THRESHOLD, multithreadingThreshold)).width(100).build());
 		
 		layout.addToContents(grid);
 		GridLayout footerGrid = new GridLayout();
@@ -85,6 +91,9 @@ public class MultithreadingConfigScreen extends Screen {
 	public void onClose() {
 		if (maxExplosionThreads != null) {
 			LuckyTNTLibConfigValues.MAX_EXPLOSION_THREADS.set((int)maxExplosionThreads.getValue());
+		}
+		if (multithreadingThreshold != null) {
+			LuckyTNTLibConfigValues.MULTITHREADING_THRESHOLD.set((int)multithreadingThreshold.getValue());
 		}
 		super.onClose();
 	}

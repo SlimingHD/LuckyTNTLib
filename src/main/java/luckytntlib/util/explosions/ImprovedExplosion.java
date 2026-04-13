@@ -70,8 +70,10 @@ public class ImprovedExplosion extends Explosion {
 	public final int size;
 	public final ExplosionDamageCalculator damageCalculator;
 	public final boolean performsBlockUpdates;
-	private final BlockExplosionEffect customExplosionEffect;
 	
+	@Nullable
+	private BlockExplosionEffect customExplosionEffect;
+	@Nullable
 	private Consumer<ImprovedExplosion> onExplosionFinish;
 	
 	@Deprecated(forRemoval = true)
@@ -145,22 +147,6 @@ public class ImprovedExplosion extends Explosion {
 	 * @param size  the radius of a sphere that is being used for ray-tracing. It influences strength and reach of the explosion
 	 */	
 	public ImprovedExplosion(Level level, @Nullable Entity explodingEntity, @Nullable DamageSource source, double x, double y, double z, int size) {
-		this(level, explodingEntity, source, x, y, z, size, size < 60 ? true : false, null);
-	}
-	
-	/**
-	 * Creates a new ImprovedExplosion
-	 * @param level the level
-	 * @param entity the entity not affected by this explosion. Should be the entity causing the explosion and also an IExplosiveEntity
-	 * @param source the {@link DamageSource} this explosion uses
-	 * @param x the x center position
-	 * @param y the y center position
-	 * @param z the z center position
-	 * @param size the radius of a sphere that is being used for ray-tracing. It influences strength and reach of the explosion
-	 * @param performsBlockUpdates whether or not the explosion should update all affected blocks (far slower, but updates are automatically applied). Set to true for smaller explosions
-	 * @param customExplosionEffect if not set to {@code null}, this will hijack the finishing of the explosion and instead call {@link #finishCustomExplosion(Map, Set)} 
-	 */
-	public ImprovedExplosion(Level level, @Nullable Entity explodingEntity, @Nullable DamageSource source, double x, double y, double z, int size, boolean performsBlockUpdates, @Nullable BlockExplosionEffect customExplosionEffect) {
 		super(level, explodingEntity, source, null, x, y, z, size, false, BlockInteraction.DESTROY);
 		this.level = level;
 		this.posX = x;
@@ -168,8 +154,32 @@ public class ImprovedExplosion extends Explosion {
 		this.posZ = z;
 		this.size = size;
 		damageCalculator = explodingEntity == null ? new ExplosionDamageCalculator() : new EntityBasedExplosionDamageCalculator(explodingEntity);
-		this.performsBlockUpdates = performsBlockUpdates;
-		this.customExplosionEffect = customExplosionEffect;
+		this.performsBlockUpdates = size < LuckyTNTLibConfigValues.BLOCK_UPDATE_THRESHOLD.get();
+	}
+	
+	/**
+	 * Sets a consumer of this explosion that will execute after {@link #finishImprovedExplosion(Map, Set, ExplosionRule)}.
+	 * <p>
+	 * Due to the possibility of explosions being mutli-threaded if their size is larger than or equal to the user defined threshold (minimum {@code 60}),
+	 * having a way to perform an action after the explosion has finished editing the world is crucial, as the main thread will not be blocked.
+	 * @param onExplosionFinish  the action to perform once the explosion has been finished.
+	 * @return this explosion
+	 */
+	public ImprovedExplosion setExplosionFinishWork(@Nullable Consumer<ImprovedExplosion> onExplosionFinish) {
+		this.onExplosionFinish = onExplosionFinish;
+		return this;
+	}
+	
+	/**
+	 * Sets a custom effect to be applied to all blocks gathered by {@link #doImprovedBlockExplosion(float, float, boolean, boolean, ExplosionRule)}.
+	 * This effectively redirects the finishing of the explosion to the given {@link BlockExplosionEffect}.
+	 * If set to {@code null}, the explosion will finish normally.
+	 * @param effect  the effect to redirect the explosion to.
+	 * @return this explosion
+	 */
+	public ImprovedExplosion setCustomExplosionEffect(@Nullable BlockExplosionEffect effect) {
+		customExplosionEffect = effect;
+		return this;
 	}
 	
 	/**
@@ -187,7 +197,7 @@ public class ImprovedExplosion extends Explosion {
 		if (level.isClientSide()) {
 			return;
 		}
-		if (LuckyTNTLibConfigValues.MULTITHREADED_EXPLOSIONS.get() && size >= 60) {
+		if (LuckyTNTLibConfigValues.MULTITHREADED_EXPLOSIONS.get() && size >= LuckyTNTLibConfigValues.MULTITHREADING_THRESHOLD.get()) {
 			doImprovedBlockExplosionMultithreaded(resistanceImpact, randomVecLength, ignoreFluidResistance, fire, rule);
 		} else {
 			doImprovedBlockExplosionSinglethreaded(resistanceImpact, randomVecLength, ignoreFluidResistance, fire, rule);
@@ -357,18 +367,6 @@ public class ImprovedExplosion extends Explosion {
 			ImprovedExplosion fireExplosion = new ImprovedExplosion(level, getPosition(), Math.round(size / sizeReduction));
 			fireExplosion.doImprovedBlockExplosion(1f, 1.2f * sizeReduction, false, false, new FireExplosionRule(1f / sizeReduction));
 		}
-	}
-	
-	/**
-	 * Sets a consumer of this explosion that will execute after {@link #finishImprovedExplosion(Map, Set, ExplosionRule)}.
-	 * <p>
-	 * Due to the possibility of explosions being mutli-threaded if their size is larger than or equal to {@code 60},
-	 * having a way to perform an action after the explosion has finished editing the world is crucial, as multi-threaded explosions will
-	 * not block the main thread.
-	 * @param onExplosionFinish  the action to perform once the explosion has been finished.
-	 */
-	public void setExplosionFinishWork(Consumer<ImprovedExplosion> onExplosionFinish) {
-		this.onExplosionFinish = onExplosionFinish;
 	}
 	
 	/**

@@ -14,11 +14,14 @@ import net.minecraft.client.gui.layouts.LinearLayout.Orientation;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.CommonComponents;
 import net.minecraft.network.chat.Component;
+import net.minecraftforge.client.gui.widget.ForgeSlider;
 import net.minecraftforge.common.ForgeConfigSpec;
 
 public class QualityConfigScreen extends Screen {
 
 	Button updateBlockLight = null;
+	ForgeSlider blockUpdateThreshold = null;
+	Button blockUpdateThresholdResetButton = null;
 	
 	HeaderAndFooterLayout layout = new HeaderAndFooterLayout(this, 20, 40);
 	
@@ -38,7 +41,11 @@ public class QualityConfigScreen extends Screen {
 		updateBlockLight.setTooltip(Tooltip.create(Component.translatable("luckytntlib.config.update_block_light_tooltip")));
 		rows.addChild(new CenteredStringWidget(Component.translatable("luckytntlib.config.update_block_light"), font));
 		rows.addChild(new Button.Builder(Component.translatable("luckytntlib.config.reset"), button -> resetBooleanValue(LuckyTNTLibConfigValues.UPDATE_BLOCK_LIGHT, updateBlockLight)).width(100).build());
-		
+		rows.addChild(blockUpdateThreshold = new ForgeSlider(0, 0, 100, 20, Component.empty(), Component.empty(), 60, 300, LuckyTNTLibConfigValues.BLOCK_UPDATE_THRESHOLD.get(), true));
+		blockUpdateThreshold.setTooltip(Tooltip.create(Component.translatable("luckytntlib.config.block_update_threshold_tooltip")));
+		rows.addChild(new CenteredStringWidget(Component.translatable("luckytntlib.config.block_update_threshold"), font));
+		rows.addChild(blockUpdateThresholdResetButton = new Button.Builder(Component.translatable("luckytntlib.config.reset"), button -> resetIntValue(LuckyTNTLibConfigValues.BLOCK_UPDATE_THRESHOLD, blockUpdateThreshold)).width(100).build());
+	
 		layout.addToContents(grid);
 		GridLayout footerGrid = new GridLayout();
 		footerGrid.defaultCellSetting().paddingHorizontal(4).paddingBottom(4).alignHorizontallyCenter();
@@ -71,6 +78,19 @@ public class QualityConfigScreen extends Screen {
 	public void render(GuiGraphics graphics, int mouseX, int mouseY, float partialTicks) {
 		renderBackground(graphics);
 		super.render(graphics, mouseX, mouseY, partialTicks);
+	}
+	
+	@Override
+	public void onClose() {
+		if (blockUpdateThreshold != null) {
+			LuckyTNTLibConfigValues.BLOCK_UPDATE_THRESHOLD.set((int)blockUpdateThreshold.getValue());
+		}
+		super.onClose();
+	}
+	
+	private void resetIntValue(ForgeConfigSpec.IntValue config, ForgeSlider slider) {
+		config.set(config.getDefault());
+		slider.setValue(config.getDefault());
 	}
 	
 	private void resetBooleanValue(ForgeConfigSpec.BooleanValue config, Button button) {
