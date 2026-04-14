@@ -8,6 +8,7 @@ import luckytntlib.LuckyTNTLib;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.util.Mth;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.BaseFireBlock;
@@ -32,7 +33,7 @@ public class FireExplosionRule implements ExplosionRule {
 	@Override
 	@Nullable
 	public BlockState getState(Level level, BlockState state, Vec3 center, int offX, int offY, int offZ, RandomSource random) {
-		if (probability != 1 && level.getRandom().nextFloat() > probability) {
+		if (!Mth.equal(probability, 1f) && random.nextFloat() > probability) {
 			return null;
 		}
 		BlockPos pos = BlockPos.containing(center).offset(offX, offY, offZ);

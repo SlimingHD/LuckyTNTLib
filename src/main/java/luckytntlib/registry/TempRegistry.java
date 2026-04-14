@@ -44,7 +44,7 @@ public class TempRegistry {
 		
 		@Override
 		public void serverExplosion(IExplosiveEntity ent) {
-			ExplosionHelper.createSphericalCrater(ent.getLevel(), ent.getPos(), 150, 5000f);
+			ExplosionHelper.createSphericalCrater(ent.getLevel(), ent.getPos(), 200, 5000f);
 		}
 	}
 	
@@ -54,9 +54,7 @@ public class TempRegistry {
 		public void serverExplosion(IExplosiveEntity ent) {
 			ImprovedExplosion explosion = new ImprovedExplosion(ent.getLevel(), (Entity)ent, null, ent.getPos(), 300);
 			explosion.doEntityExplosion(1f, true);
-			long time = System.currentTimeMillis();
 			explosion.doImprovedBlockExplosion(0.167f, 0.05f, true, false, null);
-			System.out.println("Time for executing explosion: " + (System.currentTimeMillis() - time));
 			explosion.spawnExplosionParticles();
 		}
 	}

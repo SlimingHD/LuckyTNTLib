@@ -34,7 +34,7 @@ public class MultithreadingConfigScreen extends Screen {
 	@Override
 	public void init() {
 		LinearLayout linear = layout.addToHeader(new LinearLayout(0, 0, Orientation.VERTICAL));
-		linear.addChild(new StringWidget(Component.translatable("luckytntlib.config.multithreading_title"), font), LayoutSettings.defaults().alignHorizontallyCenter());
+		linear.addChild(new StringWidget(title, font), LayoutSettings.defaults().alignHorizontallyCenter());
 		GridLayout grid = new GridLayout();
 		grid.defaultCellSetting().paddingHorizontal(4).paddingBottom(4).alignHorizontallyCenter();
 		RowHelper rows = grid.createRowHelper(3);
@@ -43,15 +43,27 @@ public class MultithreadingConfigScreen extends Screen {
 			nextBooleanValue(LuckyTNTLibConfigValues.MULTITHREADED_EXPLOSIONS, button);
 			maxExplosionThreads.active = LuckyTNTLibConfigValues.MULTITHREADED_EXPLOSIONS.get();
 			maxExplosionThreadsResetButton.active = LuckyTNTLibConfigValues.MULTITHREADED_EXPLOSIONS.get();
+			multithreadingThreshold.active = LuckyTNTLibConfigValues.MULTITHREADED_EXPLOSIONS.get();
+			multithreadingThresholdResetButton.active = LuckyTNTLibConfigValues.MULTITHREADED_EXPLOSIONS.get();
 		}).width(100).build());
 		multithreadExplosions.setTooltip(Tooltip.create(Component.translatable("luckytntlib.config.multithreaded_explosions_tooltip")));
 		rows.addChild(new CenteredStringWidget(Component.translatable("luckytntlib.config.multithreaded_explosions"), font));
 		rows.addChild(new Button.Builder(Component.translatable("luckytntlib.config.reset"), button -> resetBooleanValue(LuckyTNTLibConfigValues.MULTITHREADED_EXPLOSIONS, multithreadExplosions)).width(100).build());
-		rows.addChild(maxExplosionThreads = new ForgeSlider(0, 0, 100, 20, Component.empty(), Component.empty(), 1, 20, LuckyTNTLibConfigValues.MAX_EXPLOSION_THREADS.get(), true));
+		rows.addChild(maxExplosionThreads = new ForgeSlider(0, 0, 100, 20, Component.empty(), Component.empty(), 1, 20, LuckyTNTLibConfigValues.MAX_EXPLOSION_THREADS.get(), true) {
+			@Override
+			protected void applyValue() {
+				LuckyTNTLibConfigValues.MAX_EXPLOSION_THREADS.set((int)getValue());
+			}
+		});
 		maxExplosionThreads.setTooltip(Tooltip.create(Component.translatable("luckytntlib.config.max_explosion_threads_tooltip")));
 		rows.addChild(new CenteredStringWidget(Component.translatable("luckytntlib.config.max_explosion_threads"), font));
 		rows.addChild(maxExplosionThreadsResetButton = new Button.Builder(Component.translatable("luckytntlib.config.reset"), button -> resetIntValue(LuckyTNTLibConfigValues.MAX_EXPLOSION_THREADS, maxExplosionThreads)).width(100).build());
-		rows.addChild(multithreadingThreshold = new ForgeSlider(0, 0, 100, 20, Component.empty(), Component.empty(), 60, 300, LuckyTNTLibConfigValues.MULTITHREADING_THRESHOLD.get(), true));
+		rows.addChild(multithreadingThreshold = new ForgeSlider(0, 0, 100, 20, Component.empty(), Component.empty(), 60, 300, LuckyTNTLibConfigValues.MULTITHREADING_THRESHOLD.get(), true) {
+			@Override
+			protected void applyValue() {
+				LuckyTNTLibConfigValues.MULTITHREADING_THRESHOLD.set((int)getValue());
+			}
+		});
 		multithreadingThreshold.setTooltip(Tooltip.create(Component.translatable("luckytntlib.config.multithreading_threshold_tooltip")));
 		rows.addChild(new CenteredStringWidget(Component.translatable("luckytntlib.config.multithreading_threshold"), font));
 		rows.addChild(multithreadingThresholdResetButton = new Button.Builder(Component.translatable("luckytntlib.config.reset"), button -> resetIntValue(LuckyTNTLibConfigValues.MULTITHREADING_THRESHOLD, multithreadingThreshold)).width(100).build());
@@ -64,8 +76,7 @@ public class MultithreadingConfigScreen extends Screen {
 		Button backButton = new Button.Builder(CommonComponents.GUI_BACK, button -> {}).width(100).build();
 		backButton.active = false;
 		Button nextButton = new Button.Builder(CommonComponents.GUI_CONTINUE, button -> {
-			onClose();
-			minecraft.setScreen(new QualityConfigScreen());
+			minecraft.pushGuiLayer(new QualityConfigScreen());
 		}).width(100).build();
 		footerRows.addChild(backButton);
 		footerRows.addChild(new Button.Builder(CommonComponents.GUI_DONE, button -> onClose()).width(100).build());
@@ -83,19 +94,8 @@ public class MultithreadingConfigScreen extends Screen {
 
 	@Override
 	public void render(GuiGraphics graphics, int mouseX, int mouseY, float partialTicks) {
-		renderBackground(graphics);
+		renderDirtBackground(graphics);
 		super.render(graphics, mouseX, mouseY, partialTicks);
-	}
-	
-	@Override
-	public void onClose() {
-		if (maxExplosionThreads != null) {
-			LuckyTNTLibConfigValues.MAX_EXPLOSION_THREADS.set((int)maxExplosionThreads.getValue());
-		}
-		if (multithreadingThreshold != null) {
-			LuckyTNTLibConfigValues.MULTITHREADING_THRESHOLD.set((int)multithreadingThreshold.getValue());
-		}
-		super.onClose();
 	}
 	
 	private void resetIntValue(ForgeConfigSpec.IntValue config, ForgeSlider slider) {

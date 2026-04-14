@@ -47,6 +47,7 @@ public class ExplosionTask extends RecursiveTask<Long2ObjectMap<BitSet>> {
 		this.ignoreFluids = ignoreFluids;
 		this.allowedSize = allowedSize;
 		this.vectors = vectors;
+		++explosionThread.taskCount;
 	}
 	
 	/**

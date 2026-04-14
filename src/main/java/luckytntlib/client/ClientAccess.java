@@ -79,12 +79,12 @@ public class ClientAccess {
 					int offY = 0;
 					int offZ = 0;
 					if (useRule) {
-						offX = pos.getX() - centerPos.getX();
-						offY = pos.getY() - centerPos.getY();
-						offZ = pos.getZ() - centerPos.getZ();
+						offX = blockpos.getX() - centerPos.getX();
+						offY = blockpos.getY() - centerPos.getY();
+						offZ = blockpos.getZ() - centerPos.getZ();
 						random.setSeed(ExplosionHelper.explosionSeed(worldSeed, centerPos, offX, offY, offZ));
 					}
-
+					
 					chunk.removeBlockEntity(blockpos);
 					states.set(secpos.getX(), secpos.getY(), secpos.getZ(), useRule ? rule.getState(level, states.get(secpos.getX(), secpos.getY(), secpos.getZ()), center, offX, offY, offZ, random) : Blocks.AIR.defaultBlockState());
 				}
@@ -100,12 +100,12 @@ public class ClientAccess {
 					int offY = 0;
 					int offZ = 0;
 					if (useRule) {
-						offX = pos.getX() - centerPos.getX();
-						offY = pos.getY() - centerPos.getY();
-						offZ = pos.getZ() - centerPos.getZ();
+						offX = blockpos.getX() - centerPos.getX();
+						offY = blockpos.getY() - centerPos.getY();
+						offZ = blockpos.getZ() - centerPos.getZ();
 						random.setSeed(ExplosionHelper.explosionSeed(worldSeed, centerPos, offX, offY, offZ));
 					}
-
+					
 					chunk.removeBlockEntity(blockpos);
 					states.set(secpos.getX(), secpos.getY(), secpos.getZ(), useRule ? rule.getState(level, states.get(secpos.getX(), secpos.getY(), secpos.getZ()), center, offX, offY, offZ, random) : Blocks.AIR.defaultBlockState());
 				}

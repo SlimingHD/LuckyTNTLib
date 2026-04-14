@@ -34,14 +34,12 @@ public final class MultithreadedExplosionHandler {
 				ExplosionThread thread = explosionThreads.peek();
 				if (!thread.isAlive()) {
 					explosionThreads.poll();
-					long time = System.currentTimeMillis();
 					thread.getExplosion().finishImprovedExplosion(thread.getEditedSections(), thread.getFullSections(), thread.getExplosionRule());
 					if (thread.shouldPlaceFire()) {
 						float sizeReduction = (float)Math.sqrt(Math.sqrt(thread.getExplosion().size));
 						ImprovedExplosion fireExplosion = new ImprovedExplosion(thread.getExplosion().level, thread.getExplosion().getPosition(), Math.round(thread.getExplosion().size / sizeReduction));
 						fireExplosion.doImprovedBlockExplosion(1f, 1.2f * sizeReduction, false, false, new FireExplosionRule(1f / sizeReduction));
 					}
-					System.out.println("Time for finishing explosion: " + (System.currentTimeMillis() - time));
 					if (!queuedExplosionThreads.isEmpty()) {
 						ExplosionThread newThread = queuedExplosionThreads.poll();
 						newThread.start();

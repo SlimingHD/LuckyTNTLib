@@ -39,7 +39,7 @@ public class ClientboundSetupExplosionPacket {
 	
 	public ClientboundSetupExplosionPacket(@Nullable ExplosionRule rule, @Nullable Vec3 center, long seed) {
 		this.rule = rule;
-		this.center = rule == null ? null : center;
+		this.center = center;
 		this.seed = seed;
 	}
 	

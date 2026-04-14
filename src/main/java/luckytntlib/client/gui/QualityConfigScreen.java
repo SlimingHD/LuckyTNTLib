@@ -21,7 +21,6 @@ public class QualityConfigScreen extends Screen {
 
 	Button updateBlockLight = null;
 	ForgeSlider blockUpdateThreshold = null;
-	Button blockUpdateThresholdResetButton = null;
 	
 	HeaderAndFooterLayout layout = new HeaderAndFooterLayout(this, 20, 40);
 	
@@ -32,7 +31,7 @@ public class QualityConfigScreen extends Screen {
 	@Override
 	public void init() {
 		LinearLayout linear = layout.addToHeader(new LinearLayout(0, 0, Orientation.VERTICAL));
-		linear.addChild(new StringWidget(Component.translatable("luckytntlib.config.quality_title"), font), LayoutSettings.defaults().alignHorizontallyCenter());
+		linear.addChild(new StringWidget(title, font), LayoutSettings.defaults().alignHorizontallyCenter());
 		GridLayout grid = new GridLayout();
 		grid.defaultCellSetting().paddingHorizontal(4).paddingBottom(4).alignHorizontallyCenter();
 		RowHelper rows = grid.createRowHelper(3);
@@ -41,10 +40,15 @@ public class QualityConfigScreen extends Screen {
 		updateBlockLight.setTooltip(Tooltip.create(Component.translatable("luckytntlib.config.update_block_light_tooltip")));
 		rows.addChild(new CenteredStringWidget(Component.translatable("luckytntlib.config.update_block_light"), font));
 		rows.addChild(new Button.Builder(Component.translatable("luckytntlib.config.reset"), button -> resetBooleanValue(LuckyTNTLibConfigValues.UPDATE_BLOCK_LIGHT, updateBlockLight)).width(100).build());
-		rows.addChild(blockUpdateThreshold = new ForgeSlider(0, 0, 100, 20, Component.empty(), Component.empty(), 60, 300, LuckyTNTLibConfigValues.BLOCK_UPDATE_THRESHOLD.get(), true));
+		rows.addChild(blockUpdateThreshold = new ForgeSlider(0, 0, 100, 20, Component.empty(), Component.empty(), 60, 300, LuckyTNTLibConfigValues.BLOCK_UPDATE_THRESHOLD.get(), true) {
+			@Override
+			protected void applyValue() {
+				LuckyTNTLibConfigValues.BLOCK_UPDATE_THRESHOLD.set((int)getValue());
+			}
+		});
 		blockUpdateThreshold.setTooltip(Tooltip.create(Component.translatable("luckytntlib.config.block_update_threshold_tooltip")));
 		rows.addChild(new CenteredStringWidget(Component.translatable("luckytntlib.config.block_update_threshold"), font));
-		rows.addChild(blockUpdateThresholdResetButton = new Button.Builder(Component.translatable("luckytntlib.config.reset"), button -> resetIntValue(LuckyTNTLibConfigValues.BLOCK_UPDATE_THRESHOLD, blockUpdateThreshold)).width(100).build());
+		rows.addChild(new Button.Builder(Component.translatable("luckytntlib.config.reset"), button -> resetIntValue(LuckyTNTLibConfigValues.BLOCK_UPDATE_THRESHOLD, blockUpdateThreshold)).width(100).build());
 	
 		layout.addToContents(grid);
 		GridLayout footerGrid = new GridLayout();
@@ -53,12 +57,9 @@ public class QualityConfigScreen extends Screen {
 		
 		Button backButton = new Button.Builder(CommonComponents.GUI_BACK, button -> {
 			onClose();
-			minecraft.setScreen(new MultithreadingConfigScreen());
 		}).width(100).build();
-		@SuppressWarnings("removal")
 		Button nextButton = new Button.Builder(CommonComponents.GUI_CONTINUE, button -> {
-			onClose();
-			minecraft.setScreen(new DeprecatedConfigScreen());
+			minecraft.pushGuiLayer(new DebugConfigScreen());
 		}).width(100).build();
 		footerRows.addChild(backButton);
 		footerRows.addChild(new Button.Builder(CommonComponents.GUI_DONE, button -> onClose()).width(100).build());
@@ -76,16 +77,8 @@ public class QualityConfigScreen extends Screen {
 
 	@Override
 	public void render(GuiGraphics graphics, int mouseX, int mouseY, float partialTicks) {
-		renderBackground(graphics);
+		renderDirtBackground(graphics);
 		super.render(graphics, mouseX, mouseY, partialTicks);
-	}
-	
-	@Override
-	public void onClose() {
-		if (blockUpdateThreshold != null) {
-			LuckyTNTLibConfigValues.BLOCK_UPDATE_THRESHOLD.set((int)blockUpdateThreshold.getValue());
-		}
-		super.onClose();
 	}
 	
 	private void resetIntValue(ForgeConfigSpec.IntValue config, ForgeSlider slider) {

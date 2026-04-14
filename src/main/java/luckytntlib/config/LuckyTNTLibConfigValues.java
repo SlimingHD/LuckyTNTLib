@@ -10,6 +10,8 @@ public class LuckyTNTLibConfigValues {
 	
 	public static ForgeConfigSpec.BooleanValue UPDATE_BLOCK_LIGHT;
 	public static ForgeConfigSpec.IntValue BLOCK_UPDATE_THRESHOLD;
+	
+	public static ForgeConfigSpec.BooleanValue BENCHMARK_EXPLOSIONS;
 
 	@Deprecated(since = "47.2.32.2", forRemoval = true)
 	public static ForgeConfigSpec.BooleanValue PERFORMANT_EXPLOSION;
@@ -23,9 +25,13 @@ public class LuckyTNTLibConfigValues {
 		MULTITHREADING_THRESHOLD = builder.comment("Defines the radius at which explosions will be multi-threaded. For reference, TNTx500 = size 80, TNTx2000 = size 160, and TNTx10000 = size 300").defineInRange("multithreadingThreshold", 90, 60, 300);
 		builder.pop();
 		
-		builder.comment("Post Explosions").push("Quality");
+		builder.comment("Post explosions").push("Quality");
 		UPDATE_BLOCK_LIGHT = builder.comment("En- or disables block light updates when using more performant explosions. Enabling this will make block lights update correctly at the cost of performance.").define("updateBlockLight", true);
 		BLOCK_UPDATE_THRESHOLD = builder.comment("Defines the radius at which explosions will stop perform blocks updates. This setting significantly impacts performance. For reference, Supernova has radius 200.").defineInRange("blockUpdateRadius", 90, 60, 300);
+		builder.pop();
+		
+		builder.comment("Debug settings").push("Debug");
+		BENCHMARK_EXPLOSIONS = builder.comment("En- or disables the printing of benchmark results of explosions to the general chat.").define("benchmarkExplosions", false);
 		builder.pop();
 		
 		builder.comment("Explosions").push("Deprecated");

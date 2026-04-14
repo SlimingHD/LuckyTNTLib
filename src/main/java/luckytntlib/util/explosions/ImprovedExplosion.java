@@ -22,6 +22,7 @@ import luckytntlib.config.LuckyTNTLibConfigValues;
 import luckytntlib.network.ClientboundSetupExplosionPacket;
 import luckytntlib.network.ClientboundUpdateChunkSectionPacket;
 import luckytntlib.network.PacketHandler;
+import luckytntlib.util.ExplosionProfiler;
 import luckytntlib.util.IExplosiveEntity;
 import luckytntlib.util.explosions.rules.ExplosionRule;
 import luckytntlib.util.explosions.rules.FireExplosionRule;
@@ -75,6 +76,8 @@ public class ImprovedExplosion extends Explosion {
 	private BlockExplosionEffect customExplosionEffect;
 	@Nullable
 	private Consumer<ImprovedExplosion> onExplosionFinish;
+	
+	ExplosionProfiler profiler;
 	
 	@Deprecated(forRemoval = true)
 	List<Integer> affectedBlocks = new ArrayList<>();
@@ -197,6 +200,8 @@ public class ImprovedExplosion extends Explosion {
 		if (level.isClientSide()) {
 			return;
 		}
+		profiler = new ExplosionProfiler((ServerLevel)level);
+		profiler.start("time");
 		if (LuckyTNTLibConfigValues.MULTITHREADED_EXPLOSIONS.get() && size >= LuckyTNTLibConfigValues.MULTITHREADING_THRESHOLD.get()) {
 			doImprovedBlockExplosionMultithreaded(resistanceImpact, randomVecLength, ignoreFluidResistance, fire, rule);
 		} else {
@@ -211,14 +216,15 @@ public class ImprovedExplosion extends Explosion {
 	 * Functionally equivalent to the single-threaded version.
 	 */
 	private void doImprovedBlockExplosionMultithreaded(float resistanceImpact, float randomVecLength, boolean ignoreFluidResistance, boolean fire, @Nullable ExplosionRule rule) {			
+		ServerLevel serverLevel = (ServerLevel)level;
 		float randomVecLengthFac = 0.6f * randomVecLength;
 		float resistanceFac = 0.675f * resistanceImpact;
-		ServerLevel serverLevel = (ServerLevel)level;
 		long worldSeed = serverLevel.getSeed();
 		SingleThreadedRandomSource random = new SingleThreadedRandomSource(ExplosionHelper.explosionSeed(worldSeed, BlockPos.containing(getPosition()), 0, 0, 0));
 
 		List<Vector3f> vectors = new ArrayList<Vector3f>((int)(4 * size * size * Math.PI + 10));
 		
+		profiler.start("vectorGathering");
 		for (int offX = -size; offX <= size; offX++) {
 			for (int offY = -size; offY <= size; offY++) {
 				for (int offZ = -size; offZ <= size; offZ++) {
@@ -229,6 +235,7 @@ public class ImprovedExplosion extends Explosion {
 				}
 			}
 		}
+		profiler.stop("vectorGathering", "luckytntlib.benchmarking.vector_gathering", vectors.size());
 		
 		ExplosionThread thread = new ExplosionThread(this, resistanceFac, randomVecLengthFac, ignoreFluidResistance, fire, rule, vectors);
 		MultithreadedExplosionHandler.enqueue(thread);
@@ -250,7 +257,8 @@ public class ImprovedExplosion extends Explosion {
 		SingleThreadedRandomSource random = new SingleThreadedRandomSource(ExplosionHelper.explosionSeed(worldSeed, BlockPos.containing(getPosition()), 0, 0, 0));
 		
 		List<Vector3f> vectors = new ArrayList<Vector3f>((int)(4 * size * size * Math.PI + 10));
-		
+
+		profiler.start("vectorGathering");
 		for (int offX = -size; offX <= size; offX++) {
 			for (int offY = -size; offY <= size; offY++) {
 				for (int offZ = -size; offZ <= size; offZ++) {
@@ -261,6 +269,7 @@ public class ImprovedExplosion extends Explosion {
 				}
 			}
 		}
+		profiler.stop("vectorGathering", "luckytntlib.benchmarking.vector_gathering", vectors.size());
 		/*
 		 * We use BitSets to only take up 1 bit per block, also making sure a singular chunk section is utilizing cache locality.
 		 * Sections that are empty are marked to be skipped.
@@ -271,6 +280,7 @@ public class ImprovedExplosion extends Explosion {
 		Set<Long> emptySections = new LongOpenHashSet();
 		Long2ObjectMap<float[]> sectionResistances = new Long2ObjectOpenHashMap<float[]>();
 		
+		profiler.start("blockGathering");
 		for (Vector3f v : vectors) {
 			float vectorLength = v.length();
 			float xStep = v.x / vectorLength * 0.3f;
@@ -360,6 +370,7 @@ public class ImprovedExplosion extends Explosion {
 				}
 			}
 		}
+		profiler.stop("blockGathering", "luckytntlib.benchmarking.block_gathering", 1);
 		
 		finishImprovedExplosion(editedSections, fullSections, rule);
 		if (fire) {
@@ -375,6 +386,7 @@ public class ImprovedExplosion extends Explosion {
 	 * @param editedSections  the chunk sections which were only partially affected by the explosion
 	 * @param fullSections  the chunk sections which are fully affected by the explosion
 	 * @param rule  an optional rule for applying effects other than destroying all marked blocks
+	 * @param profiler  the profiler used to benchmark this explosion
 	 */
 	void finishImprovedExplosion(Map<Long, BitSet> editedSections, Set<Long> fullSections, @Nullable ExplosionRule rule) {
 		if (customExplosionEffect != null) {
@@ -390,6 +402,7 @@ public class ImprovedExplosion extends Explosion {
 		} else {
 			finishImprovedExplosionWithRule(editedSections, fullSections, rule);
 		}
+		profiler.stop("time", "luckytntlib.benchmarking.total_time");
 		if (onExplosionFinish != null) {
 			onExplosionFinish.accept(this);
 		}
@@ -401,6 +414,9 @@ public class ImprovedExplosion extends Explosion {
 	 * Block and sky light will be updated correctly and efficiently.
 	 */
 	private void finishImprovedExplosionWithoutRule(Map<Long, BitSet> editedSections, Set<Long> fullSections) {
+		profiler.start("editedBlocks");
+		int editedBlocks = 0;
+		
 		HashMap<LevelChunk, BitSet> chunks = new HashMap<>();
 		PacketHandler.CHANNEL.send(PacketDistributor.ALL.noArg(), new ClientboundSetupExplosionPacket(null, null, 0));
 		
@@ -427,6 +443,8 @@ public class ImprovedExplosion extends Explosion {
 			chunks.get(chunk).set(pos.y() - (level.getMinSection() - 1));
 			
 			chunk.setUnsaved(true);
+			
+			editedBlocks += 4096;
 		}
 		
 		for (Entry<Long, BitSet> entry : editedSections.entrySet()) {
@@ -455,10 +473,16 @@ public class ImprovedExplosion extends Explosion {
 			chunks.get(chunk).set(pos.y() - (level.getMinSection() - 1));
 			
 			chunk.setUnsaved(true);
+			
+			editedBlocks += removedBlocks.cardinality();
 		}
-		
+
+		profiler.start("lightTime");
 		LightUpdateHelper.updateDirectSkyLight((ServerLevel)level, chunks);
 		LightUpdateHelper.updateIndirectSkyLight((ServerLevel)level, chunks);
+		profiler.stop("lightTime", "luckytntlib.benchmarking.light_time");
+		
+		profiler.stopTime("editedBlocks", "luckytntlib.benchmarking.edited_blocks", false, editedBlocks);
 	}
 	
 	/**
@@ -467,6 +491,9 @@ public class ImprovedExplosion extends Explosion {
 	 * Block and sky light will be updated correctly and efficiently.
 	 */
 	private void finishImprovedExplosionWithRule(Map<Long, BitSet> editedSections, Set<Long> fullSections, ExplosionRule rule) {
+		profiler.start("editedBlocks");
+		int editedBlocks = 0;
+		
 		long worldSeed = ((ServerLevel)level).getSeed();
 		SingleThreadedRandomSource random = new SingleThreadedRandomSource(0);
 		BlockPos center = BlockPos.containing(getPosition());
@@ -527,6 +554,12 @@ public class ImprovedExplosion extends Explosion {
 			chunks.get(chunk).set(pos.y() - (level.getMinSection() - 1));
 			
 			chunk.setUnsaved(true);
+			
+			if (changed != null) {
+				editedBlocks += changed.cardinality();
+			} else {
+				editedBlocks += 4096;
+			}
 		}
 		
 		for (Entry<Long, BitSet> entry : editedSections.entrySet()) {
@@ -576,10 +609,16 @@ public class ImprovedExplosion extends Explosion {
 			chunks.get(chunk).set(pos.y() - (level.getMinSection() - 1));
 			
 			chunk.setUnsaved(true);
+			
+			editedBlocks += affectedBlocks.cardinality();
 		}
 		
+		profiler.start("lightTime");
 		LightUpdateHelper.updateDirectSkyLight((ServerLevel)level, chunks);
 		LightUpdateHelper.updateIndirectSkyLight((ServerLevel)level, chunks);
+		profiler.stop("lightTime", "luckytntlib.benchmarking.light_time");
+		
+		profiler.stopTime("editedBlocks", "luckytntlib.benchmarking.edited_blocks", false, editedBlocks);
 	}
 	
 	/**
@@ -587,6 +626,9 @@ public class ImprovedExplosion extends Explosion {
 	 * Best used for small explosions.
 	 */
 	private void finishUpdatingExplosionWithoutRule(Map<Long, BitSet> editedSections, Set<Long> fullSections) {
+		profiler.start("editedBlocks");
+		int editedBlocks = 0;
+		
 		for (long encodedPos : fullSections) {
 			SectionPos sectionPos = SectionPos.of(encodedPos);
 			int x = sectionPos.getX() << 4;
@@ -598,7 +640,9 @@ public class ImprovedExplosion extends Explosion {
 				level.setBlockAndUpdate(pos, Blocks.AIR.defaultBlockState());
 				state.getBlock().wasExploded(level, pos, this);
 			}
+			editedBlocks += 4096;
 		}
+		
 		for (Entry<Long, BitSet> entry : editedSections.entrySet()) {
 			SectionPos sectionPos = SectionPos.of(entry.getKey());
 			BitSet affectedBlocks = entry.getValue();
@@ -613,7 +657,10 @@ public class ImprovedExplosion extends Explosion {
 					state.getBlock().wasExploded(level, pos, this);
 				}
 			}
+			editedBlocks += affectedBlocks.cardinality();
 		}
+
+		profiler.stopTime("editedBlocks", "luckytntlib.benchmarking.edited_blocks", false, editedBlocks);
 	}
 	
 	/**
@@ -621,6 +668,9 @@ public class ImprovedExplosion extends Explosion {
 	 * Best used for small explosions.
 	 */
 	private void finishUpdatingExplosionWithRule(Map<Long, BitSet> editedSections, Set<Long> fullSections, ExplosionRule rule) {
+		profiler.start("editedBlocks");
+		int editedBlocks = 0;
+		
 		long worldSeed = ((ServerLevel)level).getSeed();
 		SingleThreadedRandomSource random = new SingleThreadedRandomSource(0);
 		BlockPos center = BlockPos.containing(getPosition());
@@ -650,9 +700,11 @@ public class ImprovedExplosion extends Explosion {
 					BlockPos pos = new BlockPos(x + lx, y + ly, z + lz);
 					level.setBlockAndUpdate(pos, newState);
 					state.getBlock().wasExploded(level, pos, this);
+					++editedBlocks;
 				}
 			}
 		}
+		
 		for (Entry<Long, BitSet> entry : editedSections.entrySet()) {
 			SectionPos sectionPos = SectionPos.of(entry.getKey());
 			LevelChunk chunk = level.getChunk(sectionPos.x(), sectionPos.z());
@@ -680,10 +732,13 @@ public class ImprovedExplosion extends Explosion {
 						BlockPos pos = new BlockPos(x + lx, y + ly, z + lz);
 						level.setBlockAndUpdate(pos, newState);
 						state.getBlock().wasExploded(level, pos, this);
+						++editedBlocks;
 					}
 				}
 			}
 		}
+		
+		profiler.stopTime("editedBlocks", "luckytntlib.benchmarking.edited_blocks", false, editedBlocks);
 	}
 	
 	/**

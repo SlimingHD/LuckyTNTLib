@@ -26,7 +26,7 @@ public class StackedExplosionRule implements ExplosionRule {
 	private final ExplosionRule[] rules;
 	
 	public StackedExplosionRule(Collection<ExplosionRule> rules) {
-		this.rules = rules.toArray(new ExplosionRule[0]);
+		this.rules = rules.toArray(l -> new ExplosionRule[l]);
 	}
 	
 	public StackedExplosionRule(ExplosionRule... rules) {

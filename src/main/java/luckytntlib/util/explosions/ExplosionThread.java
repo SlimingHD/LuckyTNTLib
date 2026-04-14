@@ -12,6 +12,7 @@ import javax.annotation.Nullable;
 import org.joml.Vector3f;
 
 import it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap;
+import luckytntlib.util.ExplosionProfiler;
 import luckytntlib.util.explosions.rules.ExplosionRule;
 
 /**
@@ -34,12 +35,15 @@ public final class ExplosionThread extends Thread {
 	@Nullable
 	private final ExplosionRule rule;
 	private final List<Vector3f> vectors;
+	private final ExplosionProfiler profiler;
 	
 	final Set<Long> emptySections = ConcurrentHashMap.newKeySet();
 	final Set<Long> fullSections = ConcurrentHashMap.newKeySet();
 	final ConcurrentHashMap<Long, float[]> sectionResistances = new ConcurrentHashMap<Long, float[]>();
 	
 	private Map<Long, BitSet> editedSections = new Long2ObjectOpenHashMap<BitSet>();
+	
+	int taskCount = 0;
 	
 	ExplosionThread(ImprovedExplosion explosion, float resistanceFac, float randomVecLengthFac, boolean ignoreFluids, boolean placeFire, @Nullable ExplosionRule rule, List<Vector3f> vectors) {
 		this.explosion = explosion;
@@ -49,14 +53,15 @@ public final class ExplosionThread extends Thread {
 		this.placeFire = placeFire;
 		this.rule = rule;
 		this.vectors = vectors;
+		this.profiler = explosion.profiler;
 	}
 	
 	@Override
-	public void run() {	
-		long time = System.currentTimeMillis();
+	public void run() {
+		profiler.start("blockGathering");
 		ExplosionTask task = new ExplosionTask(this, explosion, resistanceFac, ignoreFluids, Math.max(minVectorsPerThread, vectors.size() / (Runtime.getRuntime().availableProcessors() * 4)), vectors);
 		editedSections = pool.invoke(task);
-		System.out.println("Time for explosion block gathering: " + (System.currentTimeMillis() - time) + " task count: " + pool.getStealCount());
+		profiler.stop("blockGathering", "luckytntlib.benchmarking.block_gathering", taskCount);
 	}
 	
 	public Map<Long, BitSet> getEditedSections() {

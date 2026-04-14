@@ -7,9 +7,11 @@ import javax.annotation.Nullable;
 
 import org.joml.Vector3f;
 
+import luckytntlib.config.LuckyTNTLibConfigValues;
 import luckytntlib.network.ClientboundSetupExplosionPacket;
 import luckytntlib.network.ClientboundUpdateChunkSectionPacket;
 import luckytntlib.network.PacketHandler;
+import luckytntlib.util.ExplosionProfiler;
 import luckytntlib.util.explosions.rules.ExplosionRule;
 import luckytntlib.util.light.LightUpdateHelper;
 import net.minecraft.core.BlockPos;
@@ -77,7 +79,11 @@ public class ExplosionHelper {
 	 * @see #createSpheroidCrater(Level, Vec3, int, Vector3f, int, ExplosionRule)
 	 */
 	public static void createSphericalCrater(Level level, Vec3 position, int radius, float maxResistance) {
-		createSphericalCrater(level, position, radius, maxResistance, null);
+		if (radius < LuckyTNTLibConfigValues.BLOCK_UPDATE_THRESHOLD.get()) {
+			legacySphericalExplosion(level, position, radius, maxResistance, null);
+		} else {
+			createSphericalCrater(level, position, radius, maxResistance, null);
+		}
 	}
 	
 	/**
@@ -94,7 +100,11 @@ public class ExplosionHelper {
 	 * @see #createSpheroidCrater(Level, Vec3, int, Vector3f, int, ExplosionRule)
 	 */
 	public static void createSphericalCrater(Level level, Vec3 position, int radius, float maxResistance, @Nullable ExplosionRule rule) {
-		createSpheroidCrater(level, position, radius, new Vector3f(1), maxResistance, rule);
+		if (radius < LuckyTNTLibConfigValues.BLOCK_UPDATE_THRESHOLD.get()) {
+			legacySphericalExplosion(level, position, radius, maxResistance, rule);
+		} else {
+			createSpheroidCrater(level, position, radius, new Vector3f(1), maxResistance, rule);
+		}
 	}
 	
 	/**
@@ -112,7 +122,11 @@ public class ExplosionHelper {
 	 * @see #createSpheroidCrater(Level, Vec3, int, Vector3f, int, ExplosionRule)
 	 */
 	public static void createSpheroidCrater(Level level, Vec3 position, int radius, Vector3f scaling, float maxResistance) {
-		createSpheroidCrater(level, position, radius, scaling, maxResistance, null);
+		if (radius < LuckyTNTLibConfigValues.BLOCK_UPDATE_THRESHOLD.get()) {
+			legacySpheroidExplosion(level, position, radius, scaling, maxResistance, null);
+		} else {
+			createSpheroidCrater(level, position, radius, scaling, maxResistance, null);
+		}
 	}
 	
 	/**
@@ -131,7 +145,11 @@ public class ExplosionHelper {
 	 * @see #createSpheroidCrater(Level, Vec3, int, Vector3f, int)
 	 */
 	public static void createSpheroidCrater(Level level, Vec3 position, int radius, Vector3f scaling, float maxResistance, @Nullable ExplosionRule rule) {
-		createCrater(level, position, radius, scaling, maxResistance, SPHEROID_CALCULATOR, rule);
+		if (radius < LuckyTNTLibConfigValues.BLOCK_UPDATE_THRESHOLD.get()) {
+			legacySpheroidExplosion(level, position, radius, scaling, maxResistance, rule);
+		} else {
+			createCrater(level, position, radius, scaling, maxResistance, SPHEROID_CALCULATOR, rule);
+		}
 	}
 	
 	/**
@@ -147,7 +165,11 @@ public class ExplosionHelper {
 	 * @see #createCuboidCrater(Level, Vec3, int, Vector3f, int, ExplosionRule)
 	 */
 	public static void createCubicalCrater(Level level, Vec3 position, int radius, float maxResistance) {
-		createCubicalCrater(level, position, radius, maxResistance, null);
+		if (radius < LuckyTNTLibConfigValues.BLOCK_UPDATE_THRESHOLD.get()) {
+			legacyCubicalExplosion(level, position, radius, maxResistance, null);
+		} else {
+			createCubicalCrater(level, position, radius, maxResistance, null);
+		}
 	}
 	
 	/**
@@ -164,7 +186,11 @@ public class ExplosionHelper {
 	 * @see #createCuboidCrater(Level, Vec3, int, Vector3f, int, ExplosionRule)
 	 */
 	public static void createCubicalCrater(Level level, Vec3 position, int radius, float maxResistance, @Nullable ExplosionRule rule) {
-		createCuboidCrater(level, position, radius, new Vector3f(1), maxResistance, rule);
+		if (radius < LuckyTNTLibConfigValues.BLOCK_UPDATE_THRESHOLD.get()) {
+			legacyCubicalExplosion(level, position, radius, maxResistance, rule);
+		} else {
+			createCuboidCrater(level, position, radius, new Vector3f(1), maxResistance, rule);
+		}
 	}
 	
 	/**
@@ -182,7 +208,11 @@ public class ExplosionHelper {
 	 * @see #createCuboidCrater(Level, Vec3, int, Vector3f, int, ExplosionRule)
 	 */
 	public static void createCuboidCrater(Level level, Vec3 position, int radius, Vector3f scaling, float maxResistance) {
-		createCuboidCrater(level, position, radius, scaling, maxResistance, null);
+		if (radius < LuckyTNTLibConfigValues.BLOCK_UPDATE_THRESHOLD.get()) {
+			legacyCuboidExplosion(level, position, radius, scaling, maxResistance, null);
+		} else {
+			createCuboidCrater(level, position, radius, scaling, maxResistance, null);
+		}
 	}
 	
 	/**
@@ -201,7 +231,11 @@ public class ExplosionHelper {
 	 * @see #createCuboidCrater(Level, Vec3, int, Vector3f, int)
 	 */
 	public static void createCuboidCrater(Level level, Vec3 position, int radius, Vector3f scaling, float maxResistance, @Nullable ExplosionRule rule) {
-		createCrater(level, position, radius, scaling, maxResistance, CUBOID_CALCULATOR, rule);
+		if (radius < LuckyTNTLibConfigValues.BLOCK_UPDATE_THRESHOLD.get()) {
+			legacyCuboidExplosion(level, position, radius, scaling, maxResistance, rule);
+		} else {
+			createCrater(level, position, radius, scaling, maxResistance, CUBOID_CALCULATOR, rule);
+		}
 	}
 	
 	/**
@@ -218,7 +252,11 @@ public class ExplosionHelper {
 	 * @see #createScaledCylindricalCrater(Level, Vec3, int, int, Vector3f, int, ExplosionRule)
 	 */
 	public static void createCylindricalCrater(Level level, Vec3 position, int radiusXZ, int radiusY, float maxResistance) {
-		createCylindricalCrater(level, position, radiusXZ, radiusY, maxResistance, null);
+		if (radiusXZ < LuckyTNTLibConfigValues.BLOCK_UPDATE_THRESHOLD.get() && radiusY < LuckyTNTLibConfigValues.BLOCK_UPDATE_THRESHOLD.get()) {
+			legacyCylindricalExplosion(level, position, radiusXZ, radiusY, maxResistance, null);
+		} else {
+			createCylindricalCrater(level, position, radiusXZ, radiusY, maxResistance, null);
+		}
 	}
 	
 	/**
@@ -236,7 +274,11 @@ public class ExplosionHelper {
 	 * @see #createScaledCylindricalCrater(Level, Vec3, int, int, Vector3f, int, ExplosionRule)
 	 */
 	public static void createCylindricalCrater(Level level, Vec3 position, int radiusXZ, int radiusY, float maxResistance, @Nullable ExplosionRule rule) {
-		createScaledCylindricalCrater(level, position, radiusXZ, radiusY, new Vector3f(1), maxResistance, rule);
+		if (radiusXZ < LuckyTNTLibConfigValues.BLOCK_UPDATE_THRESHOLD.get() && radiusY < LuckyTNTLibConfigValues.BLOCK_UPDATE_THRESHOLD.get()) {
+			legacyCylindricalExplosion(level, position, radiusXZ, radiusY, maxResistance, rule);
+		} else {
+			createScaledCylindricalCrater(level, position, radiusXZ, radiusY, new Vector3f(1), maxResistance, rule);
+		}
 	}
 	
 	/**
@@ -255,7 +297,11 @@ public class ExplosionHelper {
 	 * @see #createScaledCylindricalCrater(Level, Vec3, int, int, Vector3f, int, ExplosionRule)
 	 */
 	public static void createScaledCylindricalCrater(Level level, Vec3 position, int radiusXZ, int radiusY, Vector3f scaling, float maxResistance) {
-		createScaledCylindricalCrater(level, position, radiusXZ, radiusY, scaling, maxResistance, null);
+		if (radiusXZ < LuckyTNTLibConfigValues.BLOCK_UPDATE_THRESHOLD.get() && radiusY < LuckyTNTLibConfigValues.BLOCK_UPDATE_THRESHOLD.get()) {
+			legacyScaledCylindricalExplosion(level, position, radiusXZ, radiusY, scaling, maxResistance, null);
+		} else {
+			createScaledCylindricalCrater(level, position, radiusXZ, radiusY, scaling, maxResistance, null);
+		}
 	}
 	
 	/**
@@ -275,8 +321,12 @@ public class ExplosionHelper {
 	 * @see #createScaledCylindricalCrater(Level, Vec3, int, int, Vector3f, int)
 	 */
 	public static void createScaledCylindricalCrater(Level level, Vec3 position, int radiusXZ, int radiusY, Vector3f scaling, float maxResistance, @Nullable ExplosionRule rule) {
-		DistanceCalculator calc = (x, z, r, s) -> Math.sqrt(x * x / s.x + z * z / s.z) <= radiusXZ ? (int)(radiusY * radiusY * s.y * s.y) : 0;
-		createCrater(level, position, radiusXZ, scaling, maxResistance, calc, rule);
+		if (radiusXZ < LuckyTNTLibConfigValues.BLOCK_UPDATE_THRESHOLD.get() && radiusY < LuckyTNTLibConfigValues.BLOCK_UPDATE_THRESHOLD.get()) {
+			legacyScaledCylindricalExplosion(level, position, radiusXZ, radiusY, scaling, maxResistance, rule);
+		} else {
+			DistanceCalculator calc = (x, z, r, s) -> Math.sqrt(x * x / s.x + z * z / s.z) <= radiusXZ ? (int)(radiusY * radiusY * s.y * s.y) : 0;
+			createCrater(level, position, radiusXZ, scaling, maxResistance, calc, rule);
+		}
 	}
 	
 	/**
@@ -310,9 +360,12 @@ public class ExplosionHelper {
 	 */
 	@SuppressWarnings("deprecation")
 	public static void createCrater(Level level, Vec3 position, int radius, Vector3f scaling, float maxResistance, DistanceCalculator calculator, @Nullable ExplosionRule rule) {
-		long time = System.currentTimeMillis();
-		int editedBlocks = 0;
 		if (level instanceof ServerLevel server) {
+			ExplosionProfiler profiler = new ExplosionProfiler(server);
+			profiler.start("time");
+			profiler.start("editedBlocks");
+			int editedBlocks = 0;
+			
 			ImprovedExplosion dummyExplosion = ImprovedExplosion.dummyExplosion(server);
 			HashMap<LevelChunk, BitSet> chunks = new HashMap<LevelChunk, BitSet>();
 			long worldSeed = server.getSeed();
@@ -335,7 +388,7 @@ public class ExplosionHelper {
 					int height = server.getMinBuildHeight();
 
 					for (LevelChunkSection section : chunk.getSections()) {
-						if (section.hasOnlyAir()) {
+						if (section.hasOnlyAir() && !useRule) {
 							height += 16;
 							continue;
 						}
@@ -406,15 +459,15 @@ public class ExplosionHelper {
 				}
 			}
 			
-			long lightTime = System.currentTimeMillis();
+			profiler.start("lightTime");
 			LightUpdateHelper.updateDirectSkyLight(server, chunks);
 			LightUpdateHelper.updateIndirectSkyLight(server, chunks);
-			System.out.println("total light time: " + (System.currentTimeMillis() - lightTime));
+			profiler.stop("lightTime", "luckytntlib.benchmarking.light_time");
 			
 			server.save(null, false, false);
-			
-			System.out.println("total time: " + (System.currentTimeMillis() - time));
-			System.out.println("total affected blocks: " + editedBlocks);
+
+			profiler.stopTime("editedBlocks", "luckytntlib.benchmarking.edited_blocks", false, editedBlocks);
+			profiler.stop("time", "luckytntlib.benchmarking.total_time");
 		}
 	}
 	

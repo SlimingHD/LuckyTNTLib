@@ -1,6 +1,5 @@
 package luckytntlib.util.explosions.rules;
 
-import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.mojang.serialization.JsonOps;
 
@@ -17,7 +16,7 @@ import net.minecraft.world.phys.Vec3;
  */
 public class BlockExplosionRule implements ExplosionRule {
 
-	public static final ResourceLocation RESOURCE_LOCATION = new ResourceLocation(LuckyTNTLib.MODID, "simple");
+	public static final ResourceLocation RESOURCE_LOCATION = new ResourceLocation(LuckyTNTLib.MODID, "block");
 	
 	private final BlockState stateToPlace;
 	
@@ -33,10 +32,7 @@ public class BlockExplosionRule implements ExplosionRule {
 	@Override
 	public JsonObject encode(JsonObject root) {
 		root.addProperty("type", RESOURCE_LOCATION.toString());
-		
-		JsonElement encodedBlockState = BlockState.CODEC.encodeStart(JsonOps.INSTANCE, stateToPlace).getOrThrow(false, s -> {});
-		root.add("state", encodedBlockState);
-		
+		root.add("state", BlockState.CODEC.encodeStart(JsonOps.INSTANCE, stateToPlace).getOrThrow(false, s -> {}));
 		return root;
 	}
 
