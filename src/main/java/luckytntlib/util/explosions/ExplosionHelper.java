@@ -19,7 +19,6 @@ import luckytntlib.util.light.LightUpdateHelper;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.SectionPos;
-import net.minecraft.core.Vec3i;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.tags.BlockTags;
 import net.minecraft.util.Mth;
@@ -373,6 +372,8 @@ public class ExplosionHelper {
 			profiler.startBenchmark(Benchmark.BENCHMARK_2, "luckytntlib.benchmarking.total_affected_blocks");
 			profiler.addCounterTo(Benchmark.BENCHMARK_2, Counter.COUNTER_0, 0);
 			
+			int checkedBlocks = 0;
+			
 			ImprovedExplosion dummyExplosion = ImprovedExplosion.dummyExplosion(server);
 			HashMap<LevelChunk, BitSet> chunks = new HashMap<LevelChunk, BitSet>();
 			long worldSeed = server.getSeed();
@@ -424,7 +425,7 @@ public class ExplosionHelper {
 										random.setSeed(explosionSeed(worldSeed, center, dx, dy, dz));
 									}
 									BlockState newState = useRule ? rule.getState(level, state, position, dx, dy, dz, random) : Blocks.AIR.defaultBlockState();
-									profiler.countUp(Benchmark.BENCHMARK_1, Counter.COUNTER_0, 1);
+									++checkedBlocks;
 									if (newState == null) {
 										continue;
 									}
@@ -467,6 +468,7 @@ public class ExplosionHelper {
 					chunk.setUnsaved(true);
 				}
 			}
+			profiler.countUp(Benchmark.BENCHMARK_1, Counter.COUNTER_0, checkedBlocks);
 			
 			profiler.startBenchmark(Benchmark.BENCHMARK_3, "luckytntlib.benchmarking.light_update_time");
 			LightUpdateHelper.updateDirectSkyLight(server, chunks);
@@ -900,17 +902,6 @@ public class ExplosionHelper {
 	 */
 	public static int encodeSectionPos(int x, int y, int z) {
 		return ((x & 15) << 8) | ((y & 15) << 4) | (z & 15);
-	}
-	
-	/**
-	 * Decodes a given {@code int} encoded by {@link #encodeSectionPos(int, int, int)} into 3 {@code int}s contained in a {@link Vec3i}.
-	 * @param decode  the {@code int} to be decoded
-	 * @return a {@link Vec3i} that contains all 3 decoded values
-	 * 
-	 * @see #encodeSectionPos(int, int, int)
-	 */
-	public static Vec3i decodeSectionPos(int decode) {
-		return new Vec3i((decode & 3840) >> 8, (decode & 240) >> 4, (decode & 15));
 	}
 	
 	/**

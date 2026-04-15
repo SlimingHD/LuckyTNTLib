@@ -94,7 +94,7 @@ public class ExplosionProfiler {
 			AtomicInteger i = new AtomicInteger(1);
 			profile.counters.forEach((counter, value) -> {
 				int index = i.get();
-				args[index] = Component.literal(String.format("%" + index +"$,d", value)).withStyle(ChatFormatting.GOLD);
+				args[index] = Component.literal(String.format("%" + index + "$,d", value)).withStyle(ChatFormatting.GOLD);
 				i.set(index + 1);
 			});
 			message.append("\n  ").append(Component.translatable(profile.translationKey, args).withStyle(ChatFormatting.WHITE));

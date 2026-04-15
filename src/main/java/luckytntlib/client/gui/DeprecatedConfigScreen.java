@@ -62,7 +62,7 @@ public class DeprecatedConfigScreen extends Screen {
 		Button nextButton = new Button.Builder(CommonComponents.GUI_CONTINUE, button -> {}).width(100).build();
 		nextButton.active = false;
 		footerRows.addChild(backButton);
-		footerRows.addChild(new Button.Builder(CommonComponents.GUI_DONE, button -> onClose()).width(100).build());
+		footerRows.addChild(new Button.Builder(CommonComponents.GUI_DONE, button -> minecraft.setScreen(null)).width(100).build());
 		footerRows.addChild(nextButton);
 		
 		layout.addToFooter(footerGrid);

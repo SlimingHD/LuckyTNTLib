@@ -2,17 +2,36 @@
 	"luckytntlib.config.multithreading_title" : "Конфиг многопоточности Lucky TNT Lib",
 	"luckytntlib.config.quality_title" : "Конфиг качества Lucky TNT Lib",
 	"luckytntlib.config.deprecated_title" : "Устаревший конфиг Lucky TNT Lib",
+	"luckytntlib.config.debug_title" : "Конфиг отладки Lucky TNT Lib",
 	"luckytntlib.config.reset" : "Сбросить",
 	
 	"luckytntlib.config.multithreaded_explosions" : "Многопоточность больших взрывов",
 	"luckytntlib.config.max_explosion_threads" : "Максимальное количество одновременных взрывов",
+	"luckytntlib.config.multithreading_threshold" : "Предел многопоточности",
+	"luckytntlib.config.update_block_light": "Обновление освещения блоков",
+	"luckytntlib.config.block_update_threshold": "Предел обновления блоков",
+	"luckytntlib.config.benchmark_explosions": "Отладка взрывов",
+	
 	"luckytntlib.config.multithreaded_explosions_tooltip" : "Большие взрывы будут использовать многопоточность для улучшения производительности. Они будут прогружаться параллеьно друг другу и игре, нагружая ЦП и память. Изменяйте значение ниже для контроля количества одновременных взрывов. На серверах это значение должно быть изменено на конфигах сервера",
 	"luckytntlib.config.max_explosion_threads_tooltip" : "Устанавливает количество одновременно прогружаемых взрывов. Каждый взрыв будет автоматически использовать несколько потоков. Излишки взрывов войдут в очередь. Высокие значения обеспечат скорость вычисления нескольких взрывов ценой нагрузки на ЦП и память. На серверах это значение должно быть изменено на конфигах сервера",
-	"luckytntlib.config.update_block_light": "Обновление освещения блоков",
+	"luckytntlib.config.multithreading_threshold_tooltip" : "Определяет размер, при котором взрывы становятся многопоточными. Для примера: Динамит x500 имеет размер 80, Динамит x2000 - 160 и Линамит x10000 - 300. На сервере необходимо менять изменять значение в конфиге сервера.",
 	"luckytntlib.config.update_block_light_tooltip": "Более оптимизированные взрывы производят обновление освещения самостоятельно для снижения времени вычислений. Активация увеличит визуальное качество обновления освещения ценой производительности. На серверах это значение должно быть изменено на конфигах сервера",
-		
+	"luckytntlib.config.block_update_threshold_tooltip" : "Определяет размер, при котором взрыв больше не производит автоматическое обновление блоков. Для примера: Сверхновая имеет размер 200. Это настройка сильно влияет на производительность. На сервере необходимо менять изменять значение в конфиге сервера.",
+	"luckytntlib.config.benchmark_explosions_tooltip" : "Определяет, будет ли информация отладки взрывов отображаться в чате для всех игроков. На сервере необходимо изменять значение в конфиге сервера.",
+	
 	"luckytntlib.config.performant_explosion" : "Эффектные взрывы",
 	"luckytntlib.config.explosion_performance_factor" : "Фактор эффектности",
 	"luckytntlib.config.performant_explosion_tooltip" : "Устаревшее. Обратитесь к моду, использующему эту библиотеку, чтобы узнать, сохраняет ли это значение свою силу.\nЗаменяет стандартный взрыв на идентичный, уменьшающий время прогрузки ценой вырезания некоторых деталей. На серверах это значение должно быть изменено на конфигах сервера",
-	"luckytntlib.config.explosion_performance_factor_tooltip" : "Устаревшее. Обратитесь к моду, использующему эту библиотеку, чтобы узнать, сохраняет ли это значение свою силу.\nНизкие значения добавляют детали, пока высокие улучшают производительность. Крайне сильно влияет на форму взрывов. На серверах это значение должно быть изменено на конфигах сервера"
+	"luckytntlib.config.explosion_performance_factor_tooltip" : "Устаревшее. Обратитесь к моду, использующему эту библиотеку, чтобы узнать, сохраняет ли это значение свою силу.\nНизкие значения добавляют детали, пока высокие улучшают производительность. Крайне сильно влияет на форму взрывов. На серверах это значение должно быть изменено на конфигах сервера",
+
+	"luckytntlib.benchmarking.explosion_title": "Взрыв",
+	"luckytntlib.benchmarking.fire_explosion_title": "Огненный взрыв",
+	"luckytntlib.benchmarking.total_explosion_time": "Затрачено времени: %1$sс",
+	"luckytntlib.benchmarking.explosion_finish_time": "Время генерации взрыва: %1$sс",
+	"luckytntlib.benchmarking.light_update_time": "Время обновления освещения: %1$sс",
+	"luckytntlib.benchmarking.total_checked_blocks": "Всего проверенных блоков: %2$s",
+	"luckytntlib.benchmarking.total_affected_blocks": "Всего изменненых блоков: %2$s",
+	"luckytntlib.benchmarking.vectors_gathered": "Время создания %2$s векторов: %1$sс",
+	"luckytntlib.benchmarking.blocks_gathered": "Время трассировки блоков: %1$sс",
+	"luckytntlib.benchmarking.cpu_tasks": "Затрачено задач ЦП: %2$s"
 }

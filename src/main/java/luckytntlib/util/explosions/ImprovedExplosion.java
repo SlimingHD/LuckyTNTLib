@@ -222,9 +222,6 @@ public class ImprovedExplosion extends Explosion {
 		// Total blocks actually changed by explosion
 		PROFILER.startBenchmark(Benchmark.BENCHMARK_2, "luckytntlib.benchmarking.total_affected_blocks");
 		PROFILER.addCounterTo(Benchmark.BENCHMARK_2, Counter.COUNTER_0, 0);
-		// Time and count of vector creation
-		PROFILER.startBenchmark(Benchmark.BENCHMARK_3, "luckytntlib.benchmarking.vectors_gathered");
-		PROFILER.addCounterTo(Benchmark.BENCHMARK_3, Counter.COUNTER_0, 0);
 		if (LuckyTNTLibConfigValues.MULTITHREADED_EXPLOSIONS.get() && size >= LuckyTNTLibConfigValues.MULTITHREADING_THRESHOLD.get()) {
 			doImprovedBlockExplosionMultithreaded(resistanceImpact, randomVecLength, ignoreFluidResistance, fire, rule);
 		} else {
@@ -246,7 +243,10 @@ public class ImprovedExplosion extends Explosion {
 		SingleThreadedRandomSource random = new SingleThreadedRandomSource(ExplosionHelper.explosionSeed(worldSeed, BlockPos.containing(getPosition()), 0, 0, 0));
 
 		List<Vector3f> vectors = new ArrayList<Vector3f>((int)(4 * size * size * Math.PI + 10));
-		
+
+		// Time and count of vector creation
+		PROFILER.startBenchmark(Benchmark.BENCHMARK_3, "luckytntlib.benchmarking.vectors_gathered");
+		PROFILER.addCounterTo(Benchmark.BENCHMARK_3, Counter.COUNTER_0, 0);
 		for (int offX = -size; offX <= size; offX++) {
 			for (int offY = -size; offY <= size; offY++) {
 				for (int offZ = -size; offZ <= size; offZ++) {
@@ -281,7 +281,9 @@ public class ImprovedExplosion extends Explosion {
 		
 		List<Vector3f> vectors = new ArrayList<Vector3f>((int)(4 * size * size * Math.PI + 10));
 
-
+		// Time and count of vector creation
+		PROFILER.startBenchmark(Benchmark.BENCHMARK_3, "luckytntlib.benchmarking.vectors_gathered");
+		PROFILER.addCounterTo(Benchmark.BENCHMARK_3, Counter.COUNTER_0, 0);
 		for (int offX = -size; offX <= size; offX++) {
 			for (int offY = -size; offY <= size; offY++) {
 				for (int offZ = -size; offZ <= size; offZ++) {
@@ -435,7 +437,6 @@ public class ImprovedExplosion extends Explosion {
 			finishImprovedExplosionWithRule(editedSections, fullSections, rule);
 		}
 		PROFILER.stopBenchmarkTime(Benchmark.BENCHMARK_0);
-		PROFILER.stopBenchmarkTime(Benchmark.BENCHMARK_5);
 		PROFILER.printResults();
 		if (onExplosionFinish != null) {
 			onExplosionFinish.accept(this);
@@ -459,9 +460,13 @@ public class ImprovedExplosion extends Explosion {
 			
 			chunk.setLoaded(true);
 			
-			for (int s = 0; s < 4096; s++) {
-				BlockState state = states.getAndSet((s >> 8) & 15, (s >> 4) & 15, s & 15, Blocks.AIR.defaultBlockState());
-				state.getBlock().wasExploded(level, new BlockPos((pos.x() << 4) + ((s >> 8) & 15), (pos.y() << 4) + ((s >> 4) & 15), (pos.z() << 4) + (s & 15)), this);
+			for (int x = 0; x < 16; x++) {
+				for (int z = 0; z < 16; z++) {
+					for (int y = 0; y < 16; y++) {
+						BlockState state = states.getAndSet(x, y, z, Blocks.AIR.defaultBlockState());
+						state.getBlock().wasExploded(level, new BlockPos((pos.x() << 4) + x, (pos.y() << 4) + y, (pos.z() << 4) + z), this);
+					}
+				}
 			}
 			
 			section.recalcBlockCounts();
@@ -485,10 +490,14 @@ public class ImprovedExplosion extends Explosion {
 			
 			chunk.setLoaded(true);
 			
-			for (int s = 0; s < 4096; s++) {
-				if (removedBlocks.get(s)) {
-					BlockState state = states.getAndSet((s >> 8) & 15, (s >> 4) & 15, s & 15, Blocks.AIR.defaultBlockState());
-					state.getBlock().wasExploded(level, new BlockPos((pos.x() << 4) + ((s >> 8) & 15), (pos.y() << 4) + ((s >> 4) & 15), (pos.z() << 4) + (s & 15)), this);
+			for (int x = 0; x < 16; x++) {
+				for (int z = 0; z < 16; z++) {
+					for (int y = 0; y < 16; y++) {
+						if (removedBlocks.get(ExplosionHelper.encodeSectionPos(x, y, z))) {
+							BlockState state = states.getAndSet(x, y, z, Blocks.AIR.defaultBlockState());
+							state.getBlock().wasExploded(level, new BlockPos((pos.x() << 4) + x, (pos.y() << 4) + y, (pos.z() << 4) + z), this);
+						}
+					}
 				}
 			}
 			
@@ -505,6 +514,8 @@ public class ImprovedExplosion extends Explosion {
 		}
 
 		PROFILER.countUp(Benchmark.BENCHMARK_2, Counter.COUNTER_0, PROFILER.getCount(Benchmark.BENCHMARK_1, Counter.COUNTER_0));
+		
+		PROFILER.stopBenchmarkTime(Benchmark.BENCHMARK_5);
 
 		PROFILER.startBenchmark(Benchmark.BENCHMARK_6, "luckytntlib.benchmarking.light_update_time");
 		LightUpdateHelper.updateDirectSkyLight((ServerLevel)level, chunks);
@@ -536,33 +547,34 @@ public class ImprovedExplosion extends Explosion {
 			chunk.setLoaded(true);
 			
 			BitSet changed = null;
-			for (int s = 0; s < 4096; s++) {
-				int xl = (s >> 8) & 15;
-				int yl = (s >> 4) & 15;
-				int zl = s & 15;
-				int x = (pos.x() << 4) + xl;
-				int y = (pos.y() << 4) + yl;
-				int z = (pos.z() << 4) + zl;
-				int offX = x - center.getX();
-				int offY = y - center.getY();
-				int offZ = z - center.getZ();
-				
-				BlockState state = states.get(xl, yl, zl);
-				
-				random.setSeed(ExplosionHelper.explosionSeed(worldSeed, center, offX, offY, offZ));
-				BlockState newState = rule.getState(level, state, getPosition(), offX, offY, offZ, random);
-				
-				if (newState != null) {
-					BlockPos blockpos = new BlockPos(x, y, z);
-					state.getBlock().wasExploded(level, blockpos, this);
-					states.set(xl, yl, zl, newState);
-					chunk.removeBlockEntity(blockpos);
-				} else {
-					if (changed == null) {
-						changed = new BitSet(4096);
-						changed.set(0, 4096);
+			for (int x = 0; x < 16; x++) {
+				for (int z = 0; z < 16; z++) {
+					for (int y = 0; y < 16; y++) {
+						int xg = (pos.x() << 4) + x;
+						int yg = (pos.y() << 4) + y;
+						int zg = (pos.z() << 4) + z;
+						int offX = xg - center.getX();
+						int offY = yg - center.getY();
+						int offZ = zg - center.getZ();
+						
+						BlockState state = states.get(x, y, z);
+						
+						random.setSeed(ExplosionHelper.explosionSeed(worldSeed, center, offX, offY, offZ));
+						BlockState newState = rule.getState(level, state, getPosition(), offX, offY, offZ, random);
+						
+						if (newState != null) {
+							BlockPos blockpos = new BlockPos(xg, yg, zg);
+							state.getBlock().wasExploded(level, blockpos, this);
+							states.set(x, y, z, newState);
+							chunk.removeBlockEntity(blockpos);
+						} else {
+							if (changed == null) {
+								changed = new BitSet(4096);
+								changed.set(0, 4096);
+							}
+							changed.set(ExplosionHelper.encodeSectionPos(x, y, z), false);
+						}
 					}
-					changed.set(s, false);
 				}
 			}
 			
@@ -593,30 +605,32 @@ public class ImprovedExplosion extends Explosion {
 			
 			chunk.setLoaded(true);
 			
-			for (int s = 0; s < 4096; s++) {
-				if (affectedBlocks.get(s)) {
-					int xl = (s >> 8) & 15;
-					int yl = (s >> 4) & 15;
-					int zl = s & 15;
-					int x = (pos.x() << 4) + xl;
-					int y = (pos.y() << 4) + yl;
-					int z = (pos.z() << 4) + zl;
-					int offX = x - center.getX();
-					int offY = y - center.getY();
-					int offZ = z - center.getZ();
+			for (int x = 0; x < 16; x++) {
+				for (int z = 0; z < 16; z++) {
+					for (int y = 0; y < 16; y++) {
+						int index = ExplosionHelper.encodeSectionPos(x, y, z);
+						if (affectedBlocks.get(index)) {
+							int xg = (pos.x() << 4) + x;
+							int yg = (pos.y() << 4) + y;
+							int zg = (pos.z() << 4) + z;
+							int offX = xg - center.getX();
+							int offY = yg - center.getY();
+							int offZ = zg - center.getZ();
 					
-					BlockState state = states.get(xl, yl, zl);
-					
-					random.setSeed(ExplosionHelper.explosionSeed(worldSeed, center, offX, offY, offZ));
-					BlockState newState = rule.getState(level, state, getPosition(), offX, offY, offZ, random);
-					
-					if (newState != null) {
-						BlockPos blockpos = new BlockPos(x, y, z);
-						state.getBlock().wasExploded(level, blockpos, this);
-						states.set(xl, yl, zl, newState);
-						chunk.removeBlockEntity(blockpos);
-					} else {
-						affectedBlocks.set(s, false);
+							BlockState state = states.get(x, y, z);
+							
+							random.setSeed(ExplosionHelper.explosionSeed(worldSeed, center, offX, offY, offZ));
+							BlockState newState = rule.getState(level, state, getPosition(), offX, offY, offZ, random);
+							
+							if (newState != null) {
+								BlockPos blockpos = new BlockPos(xg, yg, zg);
+								state.getBlock().wasExploded(level, blockpos, this);
+								states.set(x, y, z, newState);
+								chunk.removeBlockEntity(blockpos);
+							} else {
+								affectedBlocks.set(index, false);
+							}
+						}
 					}
 				}
 			}
@@ -633,6 +647,8 @@ public class ImprovedExplosion extends Explosion {
 			
 			chunk.setUnsaved(true);
 		}
+		
+		PROFILER.stopBenchmarkTime(Benchmark.BENCHMARK_5);
 		
 		PROFILER.startBenchmark(Benchmark.BENCHMARK_6, "luckytntlib.benchmarking.light_update_time");
 		LightUpdateHelper.updateDirectSkyLight((ServerLevel)level, chunks);
@@ -676,6 +692,8 @@ public class ImprovedExplosion extends Explosion {
 			}
 		}
 		PROFILER.countUp(Benchmark.BENCHMARK_2, Counter.COUNTER_0, PROFILER.getCount(Benchmark.BENCHMARK_1, Counter.COUNTER_0));
+		
+		PROFILER.stopBenchmarkTime(Benchmark.BENCHMARK_5);
 	}
 	
 	/**
@@ -688,6 +706,7 @@ public class ImprovedExplosion extends Explosion {
 		BlockPos center = BlockPos.containing(getPosition());
 		
 		for (long encodedPos : fullSections) {
+			int blocks = 0;
 			SectionPos sectionPos = SectionPos.of(encodedPos);
 			LevelChunk chunk = level.getChunk(sectionPos.x(), sectionPos.z());
 			LevelChunkSection section = chunk.getSection(level.getSectionIndexFromSectionY(sectionPos.y()));
@@ -712,12 +731,14 @@ public class ImprovedExplosion extends Explosion {
 					BlockPos pos = new BlockPos(x + lx, y + ly, z + lz);
 					level.setBlockAndUpdate(pos, newState);
 					state.getBlock().wasExploded(level, pos, this);
-					PROFILER.countUp(Benchmark.BENCHMARK_2, Counter.COUNTER_0, 1);
+					++blocks;
 				}
 			}
+			PROFILER.countUp(Benchmark.BENCHMARK_2, Counter.COUNTER_0, blocks);
 		}
 		
 		for (Entry<Long, BitSet> entry : editedSections.entrySet()) {
+			int blocks = 0;
 			SectionPos sectionPos = SectionPos.of(entry.getKey());
 			LevelChunk chunk = level.getChunk(sectionPos.x(), sectionPos.z());
 			LevelChunkSection section = chunk.getSection(level.getSectionIndexFromSectionY(sectionPos.y()));
@@ -744,11 +765,14 @@ public class ImprovedExplosion extends Explosion {
 						BlockPos pos = new BlockPos(x + lx, y + ly, z + lz);
 						level.setBlockAndUpdate(pos, newState);
 						state.getBlock().wasExploded(level, pos, this);
-						PROFILER.countUp(Benchmark.BENCHMARK_2, Counter.COUNTER_0, 1);
+						++blocks;
 					}
 				}
 			}
+			PROFILER.countUp(Benchmark.BENCHMARK_2, Counter.COUNTER_0, blocks);
 		}
+		
+		PROFILER.stopBenchmarkTime(Benchmark.BENCHMARK_5);
 	}
 	
 	/**
@@ -797,6 +821,8 @@ public class ImprovedExplosion extends Explosion {
 			}
 			PROFILER.countUp(Benchmark.BENCHMARK_2, Counter.COUNTER_0, affectedBlocks);
 		}
+		
+		PROFILER.stopBenchmarkTime(Benchmark.BENCHMARK_5);
 	}
 	
 	/**

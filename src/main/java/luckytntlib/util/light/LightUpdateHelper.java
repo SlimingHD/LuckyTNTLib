@@ -34,7 +34,6 @@ import net.minecraft.world.level.chunk.LevelChunk;
 import net.minecraft.world.level.chunk.LevelChunkSection;
 import net.minecraft.world.level.chunk.PalettedContainer;
 import net.minecraft.world.level.lighting.ChunkSkyLightSources;
-import net.minecraft.world.level.lighting.LevelLightEngine;
 import net.minecraftforge.network.PacketDistributor;
 
 /**
@@ -197,7 +196,7 @@ public class LightUpdateHelper {
 	 * @see #updateDirectSkyLight(ServerLevel, HashMap)
 	 */
 	public static void updateIndirectSkyLight(ServerLevel server, HashMap<LevelChunk, BitSet> chunks) {
-		LevelLightEngine engine = server.getLightEngine();
+		ThreadedLevelLightEngine engine = server.getChunkSource().getLightEngine();
 		Long2ObjectMap<BitSet> packetData = new Long2ObjectLinkedOpenHashMap<>();
 		Long2ObjectMap<LightDataHolder> dataLayerCache = new Long2ObjectOpenHashMap<>();
 		boolean updateBlockLight = LuckyTNTLibConfigValues.UPDATE_BLOCK_LIGHT.get();
@@ -251,8 +250,6 @@ public class LightUpdateHelper {
 			SectionPos pos = SectionPos.of(entry.getKey());
 			BitSet blocksToCheck = entry.getValue();
 			
-			PacketHandler.CHANNEL.send(PacketDistributor.DIMENSION.with(() -> server.dimension()), new ClientboundUpdateChunkSectionPacket(SectionPos.of(pos.getX(), pos.getY() - server.getMinSection(), pos.getZ()), blocksToCheck, false, true));
-			
 			for (int x = 0; x < 16; ++x) {
 				for (int z = 0; z < 16; ++z) {
 					for (int y = 15; y >= 0; --y) {
@@ -265,7 +262,10 @@ public class LightUpdateHelper {
 			}
 			engine.updateSectionStatus(pos, false);
 			engine.setLightEnabled(new ChunkPos(pos.getX(), pos.getZ()), true);
+
+			PacketHandler.CHANNEL.send(PacketDistributor.DIMENSION.with(() -> server.dimension()), new ClientboundUpdateChunkSectionPacket(SectionPos.of(pos.getX(), pos.getY() - server.getMinSection(), pos.getZ()), blocksToCheck, false, true));
 		}
+		engine.tryScheduleUpdate();
 	}
 	
 	/**
@@ -287,7 +287,7 @@ public class LightUpdateHelper {
 			packetData.put(c, new BitSet(4096));
 		}
 		
-		packetData.get(c).set(ExplosionHelper.encodeSectionPos(realX, (y & 15), realZ));
+		packetData.get(c).set(ExplosionHelper.encodeSectionPos(realX, y & 15, realZ));
 	}
 	
 	/**

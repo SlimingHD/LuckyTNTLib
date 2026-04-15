@@ -79,7 +79,7 @@ public class MultithreadingConfigScreen extends Screen {
 			minecraft.pushGuiLayer(new QualityConfigScreen());
 		}).width(100).build();
 		footerRows.addChild(backButton);
-		footerRows.addChild(new Button.Builder(CommonComponents.GUI_DONE, button -> onClose()).width(100).build());
+		footerRows.addChild(new Button.Builder(CommonComponents.GUI_DONE, button -> minecraft.setScreen(null)).width(100).build());
 		footerRows.addChild(nextButton);
 		
 		layout.addToFooter(footerGrid);

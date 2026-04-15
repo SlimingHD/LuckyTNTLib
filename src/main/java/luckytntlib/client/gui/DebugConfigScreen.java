@@ -52,7 +52,7 @@ public class DebugConfigScreen extends Screen {
 			minecraft.pushGuiLayer(new DeprecatedConfigScreen());
 		}).width(100).build();
 		footerRows.addChild(backButton);
-		footerRows.addChild(new Button.Builder(CommonComponents.GUI_DONE, button -> onClose()).width(100).build());
+		footerRows.addChild(new Button.Builder(CommonComponents.GUI_DONE, button -> minecraft.setScreen(null)).width(100).build());
 		footerRows.addChild(nextButton);
 		
 		layout.addToFooter(footerGrid);
