@@ -24,10 +24,14 @@
 	"luckytntlib.config.performant_explosion_tooltip" : "Veraltet. Es ist implementationsabhängig, ob dieser Wert noch einen Effekt hat.\nErsetzt die Standard-Explosion durch eine Identische, die die Ladezeit zu Gunsten von wenig Detailverlust reduziert. Sollte ein Server gehostet werden, muss diese Einstellung stattdessen in der Server-Konfigurations gesetzt werden.",
 	"luckytntlib.config.explosion_performance_factor_tooltip" : "Veraltet. Es ist implementationsabhängig, ob dieser Wert noch einen Effekt hat.\nGeringe Werte erhöhen die Details, w\u00e4hrend hohe Werte die Leistung verbessern. Beeinflusst das Aussehen der Explosion massiv. Sollte ein Server gehostet werden, muss diese Einstellung stattdessen in der Server-Konfigurations gesetzt werden.",
 	
-	"luckytntlib.benchmarking.title": "[Explosionen-Benchmarking] ",
-	"luckytntlib.benchmarking.total_time": "Explosion wurde nach %1$s Sekunden abgeschlossen",
-	"luckytntlib.benchmarking.edited_blocks": "Explosion hat insgesamt %1$s Blöcke bearbeitet",
-	"luckytntlib.benchmarking.light_time": "Licht Berechnungen für Explosion nach %1$s Sekunden abgeschlossen",
-	"luckytntlib.benchmarking.vector_gathering": "Explosion brauchte %1$s Sekunden, um %2$s Vektoren für das Raytracing zu berechnen",
-	"luckytntlib.benchmarking.block_gathering": "Explosion brauchte %1$s Sekunden, um alle betroffenen Blöcke mit %2$s CPU-Tasks zu ermitteln"
+	"luckytntlib.benchmarking.explosion_title": "Explosion",
+	"luckytntlib.benchmarking.fire_explosion_title": "Feuer-Explosion",
+	"luckytntlib.benchmarking.total_explosion_time": "Gesamtdauer der Explosion: %1$ss",
+	"luckytntlib.benchmarking.explosion_finish_time": "Zeit für Anwenden der Änderungen: %1$ss",
+	"luckytntlib.benchmarking.light_update_time": "Zeit für Licht-Updates: %1$ss",
+	"luckytntlib.benchmarking.total_checked_blocks": "Gesamtanzahl geprüfter Blöcke: %2$s",
+	"luckytntlib.benchmarking.total_affected_blocks": "Gesamtanzahl bearbeiteter Blöcke: %2$s",
+	"luckytntlib.benchmarking.vectors_gathered": "Zeit für die Berechnung von %2$s Vektoren: %1$ss",
+	"luckytntlib.benchmarking.blocks_gathered": "Zeit für Raytracing von Blöcken: %1$ss",
+	"luckytntlib.benchmarking.cpu_tasks": "Benutzte CPU-Tasks: %2$s"
 }
