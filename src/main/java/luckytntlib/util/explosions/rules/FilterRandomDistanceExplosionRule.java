@@ -78,7 +78,7 @@ public class FilterRandomDistanceExplosionRule implements ExplosionRule {
 		}),
 		QUADRATIC("quadratic", (offX, offY, offZ, r, start) -> {
 			int distanceSqr = offX * offX + offY * offY + offZ * offZ;
-			return 1f - (distanceSqr - start) / r;
+			return 1f - (distanceSqr - start) / (float)r;
 		});
 		
 		private final String name;
