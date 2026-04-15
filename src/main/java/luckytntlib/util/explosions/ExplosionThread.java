@@ -13,6 +13,8 @@ import org.joml.Vector3f;
 
 import it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap;
 import luckytntlib.util.ExplosionProfiler;
+import luckytntlib.util.ExplosionProfiler.Benchmark;
+import luckytntlib.util.ExplosionProfiler.Counter;
 import luckytntlib.util.explosions.rules.ExplosionRule;
 
 /**
@@ -35,7 +37,7 @@ public final class ExplosionThread extends Thread {
 	@Nullable
 	private final ExplosionRule rule;
 	private final List<Vector3f> vectors;
-	private final ExplosionProfiler profiler;
+	private final ExplosionProfiler PROFILER;
 	
 	final Set<Long> emptySections = ConcurrentHashMap.newKeySet();
 	final Set<Long> fullSections = ConcurrentHashMap.newKeySet();
@@ -53,15 +55,25 @@ public final class ExplosionThread extends Thread {
 		this.placeFire = placeFire;
 		this.rule = rule;
 		this.vectors = vectors;
-		this.profiler = explosion.profiler;
+		this.PROFILER = explosion.PROFILER;
 	}
 	
 	@Override
 	public void run() {
-		profiler.start("blockGathering");
+		PROFILER.startBenchmark(Benchmark.BENCHMARK_4, "luckytntlib.benchmarking.blocks_gathered");
+		PROFILER.startBenchmark(Benchmark.BENCHMARK_7, "luckytntlib.benchmarking.cpu_tasks");
+		
 		ExplosionTask task = new ExplosionTask(this, explosion, resistanceFac, ignoreFluids, Math.max(minVectorsPerThread, vectors.size() / (Runtime.getRuntime().availableProcessors() * 4)), vectors);
 		editedSections = pool.invoke(task);
-		profiler.stop("blockGathering", "luckytntlib.benchmarking.block_gathering", taskCount);
+		
+		PROFILER.addCounterTo(Benchmark.BENCHMARK_7, Counter.COUNTER_0, taskCount);
+		PROFILER.stopBenchmarkTime(Benchmark.BENCHMARK_4);
+		editedSections.forEach((pos, bitset) -> {
+			PROFILER.countUp(Benchmark.BENCHMARK_1, Counter.COUNTER_0, bitset);
+		});
+		fullSections.forEach(pos -> {
+			PROFILER.countUp(Benchmark.BENCHMARK_1, Counter.COUNTER_0, 4096);
+		});
 	}
 	
 	public Map<Long, BitSet> getEditedSections() {

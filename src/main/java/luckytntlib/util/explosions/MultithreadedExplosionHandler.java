@@ -38,6 +38,7 @@ public final class MultithreadedExplosionHandler {
 					if (thread.shouldPlaceFire()) {
 						float sizeReduction = (float)Math.sqrt(Math.sqrt(thread.getExplosion().size));
 						ImprovedExplosion fireExplosion = new ImprovedExplosion(thread.getExplosion().level, thread.getExplosion().getPosition(), Math.round(thread.getExplosion().size / sizeReduction));
+						fireExplosion.setProfilerTitle("luckytntlib.benchmarking.fire_explosion_title");
 						fireExplosion.doImprovedBlockExplosion(1f, 1.2f * sizeReduction, false, false, new FireExplosionRule(1f / sizeReduction));
 					}
 					if (!queuedExplosionThreads.isEmpty()) {

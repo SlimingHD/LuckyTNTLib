@@ -12,6 +12,8 @@ import luckytntlib.network.ClientboundSetupExplosionPacket;
 import luckytntlib.network.ClientboundUpdateChunkSectionPacket;
 import luckytntlib.network.PacketHandler;
 import luckytntlib.util.ExplosionProfiler;
+import luckytntlib.util.ExplosionProfiler.Benchmark;
+import luckytntlib.util.ExplosionProfiler.Counter;
 import luckytntlib.util.explosions.rules.ExplosionRule;
 import luckytntlib.util.light.LightUpdateHelper;
 import net.minecraft.core.BlockPos;
@@ -362,9 +364,14 @@ public class ExplosionHelper {
 	public static void createCrater(Level level, Vec3 position, int radius, Vector3f scaling, float maxResistance, DistanceCalculator calculator, @Nullable ExplosionRule rule) {
 		if (level instanceof ServerLevel server) {
 			ExplosionProfiler profiler = new ExplosionProfiler(server);
-			profiler.start("time");
-			profiler.start("editedBlocks");
-			int editedBlocks = 0;
+			if (radius < 50) {
+				profiler.disable();
+			}
+			profiler.startBenchmark(Benchmark.BENCHMARK_0, "luckytntlib.benchmarking.total_explosion_time");
+			profiler.startBenchmark(Benchmark.BENCHMARK_1, "luckytntlib.benchmarking.total_checked_blocks");
+			profiler.addCounterTo(Benchmark.BENCHMARK_1, Counter.COUNTER_0, 0);
+			profiler.startBenchmark(Benchmark.BENCHMARK_2, "luckytntlib.benchmarking.total_affected_blocks");
+			profiler.addCounterTo(Benchmark.BENCHMARK_2, Counter.COUNTER_0, 0);
 			
 			ImprovedExplosion dummyExplosion = ImprovedExplosion.dummyExplosion(server);
 			HashMap<LevelChunk, BitSet> chunks = new HashMap<LevelChunk, BitSet>();
@@ -417,6 +424,7 @@ public class ExplosionHelper {
 										random.setSeed(explosionSeed(worldSeed, center, dx, dy, dz));
 									}
 									BlockState newState = useRule ? rule.getState(level, state, position, dx, dy, dz, random) : Blocks.AIR.defaultBlockState();
+									profiler.countUp(Benchmark.BENCHMARK_1, Counter.COUNTER_0, 1);
 									if (newState == null) {
 										continue;
 									}
@@ -428,7 +436,6 @@ public class ExplosionHelper {
 									chunk.removeBlockEntity(blockpos);
 
 									changed.set(encodeSectionPos(i, j, k));
-									++editedBlocks;
 
 									if (!chunkEdited) {
 										chunkEdited = true;
@@ -444,8 +451,10 @@ public class ExplosionHelper {
 						if (!changed.isEmpty()) {
 							if (changed.cardinality() == 4096) {
 								PacketHandler.CHANNEL.send(PacketDistributor.TRACKING_CHUNK.with(() -> chunk), new ClientboundUpdateChunkSectionPacket(SectionPos.of(chunkPos, height / 16 - chunk.getMinSection()), new BitSet(0), true, false));
+								profiler.countUp(Benchmark.BENCHMARK_2, Counter.COUNTER_0, 4096);
 							} else {
 								PacketHandler.CHANNEL.send(PacketDistributor.TRACKING_CHUNK.with(() -> chunk), new ClientboundUpdateChunkSectionPacket(SectionPos.of(chunkPos, height / 16 - chunk.getMinSection()), changed, false, false));
+								profiler.countUp(Benchmark.BENCHMARK_2, Counter.COUNTER_0, changed.cardinality());
 							}
 						}
 
@@ -459,15 +468,15 @@ public class ExplosionHelper {
 				}
 			}
 			
-			profiler.start("lightTime");
+			profiler.startBenchmark(Benchmark.BENCHMARK_3, "luckytntlib.benchmarking.light_update_time");
 			LightUpdateHelper.updateDirectSkyLight(server, chunks);
 			LightUpdateHelper.updateIndirectSkyLight(server, chunks);
-			profiler.stop("lightTime", "luckytntlib.benchmarking.light_time");
+			profiler.stopBenchmarkTime(Benchmark.BENCHMARK_3);
 			
 			server.save(null, false, false);
 
-			profiler.stopTime("editedBlocks", "luckytntlib.benchmarking.edited_blocks", false, editedBlocks);
-			profiler.stop("time", "luckytntlib.benchmarking.total_time");
+			profiler.stopBenchmarkTime(Benchmark.BENCHMARK_0);
+			profiler.printResults();
 		}
 	}
 	

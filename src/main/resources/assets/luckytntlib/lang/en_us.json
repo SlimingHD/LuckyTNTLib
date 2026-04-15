@@ -24,6 +24,17 @@
 	"luckytntlib.config.performant_explosion_tooltip" : "Deprecated. See the mod implementing this library as to whether or not this value still has effect.\nReplaces the standard explosion with an identical one that reduces loading time at the expense of some detail. If you host a server you will have to change this value in the server config instead.",
 	"luckytntlib.config.explosion_performance_factor_tooltip" : "Deprecated. See the mod implementing this library as to whether or not this value still has effect.\nLower values retain more details while higher values provide more performance. Has significant impact on the shape of explosions. If you host a server you will have to change this value in the server config instead.",
 	
+	"luckytntlib.benchmarking.explosion_title": "Explosion",
+	"luckytntlib.benchmarking.fire_explosion_title": "Explosion Fire Placement",
+	"luckytntlib.benchmarking.total_explosion_time": "Total time for explosion: %1$ss",
+	"luckytntlib.benchmarking.explosion_finish_time": "Time for applying explosion: %1$ss",
+	"luckytntlib.benchmarking.light_update_time": "Time for light updates: %1$ss",
+	"luckytntlib.benchmarking.total_checked_blocks": "Total checked blocks: %2$s",
+	"luckytntlib.benchmarking.total_affected_blocks": "Total affected blocks: %2$s",
+	"luckytntlib.benchmarking.vectors_gathered": "Time for creation of %2$s vectors: %1$ss",
+	"luckytntlib.benchmarking.blocks_gathered": "Time for raytracing blocks: %1$ss",
+	"luckytntlib.benchmarking.cpu_tasks": "CPU Tasks used: %2$s",
+	
 	"luckytntlib.benchmarking.title": "[Explosion Benchmarking] ",
 	"luckytntlib.benchmarking.total_time": "Explosion finished after %1$s seconds",
 	"luckytntlib.benchmarking.edited_blocks": "Explosion edited a total of %1$s blocks",

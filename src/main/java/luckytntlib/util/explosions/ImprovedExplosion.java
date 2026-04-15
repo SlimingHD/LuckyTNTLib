@@ -23,6 +23,8 @@ import luckytntlib.network.ClientboundSetupExplosionPacket;
 import luckytntlib.network.ClientboundUpdateChunkSectionPacket;
 import luckytntlib.network.PacketHandler;
 import luckytntlib.util.ExplosionProfiler;
+import luckytntlib.util.ExplosionProfiler.Benchmark;
+import luckytntlib.util.ExplosionProfiler.Counter;
 import luckytntlib.util.IExplosiveEntity;
 import luckytntlib.util.explosions.rules.ExplosionRule;
 import luckytntlib.util.explosions.rules.FireExplosionRule;
@@ -77,7 +79,7 @@ public class ImprovedExplosion extends Explosion {
 	@Nullable
 	private Consumer<ImprovedExplosion> onExplosionFinish;
 	
-	ExplosionProfiler profiler;
+	final ExplosionProfiler PROFILER;
 	
 	@Deprecated(forRemoval = true)
 	List<Integer> affectedBlocks = new ArrayList<>();
@@ -158,6 +160,18 @@ public class ImprovedExplosion extends Explosion {
 		this.size = size;
 		damageCalculator = explodingEntity == null ? new ExplosionDamageCalculator() : new EntityBasedExplosionDamageCalculator(explodingEntity);
 		this.performsBlockUpdates = size < LuckyTNTLibConfigValues.BLOCK_UPDATE_THRESHOLD.get();
+		PROFILER = new ExplosionProfiler(level);
+		if (size < 50) {
+			PROFILER.disable();
+		}
+	}
+	
+	public void setProfilerTitle(String translationKey) {
+		PROFILER.setTitle(translationKey);
+	}
+	
+	public void disableProfiler() {
+		PROFILER.disable();
 	}
 	
 	/**
@@ -200,8 +214,17 @@ public class ImprovedExplosion extends Explosion {
 		if (level.isClientSide()) {
 			return;
 		}
-		profiler = new ExplosionProfiler((ServerLevel)level);
-		profiler.start("time");
+		// Total explosion time
+		PROFILER.startBenchmark(Benchmark.BENCHMARK_0, "luckytntlib.benchmarking.total_explosion_time");
+		// Total blocks checked by explosion
+		PROFILER.startBenchmark(Benchmark.BENCHMARK_1, "luckytntlib.benchmarking.total_checked_blocks");
+		PROFILER.addCounterTo(Benchmark.BENCHMARK_1, Counter.COUNTER_0, 0);
+		// Total blocks actually changed by explosion
+		PROFILER.startBenchmark(Benchmark.BENCHMARK_2, "luckytntlib.benchmarking.total_affected_blocks");
+		PROFILER.addCounterTo(Benchmark.BENCHMARK_2, Counter.COUNTER_0, 0);
+		// Time and count of vector creation
+		PROFILER.startBenchmark(Benchmark.BENCHMARK_3, "luckytntlib.benchmarking.vectors_gathered");
+		PROFILER.addCounterTo(Benchmark.BENCHMARK_3, Counter.COUNTER_0, 0);
 		if (LuckyTNTLibConfigValues.MULTITHREADED_EXPLOSIONS.get() && size >= LuckyTNTLibConfigValues.MULTITHREADING_THRESHOLD.get()) {
 			doImprovedBlockExplosionMultithreaded(resistanceImpact, randomVecLength, ignoreFluidResistance, fire, rule);
 		} else {
@@ -224,7 +247,6 @@ public class ImprovedExplosion extends Explosion {
 
 		List<Vector3f> vectors = new ArrayList<Vector3f>((int)(4 * size * size * Math.PI + 10));
 		
-		profiler.start("vectorGathering");
 		for (int offX = -size; offX <= size; offX++) {
 			for (int offY = -size; offY <= size; offY++) {
 				for (int offZ = -size; offZ <= size; offZ++) {
@@ -235,7 +257,8 @@ public class ImprovedExplosion extends Explosion {
 				}
 			}
 		}
-		profiler.stop("vectorGathering", "luckytntlib.benchmarking.vector_gathering", vectors.size());
+		PROFILER.countUp(Benchmark.BENCHMARK_3, Counter.COUNTER_0, vectors.size());
+		PROFILER.stopBenchmarkTime(Benchmark.BENCHMARK_3);
 		
 		ExplosionThread thread = new ExplosionThread(this, resistanceFac, randomVecLengthFac, ignoreFluidResistance, fire, rule, vectors);
 		MultithreadedExplosionHandler.enqueue(thread);
@@ -258,7 +281,7 @@ public class ImprovedExplosion extends Explosion {
 		
 		List<Vector3f> vectors = new ArrayList<Vector3f>((int)(4 * size * size * Math.PI + 10));
 
-		profiler.start("vectorGathering");
+
 		for (int offX = -size; offX <= size; offX++) {
 			for (int offY = -size; offY <= size; offY++) {
 				for (int offZ = -size; offZ <= size; offZ++) {
@@ -269,7 +292,8 @@ public class ImprovedExplosion extends Explosion {
 				}
 			}
 		}
-		profiler.stop("vectorGathering", "luckytntlib.benchmarking.vector_gathering", vectors.size());
+		PROFILER.countUp(Benchmark.BENCHMARK_3, Counter.COUNTER_0, vectors.size());
+		PROFILER.stopBenchmarkTime(Benchmark.BENCHMARK_3);
 		/*
 		 * We use BitSets to only take up 1 bit per block, also making sure a singular chunk section is utilizing cache locality.
 		 * Sections that are empty are marked to be skipped.
@@ -279,8 +303,8 @@ public class ImprovedExplosion extends Explosion {
 		Set<Long> fullSections = new LongOpenHashSet();
 		Set<Long> emptySections = new LongOpenHashSet();
 		Long2ObjectMap<float[]> sectionResistances = new Long2ObjectOpenHashMap<float[]>();
-		
-		profiler.start("blockGathering");
+
+		PROFILER.startBenchmark(Benchmark.BENCHMARK_4, "luckytntlib.benchmarking.blocks_gathered");
 		for (Vector3f v : vectors) {
 			float vectorLength = v.length();
 			float xStep = v.x / vectorLength * 0.3f;
@@ -370,12 +394,19 @@ public class ImprovedExplosion extends Explosion {
 				}
 			}
 		}
-		profiler.stop("blockGathering", "luckytntlib.benchmarking.block_gathering", 1);
+		PROFILER.stopBenchmarkTime(Benchmark.BENCHMARK_4);
+		editedSections.forEach((pos, bitset) -> {
+			PROFILER.countUp(Benchmark.BENCHMARK_1, Counter.COUNTER_0, bitset);
+		});
+		fullSections.forEach(pos -> {
+			PROFILER.countUp(Benchmark.BENCHMARK_1, Counter.COUNTER_0, 4096);
+		});
 		
 		finishImprovedExplosion(editedSections, fullSections, rule);
 		if (fire) {
 			float sizeReduction = (float)Math.sqrt(Math.sqrt(size));
 			ImprovedExplosion fireExplosion = new ImprovedExplosion(level, getPosition(), Math.round(size / sizeReduction));
+			fireExplosion.setProfilerTitle("luckytntlib.benchmarking.fire_explosion_title");
 			fireExplosion.doImprovedBlockExplosion(1f, 1.2f * sizeReduction, false, false, new FireExplosionRule(1f / sizeReduction));
 		}
 	}
@@ -386,9 +417,10 @@ public class ImprovedExplosion extends Explosion {
 	 * @param editedSections  the chunk sections which were only partially affected by the explosion
 	 * @param fullSections  the chunk sections which are fully affected by the explosion
 	 * @param rule  an optional rule for applying effects other than destroying all marked blocks
-	 * @param profiler  the profiler used to benchmark this explosion
+	 * @param PROFILER  the profiler used to benchmark this explosion
 	 */
 	void finishImprovedExplosion(Map<Long, BitSet> editedSections, Set<Long> fullSections, @Nullable ExplosionRule rule) {
+		PROFILER.startBenchmark(Benchmark.BENCHMARK_5, "luckytntlib.benchmarking.explosion_finish_time");
 		if (customExplosionEffect != null) {
 			finishCustomExplosion(editedSections, fullSections);
 		} else if (performsBlockUpdates) {
@@ -402,7 +434,9 @@ public class ImprovedExplosion extends Explosion {
 		} else {
 			finishImprovedExplosionWithRule(editedSections, fullSections, rule);
 		}
-		profiler.stop("time", "luckytntlib.benchmarking.total_time");
+		PROFILER.stopBenchmarkTime(Benchmark.BENCHMARK_0);
+		PROFILER.stopBenchmarkTime(Benchmark.BENCHMARK_5);
+		PROFILER.printResults();
 		if (onExplosionFinish != null) {
 			onExplosionFinish.accept(this);
 		}
@@ -414,9 +448,6 @@ public class ImprovedExplosion extends Explosion {
 	 * Block and sky light will be updated correctly and efficiently.
 	 */
 	private void finishImprovedExplosionWithoutRule(Map<Long, BitSet> editedSections, Set<Long> fullSections) {
-		profiler.start("editedBlocks");
-		int editedBlocks = 0;
-		
 		HashMap<LevelChunk, BitSet> chunks = new HashMap<>();
 		PacketHandler.CHANNEL.send(PacketDistributor.ALL.noArg(), new ClientboundSetupExplosionPacket(null, null, 0));
 		
@@ -443,8 +474,6 @@ public class ImprovedExplosion extends Explosion {
 			chunks.get(chunk).set(pos.y() - (level.getMinSection() - 1));
 			
 			chunk.setUnsaved(true);
-			
-			editedBlocks += 4096;
 		}
 		
 		for (Entry<Long, BitSet> entry : editedSections.entrySet()) {
@@ -473,16 +502,16 @@ public class ImprovedExplosion extends Explosion {
 			chunks.get(chunk).set(pos.y() - (level.getMinSection() - 1));
 			
 			chunk.setUnsaved(true);
-			
-			editedBlocks += removedBlocks.cardinality();
 		}
 
-		profiler.start("lightTime");
+		PROFILER.countUp(Benchmark.BENCHMARK_2, Counter.COUNTER_0, PROFILER.getCount(Benchmark.BENCHMARK_1, Counter.COUNTER_0));
+
+		PROFILER.startBenchmark(Benchmark.BENCHMARK_6, "luckytntlib.benchmarking.light_update_time");
 		LightUpdateHelper.updateDirectSkyLight((ServerLevel)level, chunks);
 		LightUpdateHelper.updateIndirectSkyLight((ServerLevel)level, chunks);
-		profiler.stop("lightTime", "luckytntlib.benchmarking.light_time");
+		PROFILER.stopBenchmarkTime(Benchmark.BENCHMARK_6);
 		
-		profiler.stopTime("editedBlocks", "luckytntlib.benchmarking.edited_blocks", false, editedBlocks);
+		((ServerLevel)level).save(null, false, false);
 	}
 	
 	/**
@@ -490,10 +519,7 @@ public class ImprovedExplosion extends Explosion {
 	 * This will not prompt block updates for performance reasons. Such updates need to be manually queued in the given rule.
 	 * Block and sky light will be updated correctly and efficiently.
 	 */
-	private void finishImprovedExplosionWithRule(Map<Long, BitSet> editedSections, Set<Long> fullSections, ExplosionRule rule) {
-		profiler.start("editedBlocks");
-		int editedBlocks = 0;
-		
+	private void finishImprovedExplosionWithRule(Map<Long, BitSet> editedSections, Set<Long> fullSections, ExplosionRule rule) {		
 		long worldSeed = ((ServerLevel)level).getSeed();
 		SingleThreadedRandomSource random = new SingleThreadedRandomSource(0);
 		BlockPos center = BlockPos.containing(getPosition());
@@ -544,8 +570,10 @@ public class ImprovedExplosion extends Explosion {
 			
 			if (changed != null) {
 				PacketHandler.CHANNEL.send(PacketDistributor.ALL.noArg(), new ClientboundUpdateChunkSectionPacket(SectionPos.of(pos.x(), level.getSectionIndexFromSectionY(pos.y()), pos.z()), changed, false, false));
+				PROFILER.countUp(Benchmark.BENCHMARK_2, Counter.COUNTER_0, changed);
 			} else {
 				PacketHandler.CHANNEL.send(PacketDistributor.ALL.noArg(), new ClientboundUpdateChunkSectionPacket(SectionPos.of(pos.x(), level.getSectionIndexFromSectionY(pos.y()), pos.z()), new BitSet(0), true, false));
+				PROFILER.countUp(Benchmark.BENCHMARK_2, Counter.COUNTER_0, 4096);
 			}
 			
 			if (!chunks.containsKey(chunk)) {
@@ -554,12 +582,6 @@ public class ImprovedExplosion extends Explosion {
 			chunks.get(chunk).set(pos.y() - (level.getMinSection() - 1));
 			
 			chunk.setUnsaved(true);
-			
-			if (changed != null) {
-				editedBlocks += changed.cardinality();
-			} else {
-				editedBlocks += 4096;
-			}
 		}
 		
 		for (Entry<Long, BitSet> entry : editedSections.entrySet()) {
@@ -600,8 +622,9 @@ public class ImprovedExplosion extends Explosion {
 			}
 			
 			section.recalcBlockCounts();
-			
+
 			PacketHandler.CHANNEL.send(PacketDistributor.ALL.noArg(), new ClientboundUpdateChunkSectionPacket(SectionPos.of(pos.x(), level.getSectionIndexFromSectionY(pos.y()), pos.z()), affectedBlocks, false, false));
+			PROFILER.countUp(Benchmark.BENCHMARK_2, Counter.COUNTER_0, affectedBlocks);
 			
 			if (!chunks.containsKey(chunk)) {
 				chunks.put(chunk, new BitSet());
@@ -609,16 +632,14 @@ public class ImprovedExplosion extends Explosion {
 			chunks.get(chunk).set(pos.y() - (level.getMinSection() - 1));
 			
 			chunk.setUnsaved(true);
-			
-			editedBlocks += affectedBlocks.cardinality();
 		}
 		
-		profiler.start("lightTime");
+		PROFILER.startBenchmark(Benchmark.BENCHMARK_6, "luckytntlib.benchmarking.light_update_time");
 		LightUpdateHelper.updateDirectSkyLight((ServerLevel)level, chunks);
 		LightUpdateHelper.updateIndirectSkyLight((ServerLevel)level, chunks);
-		profiler.stop("lightTime", "luckytntlib.benchmarking.light_time");
+		PROFILER.stopBenchmarkTime(Benchmark.BENCHMARK_6);
 		
-		profiler.stopTime("editedBlocks", "luckytntlib.benchmarking.edited_blocks", false, editedBlocks);
+		((ServerLevel)level).save(null, false, false);
 	}
 	
 	/**
@@ -626,9 +647,6 @@ public class ImprovedExplosion extends Explosion {
 	 * Best used for small explosions.
 	 */
 	private void finishUpdatingExplosionWithoutRule(Map<Long, BitSet> editedSections, Set<Long> fullSections) {
-		profiler.start("editedBlocks");
-		int editedBlocks = 0;
-		
 		for (long encodedPos : fullSections) {
 			SectionPos sectionPos = SectionPos.of(encodedPos);
 			int x = sectionPos.getX() << 4;
@@ -640,7 +658,6 @@ public class ImprovedExplosion extends Explosion {
 				level.setBlockAndUpdate(pos, Blocks.AIR.defaultBlockState());
 				state.getBlock().wasExploded(level, pos, this);
 			}
-			editedBlocks += 4096;
 		}
 		
 		for (Entry<Long, BitSet> entry : editedSections.entrySet()) {
@@ -657,10 +674,8 @@ public class ImprovedExplosion extends Explosion {
 					state.getBlock().wasExploded(level, pos, this);
 				}
 			}
-			editedBlocks += affectedBlocks.cardinality();
 		}
-
-		profiler.stopTime("editedBlocks", "luckytntlib.benchmarking.edited_blocks", false, editedBlocks);
+		PROFILER.countUp(Benchmark.BENCHMARK_2, Counter.COUNTER_0, PROFILER.getCount(Benchmark.BENCHMARK_1, Counter.COUNTER_0));
 	}
 	
 	/**
@@ -668,9 +683,6 @@ public class ImprovedExplosion extends Explosion {
 	 * Best used for small explosions.
 	 */
 	private void finishUpdatingExplosionWithRule(Map<Long, BitSet> editedSections, Set<Long> fullSections, ExplosionRule rule) {
-		profiler.start("editedBlocks");
-		int editedBlocks = 0;
-		
 		long worldSeed = ((ServerLevel)level).getSeed();
 		SingleThreadedRandomSource random = new SingleThreadedRandomSource(0);
 		BlockPos center = BlockPos.containing(getPosition());
@@ -700,7 +712,7 @@ public class ImprovedExplosion extends Explosion {
 					BlockPos pos = new BlockPos(x + lx, y + ly, z + lz);
 					level.setBlockAndUpdate(pos, newState);
 					state.getBlock().wasExploded(level, pos, this);
-					++editedBlocks;
+					PROFILER.countUp(Benchmark.BENCHMARK_2, Counter.COUNTER_0, 1);
 				}
 			}
 		}
@@ -732,13 +744,11 @@ public class ImprovedExplosion extends Explosion {
 						BlockPos pos = new BlockPos(x + lx, y + ly, z + lz);
 						level.setBlockAndUpdate(pos, newState);
 						state.getBlock().wasExploded(level, pos, this);
-						++editedBlocks;
+						PROFILER.countUp(Benchmark.BENCHMARK_2, Counter.COUNTER_0, 1);
 					}
 				}
 			}
 		}
-		
-		profiler.stopTime("editedBlocks", "luckytntlib.benchmarking.edited_blocks", false, editedBlocks);
 	}
 	
 	/**
@@ -764,6 +774,7 @@ public class ImprovedExplosion extends Explosion {
 				BlockPos pos = new BlockPos(x + ((i >> 8) & 15), y + ((i >> 4) & 15), z + (i & 15));
 				customExplosionEffect.handleBlock(level, getPosition(), pos, state);
 			}
+			PROFILER.countUp(Benchmark.BENCHMARK_2, Counter.COUNTER_0, 4096);
 		}
 		for (Entry<Long, BitSet> entry : editedSections.entrySet()) {
 			SectionPos sectionPos = SectionPos.of(entry.getKey());
@@ -784,6 +795,7 @@ public class ImprovedExplosion extends Explosion {
 					customExplosionEffect.handleBlock(level, getPosition(), pos, state);
 				}
 			}
+			PROFILER.countUp(Benchmark.BENCHMARK_2, Counter.COUNTER_0, affectedBlocks);
 		}
 	}
 	

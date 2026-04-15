@@ -52,7 +52,7 @@ public class TempRegistry {
 		
 		@Override
 		public void serverExplosion(IExplosiveEntity ent) {
-			ImprovedExplosion explosion = new ImprovedExplosion(ent.getLevel(), (Entity)ent, null, ent.getPos(), 300);
+			ImprovedExplosion explosion = new ImprovedExplosion(ent.getLevel(), (Entity)ent, null, ent.getPos(), 160);
 			explosion.doEntityExplosion(1f, true);
 			explosion.doImprovedBlockExplosion(0.167f, 0.05f, true, false, null);
 			explosion.spawnExplosionParticles();

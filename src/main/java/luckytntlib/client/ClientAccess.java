@@ -44,22 +44,24 @@ public class ClientAccess {
 		LevelChunk chunk = level.getChunk(pos.getX(), pos.getZ());
 		chunk.setLoaded(true);
 		
-		if (updateLight) {
-			LevelLightEngine engine = level.getLightEngine();
-			
-			for (int x = 0; x < 16; ++x) {
-				for (int z = 0; z < 16; ++z) {
-					for (int y = 15; y >= 0; --y) {
-						if (!changed.get(ExplosionHelper.encodeSectionPos(x, y, z))) {
-							continue;
+		if (updateLight) {		
+			level.queueLightUpdate(() -> {
+				LevelLightEngine engine = level.getLightEngine();
+				int sectionX = pos.getX() << 4;
+				int sectionY = (pos.getY() + level.getMinSection()) << 4;
+				int sectionZ = pos.getZ() << 4;
+				for (int x = 0; x < 16; ++x) {
+					for (int z = 0; z < 16; ++z) {
+						for (int y = 15; y >= 0; --y) {
+							if (!changed.get(ExplosionHelper.encodeSectionPos(x, y, z))) {
+								continue;
+							}
+							engine.checkBlock(new BlockPos(sectionX + x, sectionY + y, sectionZ + z));
 						}
-						engine.checkBlock(new BlockPos((pos.getX() << 4) + x, ((pos.getY() + level.getMinSection()) << 4) + y, (pos.getZ() << 4) + z));
 					}
 				}
-			}
-			
-			engine.updateSectionStatus(SectionPos.of(pos.getX(), pos.getY() + level.getMinSection(), pos.getZ()), false);
-			engine.setLightEnabled(chunk.getPos(), true);
+				engine.runLightUpdates();
+			});
 		} else {
 			PalettedContainer<BlockState> states = chunk.getSection(pos.getY()).getStates();
 			
