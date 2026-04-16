@@ -312,9 +312,9 @@ public class ImprovedExplosion extends Explosion {
 			float xStep = v.x / vectorLength * 0.3f;
 			float yStep = v.y / vectorLength * 0.3f;
 			float zStep = v.z / vectorLength * 0.3f;
-			float blockX = (float)posX;
-			float blockY = (float)posY;
-			float blockZ = (float)posZ;
+			double blockX = posX;
+			double blockY = posY;
+			double blockZ = posZ;
 			int lastPosX = 0;
 			int lastPosY = -10000;
 			int lastPosZ = 0;

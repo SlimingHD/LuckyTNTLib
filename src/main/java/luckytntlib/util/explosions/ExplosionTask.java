@@ -30,7 +30,7 @@ public class ExplosionTask extends RecursiveTask<Long2ObjectMap<BitSet>> {
 	private final ExplosionThread explosionThread;
 	private final ImprovedExplosion explosion;
 	private final Level level;
-	private final float x, y, z;
+	private final double x, y, z;
 	private final float resistanceFac;
 	private final boolean ignoreFluids;
 	private final int allowedSize;
@@ -40,9 +40,9 @@ public class ExplosionTask extends RecursiveTask<Long2ObjectMap<BitSet>> {
 		this.explosionThread = explosionThread;
 		this.explosion = explosion;
 		this.level = explosion.level;
-		this.x = (float)explosion.posX;
-		this.y = (float)explosion.posY;
-		this.z = (float)explosion.posZ;
+		this.x = explosion.posX;
+		this.y = explosion.posY;
+		this.z = explosion.posZ;
 		this.resistanceFac = resistanceFac;
 		this.ignoreFluids = ignoreFluids;
 		this.allowedSize = allowedSize;
@@ -91,9 +91,9 @@ public class ExplosionTask extends RecursiveTask<Long2ObjectMap<BitSet>> {
 			float xStep = v.x / vectorLength * 0.3f;
 			float yStep = v.y / vectorLength * 0.3f;
 			float zStep = v.z / vectorLength * 0.3f;
-			float blockX = x;
-			float blockY = y;
-			float blockZ = z;
+			double blockX = x;
+			double blockY = y;
+			double blockZ = z;
 			int lastPosX = 0;
 			int lastPosY = -10000;
 			int lastPosZ = 0;
