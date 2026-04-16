@@ -11,6 +11,7 @@ import it.unimi.dsi.fastutil.longs.Long2ObjectMap;
 import it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.SectionPos;
+import net.minecraft.util.Mth;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.chunk.LevelChunkSection;
@@ -108,7 +109,7 @@ public class ExplosionTask extends RecursiveTask<Long2ObjectMap<BitSet>> {
 				blockX += xStep;
 				blockY += yStep;
 				blockZ += zStep;
-				pos.set((int)blockX, (int)blockY, (int)blockZ);
+				pos.set(Mth.floor(blockX), Mth.floor(blockY), Mth.floor(blockZ));
 				if (!level.isInWorldBounds(pos)) {
 					break;
 				}

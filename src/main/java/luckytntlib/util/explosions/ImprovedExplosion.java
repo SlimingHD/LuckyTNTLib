@@ -329,7 +329,7 @@ public class ImprovedExplosion extends Explosion {
 				blockX += xStep;
 				blockY += yStep;
 				blockZ += zStep;
-				pos.set((int)blockX, (int)blockY, (int)blockZ);
+				pos.set(Mth.floor(blockX), Mth.floor(blockY), Mth.floor(blockZ));
 				if (!level.isInWorldBounds(pos)) {
 					break;
 				}
