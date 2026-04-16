@@ -517,7 +517,7 @@ public class ExplosionHelper {
 			for (int offX = (int)(-radius * scaling.x); offX <= Mth.ceil(radius * scaling.x); offX++) {
 				for (int offY = (int)(-radius * scaling.y); offY <= Mth.ceil(radius * scaling.y); offY++) {
 					for (int offZ = (int)(-radius * scaling.z); offZ <= Mth.ceil(radius * scaling.z); offZ++) {
-						int distSqr = offX * offX + offY * offY + offZ * offZ;
+						float distSqr = offX * offX / scaling.x + offY * offY / scaling.y + offZ * offZ / scaling.z ;
 						if (distSqr > radiusSqr) {
 							continue;
 						}
@@ -641,7 +641,7 @@ public class ExplosionHelper {
 			for (int offX = (int)(-radius * scaling.x); offX <= Mth.ceil(radius * scaling.x); offX++) {
 				for (int offY = (int)(-radiusY * scaling.y); offY <= Mth.ceil(radiusY * scaling.y); offY++) {
 					for (int offZ = (int)(-radius * scaling.z); offZ <= Mth.ceil(radius * scaling.z); offZ++) {
-						int distSqr = offX * offX + offZ * offZ;
+						float distSqr = offX * offX / scaling.x + offZ * offZ / scaling.z;
 						if (distSqr > radiusSqr) {
 							continue;
 						}
@@ -754,7 +754,7 @@ public class ExplosionHelper {
 		for (int offX = (int)(-radius * scaling.x); offX <= Mth.ceil(radius * scaling.x); offX++) {
 			for (int offY = (int)(-radius * scaling.y); offY <= Mth.ceil(radius * scaling.y); offY++) {
 				for (int offZ = (int)(-radius * scaling.z); offZ <= Mth.ceil(radius * scaling.z); offZ++) {
-					int distSqr = offX * offX + offY * offY + offZ * offZ;
+					float distSqr = offX * offX / scaling.x + offY * offY / scaling.y + offZ * offZ / scaling.z;
 					if (distSqr <= radiusSqr) {
 						BlockPos pos = center.offset(offX, offY, offZ);
 						BlockState state = level.getBlockState(pos);
@@ -832,7 +832,7 @@ public class ExplosionHelper {
 		for (int offX = (int)(-radius * scaling.x); offX <= Mth.ceil(radius * scaling.x); offX++) {
 			for (int offY = (int)(-radiusY * scaling.y); offY <= Mth.ceil(radiusY * scaling.y); offY++) {
 				for (int offZ = (int)(-radius * scaling.z); offZ <= Mth.ceil(radius * scaling.z); offZ++) {
-					int distSqr = offX * offX + offZ * offZ;
+					float distSqr = offX * offX / scaling.x + offZ * offZ / scaling.z;
 					if (distSqr <= radiusSqr) {
 						BlockPos pos = center.offset(offX, offY, offZ);
 						BlockState state = level.getBlockState(pos);
