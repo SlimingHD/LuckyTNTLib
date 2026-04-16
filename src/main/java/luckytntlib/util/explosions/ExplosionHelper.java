@@ -374,7 +374,6 @@ public class ExplosionHelper {
 			
 			int checkedBlocks = 0;
 			
-			ImprovedExplosion dummyExplosion = ImprovedExplosion.dummyExplosion(server);
 			HashMap<LevelChunk, BitSet> chunks = new HashMap<LevelChunk, BitSet>();
 			long worldSeed = server.getSeed();
 			ChunkPos pos = new ChunkPos(Mth.floor(position.x) >> 4, Mth.floor(position.z) >> 4);
@@ -433,7 +432,6 @@ public class ExplosionHelper {
 									states.set(i, j, k, newState);
 
 									BlockPos blockpos = new BlockPos((chunkPos.x << 4) + i, height + j, (chunkPos.z << 4) + k);
-									state.getBlock().wasExploded(server, blockpos, dummyExplosion);
 									chunk.removeBlockEntity(blockpos);
 
 									changed.set(encodeSectionPos(i, j, k));

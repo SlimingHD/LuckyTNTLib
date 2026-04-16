@@ -463,8 +463,7 @@ public class ImprovedExplosion extends Explosion {
 			for (int x = 0; x < 16; x++) {
 				for (int z = 0; z < 16; z++) {
 					for (int y = 0; y < 16; y++) {
-						BlockState state = states.getAndSet(x, y, z, Blocks.AIR.defaultBlockState());
-						state.getBlock().wasExploded(level, new BlockPos((pos.x() << 4) + x, (pos.y() << 4) + y, (pos.z() << 4) + z), this);
+						states.set(x, y, z, Blocks.AIR.defaultBlockState());
 					}
 				}
 			}
@@ -494,8 +493,7 @@ public class ImprovedExplosion extends Explosion {
 				for (int z = 0; z < 16; z++) {
 					for (int y = 0; y < 16; y++) {
 						if (removedBlocks.get(ExplosionHelper.encodeSectionPos(x, y, z))) {
-							BlockState state = states.getAndSet(x, y, z, Blocks.AIR.defaultBlockState());
-							state.getBlock().wasExploded(level, new BlockPos((pos.x() << 4) + x, (pos.y() << 4) + y, (pos.z() << 4) + z), this);
+							states.set(x, y, z, Blocks.AIR.defaultBlockState());
 						}
 					}
 				}
@@ -564,7 +562,6 @@ public class ImprovedExplosion extends Explosion {
 						
 						if (newState != null) {
 							BlockPos blockpos = new BlockPos(xg, yg, zg);
-							state.getBlock().wasExploded(level, blockpos, this);
 							states.set(x, y, z, newState);
 							chunk.removeBlockEntity(blockpos);
 						} else {
@@ -624,7 +621,6 @@ public class ImprovedExplosion extends Explosion {
 							
 							if (newState != null) {
 								BlockPos blockpos = new BlockPos(xg, yg, zg);
-								state.getBlock().wasExploded(level, blockpos, this);
 								states.set(x, y, z, newState);
 								chunk.removeBlockEntity(blockpos);
 							} else {
