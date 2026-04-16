@@ -1211,7 +1211,7 @@ public class ImprovedExplosion extends Explosion {
 			double seenPercent = getSeenPercent(getPosition(), entity);
 			float damage = (1f - (float)distance) * (float)seenPercent;
 			if (damageEntities) {
-				entity.hurt(getDamageSource(), (damage * damage + damage) / 2f * 7 * size + 1f);
+				entity.hurt(getDamageSource(), (damage * damage + damage) / 2f * 7f * size + 1f);
 			}
 			double knockback = damage;
 			if (entity instanceof LivingEntity lEnt) {
@@ -1238,7 +1238,7 @@ public class ImprovedExplosion extends Explosion {
 		ForgeEventFactory.onExplosionDetonate(level, this, entities, size * 2d);
 		for (Entity entity : entities) {
 			if (!entity.ignoreExplosion()) {
-				double distance = Math.sqrt(entity.distanceToSqr(posX, posY, posZ)) / size * 2d;
+				double distance = Math.sqrt(entity.distanceToSqr(posX, posY, posZ)) / (size * 2d);
 				if (distance <= 1f) {
 					entityEffect.handleEntity(entity, distance);
 				}
