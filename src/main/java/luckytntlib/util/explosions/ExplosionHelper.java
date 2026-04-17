@@ -362,17 +362,9 @@ public class ExplosionHelper {
 	@SuppressWarnings("deprecation")
 	public static void createCrater(Level level, Vec3 position, int radius, Vector3f scaling, float maxResistance, DistanceCalculator calculator, @Nullable ExplosionRule rule) {
 		if (level instanceof ServerLevel server) {
-			ExplosionProfiler profiler = new ExplosionProfiler(server);
-			if (radius < 50) {
-				profiler.disable();
-			}
-			profiler.startBenchmark(Benchmark.BENCHMARK_0, "luckytntlib.benchmarking.total_explosion_time");
-			profiler.startBenchmark(Benchmark.BENCHMARK_1, "luckytntlib.benchmarking.total_checked_blocks");
-			profiler.addCounterTo(Benchmark.BENCHMARK_1, Counter.COUNTER_0, 0);
-			profiler.startBenchmark(Benchmark.BENCHMARK_2, "luckytntlib.benchmarking.total_affected_blocks");
-			profiler.addCounterTo(Benchmark.BENCHMARK_2, Counter.COUNTER_0, 0);
-			
+			ExplosionProfiler profiler = startBenchmark(level, radius);
 			int checkedBlocks = 0;
+			int affectedBlocks = 0;
 			
 			HashMap<LevelChunk, BitSet> chunks = new HashMap<LevelChunk, BitSet>();
 			long worldSeed = server.getSeed();
@@ -450,10 +442,10 @@ public class ExplosionHelper {
 						if (!changed.isEmpty()) {
 							if (changed.cardinality() == 4096) {
 								PacketHandler.CHANNEL.send(PacketDistributor.TRACKING_CHUNK.with(() -> chunk), new ClientboundUpdateChunkSectionPacket(SectionPos.of(chunkPos, height / 16 - chunk.getMinSection()), new BitSet(0), true, false));
-								profiler.countUp(Benchmark.BENCHMARK_2, Counter.COUNTER_0, 4096);
+								affectedBlocks += 4096;
 							} else {
 								PacketHandler.CHANNEL.send(PacketDistributor.TRACKING_CHUNK.with(() -> chunk), new ClientboundUpdateChunkSectionPacket(SectionPos.of(chunkPos, height / 16 - chunk.getMinSection()), changed, false, false));
-								profiler.countUp(Benchmark.BENCHMARK_2, Counter.COUNTER_0, changed.cardinality());
+								affectedBlocks += changed.cardinality();
 							}
 						}
 
@@ -466,7 +458,6 @@ public class ExplosionHelper {
 					chunk.setUnsaved(true);
 				}
 			}
-			profiler.countUp(Benchmark.BENCHMARK_1, Counter.COUNTER_0, checkedBlocks);
 			
 			profiler.startBenchmark(Benchmark.BENCHMARK_3, "luckytntlib.benchmarking.light_update_time");
 			LightUpdateHelper.updateDirectSkyLight(server, chunks);
@@ -475,8 +466,7 @@ public class ExplosionHelper {
 			
 			server.save(null, false, false);
 
-			profiler.stopBenchmarkTime(Benchmark.BENCHMARK_0);
-			profiler.printResults();
+			stopBenchmark(profiler, checkedBlocks, affectedBlocks);
 		}
 	}
 	
@@ -508,6 +498,10 @@ public class ExplosionHelper {
 	@SuppressWarnings("deprecation")
 	public static void legacySpheroidExplosion(Level level, Vec3 position, int radius, Vector3f scaling, float maxResistance, @Nullable ExplosionRule rule) {
 		if (level instanceof ServerLevel server) {
+			ExplosionProfiler profiler = startBenchmark(level, radius);
+			int checkedBlocks = 0;
+			int affectedBlocks = 0;
+			
 			int radiusSqr = radius * radius;
 			BlockPos center = BlockPos.containing(position);
 			ImprovedExplosion dummy = ImprovedExplosion.dummyExplosion(level);
@@ -532,15 +526,18 @@ public class ExplosionHelper {
 							random.setSeed(explosionSeed(worldSeed, center, offX, offY, offZ));
 						}
 						BlockState newState = useRule ? rule.getState(level, state, position, offX, offY, offZ, random) : Blocks.AIR.defaultBlockState();
+						++checkedBlocks;
 						if (newState == null) {
 							continue;
 						}
 						
 						level.setBlockAndUpdate(pos, newState);
 						state.getBlock().wasExploded(level, pos, dummy);
+						++affectedBlocks;
 					}
 				}
 			}
+			stopBenchmark(profiler, checkedBlocks, affectedBlocks);
 		}
 	}
 	
@@ -572,6 +569,10 @@ public class ExplosionHelper {
 	@SuppressWarnings("deprecation")
 	public static void legacyCuboidExplosion(Level level, Vec3 position, int radius, Vector3f scaling, float maxResistance, @Nullable ExplosionRule rule) {
 		if (level instanceof ServerLevel server) {
+			ExplosionProfiler profiler = startBenchmark(level, radius);
+			int checkedBlocks = 0;
+			int affectedBlocks = 0;
+			
 			BlockPos center = BlockPos.containing(position);
 			ImprovedExplosion dummy = ImprovedExplosion.dummyExplosion(level);
 			SingleThreadedRandomSource random = new SingleThreadedRandomSource(0);
@@ -590,15 +591,18 @@ public class ExplosionHelper {
 							random.setSeed(explosionSeed(worldSeed, center, offX, offY, offZ));
 						}
 						BlockState newState = useRule ? rule.getState(level, state, position, offX, offY, offZ, random) : Blocks.AIR.defaultBlockState();
+						++checkedBlocks;
 						if (newState == null) {
 							continue;
 						}
 
 						level.setBlockAndUpdate(pos, newState);
 						state.getBlock().wasExploded(level, pos, dummy);
+						++affectedBlocks;
 					}
 				}
 			}
+			stopBenchmark(profiler, checkedBlocks, affectedBlocks);
 		}
 	}
 	
@@ -632,6 +636,10 @@ public class ExplosionHelper {
 	@SuppressWarnings("deprecation")
 	public static void legacyScaledCylindricalExplosion(Level level, Vec3 position, int radius, int radiusY, Vector3f scaling, float maxResistance, @Nullable ExplosionRule rule) {
 		if (level instanceof ServerLevel server) {
+			ExplosionProfiler profiler = startBenchmark(level, radius);
+			int checkedBlocks = 0;
+			int affectedBlocks = 0;
+			
 			int radiusSqr = radius * radius;
 			BlockPos center = BlockPos.containing(position);
 			ImprovedExplosion dummy = ImprovedExplosion.dummyExplosion(level);
@@ -656,15 +664,18 @@ public class ExplosionHelper {
 							random.setSeed(explosionSeed(worldSeed, center, offX, offY, offZ));
 						}
 						BlockState newState = useRule ? rule.getState(level, state, position, offX, offY, offZ, random) : Blocks.AIR.defaultBlockState();
+						++checkedBlocks;
 						if (newState == null) {
 							continue;
 						}
 
 						level.setBlockAndUpdate(pos, newState);
 						state.getBlock().wasExploded(level, pos, dummy);
+						++affectedBlocks;
 					}
 				}
 			}
+			stopBenchmark(profiler, checkedBlocks, affectedBlocks);
 		}
 	}
 	
@@ -682,6 +693,10 @@ public class ExplosionHelper {
 	@SuppressWarnings("deprecation")
 	public static void legacySurfaceExplosion(Level level, Vec3 position, int radius, float maxResistance, @Nullable ExplosionRule rule) {
 		if (level instanceof ServerLevel server) {
+			ExplosionProfiler profiler = startBenchmark(level, radius);
+			int checkedBlocks = 0;
+			int affectedBlocks = 0;
+			
 			int radiusSqr = radius * radius;
 			BlockPos center = BlockPos.containing(position);
 			ImprovedExplosion dummy = ImprovedExplosion.dummyExplosion(level);
@@ -712,16 +727,19 @@ public class ExplosionHelper {
 							random.setSeed(explosionSeed(worldSeed, center, offX, offY, offZ));
 						}
 						BlockState newState = useRule ? rule.getState(level, state, position, offX, offY, offZ, random) : Blocks.AIR.defaultBlockState();
+						++checkedBlocks;
 						if (newState == null) {
 							continue;
 						}
 
 						level.setBlockAndUpdate(pos, newState);
 						state.getBlock().wasExploded(level, pos, dummy);
+						++affectedBlocks;
 						break;
 					}
 				}
 			}
+			stopBenchmark(profiler, checkedBlocks, affectedBlocks);
 		}
 	}
 	
@@ -749,6 +767,9 @@ public class ExplosionHelper {
 	 * @param effect  a {@link BlockExplosionEffect} where you can fully customize what happens to each block
 	 */
 	public static void customSpheroidExplosion(Level level, Vec3 position, int radius, Vector3f scaling, BlockExplosionEffect effect) {
+		ExplosionProfiler profiler = startBenchmark(level, radius);
+		int affectedBlocks = 0;
+		
 		int radiusSqr = radius * radius;
 		BlockPos center = BlockPos.containing(position);
 		for (int offX = (int)(-radius * scaling.x); offX <= Mth.ceil(radius * scaling.x); offX++) {
@@ -759,10 +780,12 @@ public class ExplosionHelper {
 						BlockPos pos = center.offset(offX, offY, offZ);
 						BlockState state = level.getBlockState(pos);
 						effect.handleBlock(level, position, pos, state);
+						++affectedBlocks;
 					}
 				}
 			}
 		}
+		stopBenchmark(profiler, affectedBlocks, affectedBlocks);
 	}
 	
 	/**
@@ -789,6 +812,9 @@ public class ExplosionHelper {
 	 * @param effect  a {@link BlockExplosionEffect} where you can fully customize what happens to each block
 	 */
 	public static void customCuboidExplosion(Level level, Vec3 position, int radius, Vector3f scaling, BlockExplosionEffect effect) {
+		ExplosionProfiler profiler = startBenchmark(level, radius);
+		int affectedBlocks = 0;
+		
 		BlockPos center = BlockPos.containing(position);
 		for (int offX = (int)(-radius * scaling.x); offX <= Mth.ceil(radius * scaling.x); offX++) {
 			for (int offY = (int)(-radius * scaling.y); offY <= Mth.ceil(radius * scaling.y); offY++) {
@@ -796,9 +822,11 @@ public class ExplosionHelper {
 					BlockPos pos = center.offset(offX, offY, offZ);
 					BlockState state = level.getBlockState(pos);
 					effect.handleBlock(level, position, pos, state);
+					++affectedBlocks;
 				}
 			}
 		}
+		stopBenchmark(profiler, affectedBlocks, affectedBlocks);
 	}
 	
 	/**
@@ -827,6 +855,9 @@ public class ExplosionHelper {
 	 * @param effect  a {@link BlockExplosionEffect} where you can fully customize what happens to each block
 	 */
 	public static void customScaledCylindricalExplosion(Level level, Vec3 position, int radius, int radiusY, Vector3f scaling, BlockExplosionEffect effect) {
+		ExplosionProfiler profiler = startBenchmark(level, radius);
+		int affectedBlocks = 0;
+		
 		int radiusSqr = radius * radius;
 		BlockPos center = BlockPos.containing(position);
 		for (int offX = (int)(-radius * scaling.x); offX <= Mth.ceil(radius * scaling.x); offX++) {
@@ -837,10 +868,12 @@ public class ExplosionHelper {
 						BlockPos pos = center.offset(offX, offY, offZ);
 						BlockState state = level.getBlockState(pos);
 						effect.handleBlock(level, position, pos, state);
+						++affectedBlocks;
 					}
 				}
 			}
 		}
+		stopBenchmark(profiler, affectedBlocks, affectedBlocks);
 	}
 	
 	/**
@@ -854,6 +887,9 @@ public class ExplosionHelper {
 	 * @param effect  a {@link BlockExplosionEffect} where you can fully customize what happens to each block
 	 */
 	public static void customSurfaceExplosion(Level level, Vec3 position, int radius, BlockExplosionEffect effect) {
+		ExplosionProfiler profiler = startBenchmark(level, radius);
+		int affectedBlocks = 0;
+		
 		int radiusSqr = radius * radius;
 		BlockPos center = BlockPos.containing(position);
 		for (int offX = -radius; offX <= radius; offX++) {
@@ -866,12 +902,14 @@ public class ExplosionHelper {
 						BlockState state = level.getBlockState(pos);
 						if (!state.getCollisionShape(level, pos).isEmpty() && level.getBlockState(above).getCollisionShape(level, above).isEmpty()) {
 							effect.handleBlock(level, position, pos, state);
+							++affectedBlocks;
 							break;
 						}
 					}
 				}
 			}
 		}
+		stopBenchmark(profiler, affectedBlocks, affectedBlocks);
 	}
 	
 	/**
@@ -900,6 +938,35 @@ public class ExplosionHelper {
 	 */
 	public static int encodeSectionPos(int x, int y, int z) {
 		return ((x & 15) << 8) | ((y & 15) << 4) | (z & 15);
+	}
+	
+	/**
+	 * Quick helper method to create a new {@link ExplosionProfiler} and start default benchmarks for all non-deprecated methods in this class
+	 */
+	private static ExplosionProfiler startBenchmark(Level level, int radius) {
+		ExplosionProfiler profiler = new ExplosionProfiler(level);
+		
+		profiler.startBenchmark(Benchmark.BENCHMARK_0, "luckytntlib.benchmarking.total_explosion_time");
+		profiler.startBenchmark(Benchmark.BENCHMARK_1, "luckytntlib.benchmarking.total_checked_blocks");
+		profiler.addCounterTo(Benchmark.BENCHMARK_1, Counter.COUNTER_0, 0);
+		profiler.startBenchmark(Benchmark.BENCHMARK_2, "luckytntlib.benchmarking.total_affected_blocks");
+		profiler.addCounterTo(Benchmark.BENCHMARK_2, Counter.COUNTER_0, 0);
+		
+		if (radius < 50) {
+			profiler.disable();
+		}
+		
+		return profiler;
+	}
+	
+	/**
+	 * Quick helper method to finish default benchmarks for all non-deprecated methods in this class
+	 */
+	private static void stopBenchmark(ExplosionProfiler profiler, int checkedBlocks, int affectedBlocks) {
+		profiler.countUp(Benchmark.BENCHMARK_1, Counter.COUNTER_0, checkedBlocks);
+		profiler.countUp(Benchmark.BENCHMARK_2, Counter.COUNTER_0, affectedBlocks);
+		profiler.stopBenchmarkTime(Benchmark.BENCHMARK_0);
+		profiler.printResults();
 	}
 	
 	/**
