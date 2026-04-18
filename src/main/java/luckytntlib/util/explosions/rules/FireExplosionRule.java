@@ -33,6 +33,9 @@ public class FireExplosionRule implements ExplosionRule {
 	@Override
 	@Nullable
 	public BlockState getState(Level level, BlockState state, Vec3 center, int offX, int offY, int offZ, RandomSource random) {
+		if (!state.isAir()) {
+			return null;
+		}
 		if (!Mth.equal(probability, 1f) && random.nextFloat() > probability) {
 			return null;
 		}
