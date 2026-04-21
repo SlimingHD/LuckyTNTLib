@@ -21,6 +21,7 @@ public class PacketHandler {
 		int index = 0;
 		CHANNEL.registerMessage(index++, ClientboundUpdateChunkSectionPacket.class, ClientboundUpdateChunkSectionPacket::encode, ClientboundUpdateChunkSectionPacket::new, ClientboundUpdateChunkSectionPacket::handle, Optional.of(NetworkDirection.PLAY_TO_CLIENT));
 		CHANNEL.registerMessage(index++, ClientboundUpdateSkyLightSourcesPacket.class, ClientboundUpdateSkyLightSourcesPacket::encode, ClientboundUpdateSkyLightSourcesPacket::new, ClientboundUpdateSkyLightSourcesPacket::handle, Optional.of(NetworkDirection.PLAY_TO_CLIENT));
+		CHANNEL.registerMessage(index++, ClientboundUpdateChunkSectionBiomePacket.class, ClientboundUpdateChunkSectionBiomePacket::encode, ClientboundUpdateChunkSectionBiomePacket::new, ClientboundUpdateChunkSectionBiomePacket::handle, Optional.of(NetworkDirection.PLAY_TO_CLIENT));
 		CHANNEL.registerMessage(index++, ClientboundSetupExplosionPacket.class, ClientboundSetupExplosionPacket::encode, ClientboundSetupExplosionPacket::new, ClientboundSetupExplosionPacket::handle, Optional.of(NetworkDirection.PLAY_TO_CLIENT));
 	}
 }

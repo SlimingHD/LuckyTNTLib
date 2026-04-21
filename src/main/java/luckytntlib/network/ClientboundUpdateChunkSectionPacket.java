@@ -60,7 +60,14 @@ public class ClientboundUpdateChunkSectionPacket {
 	}
 	
 	public void handle(Supplier<NetworkEvent.Context> ctx) {
-		ctx.get().enqueueWork(() -> DistExecutor.unsafeRunWhenOn(Dist.CLIENT, () -> () -> ClientAccess.updateChunkSection(SectionPos.of(sectionX, sectionY, sectionZ), changed, allAffected, updateLight)));
+		ctx.get().enqueueWork(() -> DistExecutor.unsafeRunWhenOn(Dist.CLIENT, () -> () -> {
+			SectionPos pos = SectionPos.of(sectionX, sectionY, sectionZ);
+			if (updateLight) {
+				ClientAccess.updateChunkSectionLight(pos, changed);
+			} else {
+				ClientAccess.updateChunkSection(pos, changed, allAffected);
+			}
+		}));
 		ctx.get().setPacketHandled(true);
 	}
 }

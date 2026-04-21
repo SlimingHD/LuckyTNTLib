@@ -3,15 +3,20 @@ package luckytntlib.registry;
 import luckytntlib.LuckyTNTLib;
 import luckytntlib.block.LTNTBlock;
 import luckytntlib.entity.PrimedLTNT;
+import luckytntlib.util.BiomeSetter;
 import luckytntlib.util.IExplosiveEntity;
 import luckytntlib.util.explosions.ExplosionHelper;
 import luckytntlib.util.explosions.ImprovedExplosion;
+import luckytntlib.util.explosions.rules.BlockExplosionRule;
 import luckytntlib.util.tnteffects.PrimedTNTEffect;
 import luckytntlib.util.tnteffects.TNTXStrengthEffect;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.item.Item;
+import net.minecraft.world.level.biome.Biomes;
 import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.material.MapColor;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.registries.DeferredRegister;
@@ -44,7 +49,8 @@ public class TempRegistry {
 		
 		@Override
 		public void serverExplosion(IExplosiveEntity ent) {
-			ExplosionHelper.createSphericalCrater(ent.getLevel(), ent.getPos(), 200, 5000f);
+			ExplosionHelper.createCylindricalCrater(ent.getLevel(), ent.getPos(), 50, 25, 100f, new BlockExplosionRule(Blocks.WATER.defaultBlockState()));
+			BiomeSetter.setBiomeInCylinder((ServerLevel)ent.getLevel(), ent.getPos(), 100, 50, Biomes.WARM_OCEAN);
 		}
 	}
 	
