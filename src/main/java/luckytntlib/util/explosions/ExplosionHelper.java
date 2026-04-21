@@ -17,7 +17,6 @@ import luckytntlib.util.ExplosionProfiler;
 import luckytntlib.util.ExplosionProfiler.Benchmark;
 import luckytntlib.util.ExplosionProfiler.Counter;
 import luckytntlib.util.explosions.rules.ExplosionRule;
-import luckytntlib.util.light.LightUpdateHelper;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.SectionPos;
@@ -461,6 +460,8 @@ public class ExplosionHelper {
 					chunk.setUnsaved(true);
 				}
 			}
+			
+			HeightmapUpdateHelper.updateHeightmaps(server, chunks.keySet());
 			
 			profiler.startBenchmark(Benchmark.BENCHMARK_3, "luckytntlib.benchmarking.light_update_time");
 			LightUpdateHelper.updateDirectSkyLight(server, chunks, dataLayerCache);

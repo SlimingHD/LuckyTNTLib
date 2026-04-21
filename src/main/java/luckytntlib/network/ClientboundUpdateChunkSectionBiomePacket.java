@@ -4,15 +4,21 @@ import java.util.BitSet;
 import java.util.function.Supplier;
 
 import luckytntlib.client.ClientAccess;
+import luckytntlib.util.BiomeSetter;
 import net.minecraft.core.SectionPos;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.world.level.biome.Biome;
+import net.minecraft.world.level.chunk.LevelChunkSection;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.fml.DistExecutor;
 import net.minecraftforge.network.NetworkEvent;
 
+/**
+ * Packet for updating a specific {@link LevelChunkSection} by changing the biome at the specified positions. <br>
+ * Only used in {@link BiomeSetter} to transmit changes to the world from server to client.
+ */
 public class ClientboundUpdateChunkSectionBiomePacket {
 
 	private final int sectionX, sectionY, sectionZ;

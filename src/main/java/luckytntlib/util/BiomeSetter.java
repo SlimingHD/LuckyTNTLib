@@ -11,6 +11,7 @@ import net.minecraft.core.registries.Registries;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.util.Mth;
+import net.minecraft.world.level.Level;
 import net.minecraft.world.level.biome.Biome;
 import net.minecraft.world.level.chunk.LevelChunk;
 import net.minecraft.world.level.chunk.LevelChunkSection;
@@ -26,7 +27,7 @@ import net.minecraftforge.network.PacketDistributor;
  */
 public class BiomeSetter {
 
-	public static void setBiomeInSphere(ServerLevel level, Vec3 center, int radius, ResourceKey<Biome> biomeKey) {
+	public static void setBiomeInSphere(Level level, Vec3 center, int radius, ResourceKey<Biome> biomeKey) {
 		if (level.isClientSide()) {
 			return;
 		}
@@ -79,7 +80,7 @@ public class BiomeSetter {
 		}
 	}
 	
-	public static void setBiomeInCube(ServerLevel level, Vec3 center, int radius, ResourceKey<Biome> biomeKey) {
+	public static void setBiomeInCube(Level level, Vec3 center, int radius, ResourceKey<Biome> biomeKey) {
 		if (level.isClientSide()) {
 			return;
 		}
@@ -124,7 +125,7 @@ public class BiomeSetter {
 		}
 	}
 	
-	public static void setBiomeInCylinder(ServerLevel level, Vec3 center, int radius, int radiusY, ResourceKey<Biome> biomeKey) {
+	public static void setBiomeInCylinder(Level level, Vec3 center, int radius, int radiusY, ResourceKey<Biome> biomeKey) {
 		if (level.isClientSide()) {
 			return;
 		}

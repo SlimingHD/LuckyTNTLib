@@ -1,4 +1,4 @@
-package luckytntlib.util.light;
+package luckytntlib.util.explosions;
 
 import java.lang.reflect.Field;
 import java.util.BitSet;
@@ -16,8 +16,6 @@ import luckytntlib.config.LuckyTNTLibConfigValues;
 import luckytntlib.network.ClientboundUpdateChunkSectionPacket;
 import luckytntlib.network.ClientboundUpdateSkyLightSourcesPacket;
 import luckytntlib.network.PacketHandler;
-import luckytntlib.util.explosions.ExplosionHelper;
-import luckytntlib.util.explosions.ImprovedExplosion;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.SectionPos;
 import net.minecraft.network.protocol.game.ClientboundLightUpdatePacket;

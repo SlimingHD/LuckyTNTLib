@@ -3,7 +3,7 @@ package luckytntlib.network;
 import java.util.function.Supplier;
 
 import luckytntlib.client.ClientAccess;
-import luckytntlib.util.light.LightUpdateHelper;
+import luckytntlib.util.explosions.LightUpdateHelper;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.lighting.ChunkSkyLightSources;

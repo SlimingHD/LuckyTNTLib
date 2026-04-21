@@ -28,7 +28,6 @@ import luckytntlib.util.ExplosionProfiler.Counter;
 import luckytntlib.util.IExplosiveEntity;
 import luckytntlib.util.explosions.rules.ExplosionRule;
 import luckytntlib.util.explosions.rules.FireExplosionRule;
-import luckytntlib.util.light.LightUpdateHelper;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.SectionPos;
 import net.minecraft.core.particles.ParticleTypes;
@@ -515,6 +514,8 @@ public class ImprovedExplosion extends Explosion {
 
 		PROFILER.countUp(Benchmark.BENCHMARK_2, Counter.COUNTER_0, PROFILER.getCount(Benchmark.BENCHMARK_1, Counter.COUNTER_0));
 		
+		HeightmapUpdateHelper.updateHeightmaps((ServerLevel)level, chunks.keySet());
+		
 		PROFILER.stopBenchmarkTime(Benchmark.BENCHMARK_5);
 
 		PROFILER.startBenchmark(Benchmark.BENCHMARK_6, "luckytntlib.benchmarking.light_update_time");
@@ -646,6 +647,8 @@ public class ImprovedExplosion extends Explosion {
 			
 			chunk.setUnsaved(true);
 		}
+
+		HeightmapUpdateHelper.updateHeightmaps((ServerLevel)level, chunks.keySet());
 		
 		PROFILER.stopBenchmarkTime(Benchmark.BENCHMARK_5);
 		

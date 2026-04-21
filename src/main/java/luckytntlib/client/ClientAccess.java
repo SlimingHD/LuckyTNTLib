@@ -6,6 +6,7 @@ import java.util.BitSet;
 import javax.annotation.Nullable;
 
 import luckytntlib.util.explosions.ExplosionHelper;
+import luckytntlib.util.explosions.HeightmapUpdateHelper;
 import luckytntlib.util.explosions.rules.ExplosionRule;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientLevel;
@@ -23,6 +24,7 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.chunk.LevelChunk;
 import net.minecraft.world.level.chunk.LevelChunkSection;
 import net.minecraft.world.level.chunk.PalettedContainer;
+import net.minecraft.world.level.levelgen.Heightmap;
 import net.minecraft.world.level.levelgen.SingleThreadedRandomSource;
 import net.minecraft.world.level.lighting.ChunkSkyLightSources;
 import net.minecraft.world.level.lighting.LevelLightEngine;
@@ -110,32 +112,6 @@ public class ClientAccess {
 		engine.updateSectionStatus(SectionPos.of(pos.getX(), pos.getY() + level.getMinSection(), pos.getZ()), section.hasOnlyAir());
 	}
 	
-	public static void updateChunkSectionBiome(SectionPos pos, BitSet changed, ResourceKey<Biome> biomeKey) {
-		Minecraft minecraft = Minecraft.getInstance();
-		ClientLevel level = minecraft.level;
-		
-		if (level == null) {
-			return;
-		}
-		
-		Registry<Biome> registry = level.registryAccess().registryOrThrow(Registries.BIOME);
-		Holder<Biome> biome = registry.getHolderOrThrow(biomeKey);
-		
-		LevelChunk chunk = level.getChunk(pos.getX(), pos.getZ());
-		LevelChunkSection section = chunk.getSection(pos.getY());
-		PalettedContainer<Holder<Biome>> biomes = (PalettedContainer<Holder<Biome>>)section.getBiomes();
-		for (int x = 0; x < 4; ++x) {
-			for (int y = 0; y < 4; ++y) {
-				for (int z = 0; z < 4; ++z) {
-					if (!changed.get((x << 4) | (y << 2) | z)) {
-						continue;
-					}
-					biomes.set(x, y, z, biome);
-				}
-			}
-		}
-	}
-	
 	public static void updateChunkSectionLight(SectionPos pos, BitSet changed) {
 		Minecraft minecraft = Minecraft.getInstance();
 		ClientLevel level = minecraft.level;
@@ -194,6 +170,47 @@ public class ClientAccess {
 			for (int i = 0; i < 256; i++) {
 				heightmap.set(i, data[i]);
 			}
+		}
+	}
+	
+	public static void updateChunkSectionBiome(SectionPos pos, BitSet changed, ResourceKey<Biome> biomeKey) {
+		Minecraft minecraft = Minecraft.getInstance();
+		ClientLevel level = minecraft.level;
+		
+		if (level == null) {
+			return;
+		}
+		
+		Registry<Biome> registry = level.registryAccess().registryOrThrow(Registries.BIOME);
+		Holder<Biome> biome = registry.getHolderOrThrow(biomeKey);
+		
+		LevelChunk chunk = level.getChunk(pos.getX(), pos.getZ());
+		LevelChunkSection section = chunk.getSection(pos.getY());
+		PalettedContainer<Holder<Biome>> biomes = (PalettedContainer<Holder<Biome>>)section.getBiomes();
+		for (int x = 0; x < 4; ++x) {
+			for (int y = 0; y < 4; ++y) {
+				for (int z = 0; z < 4; ++z) {
+					if (!changed.get((x << 4) | (y << 2) | z)) {
+						continue;
+					}
+					biomes.set(x, y, z, biome);
+				}
+			}
+		}
+	}
+	
+	public static void updateHeightmaps(ChunkPos pos, long[][] data) {
+		Minecraft minecraft = Minecraft.getInstance();
+		ClientLevel level = minecraft.level;
+		
+		if (level == null) {
+			return;
+		}
+		
+		LevelChunk chunk = level.getChunk(pos.x, pos.z);
+		int index = 0;
+		for (Heightmap.Types type : HeightmapUpdateHelper.TYPES) {
+			chunk.getOrCreateHeightmapUnprimed(type).setRawData(chunk, type, data[index++]);
 		}
 	}
 	

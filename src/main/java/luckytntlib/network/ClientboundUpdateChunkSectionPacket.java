@@ -6,7 +6,7 @@ import java.util.function.Supplier;
 import luckytntlib.client.ClientAccess;
 import luckytntlib.util.explosions.ExplosionHelper;
 import luckytntlib.util.explosions.ImprovedExplosion;
-import luckytntlib.util.light.LightUpdateHelper;
+import luckytntlib.util.explosions.LightUpdateHelper;
 import net.minecraft.core.SectionPos;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.world.level.chunk.LevelChunkSection;
