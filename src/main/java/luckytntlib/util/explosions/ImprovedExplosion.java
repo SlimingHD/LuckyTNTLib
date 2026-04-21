@@ -451,6 +451,7 @@ public class ImprovedExplosion extends Explosion {
 	 */
 	private void finishImprovedExplosionWithoutRule(Map<Long, BitSet> editedSections, Set<Long> fullSections) {
 		HashMap<LevelChunk, BitSet> chunks = new HashMap<>();
+		Long2ObjectMap<LightUpdateHelper.LightDataHolder> dataLayerCache = new Long2ObjectOpenHashMap<>();
 		PacketHandler.CHANNEL.send(PacketDistributor.ALL.noArg(), new ClientboundSetupExplosionPacket(null, null, 0));
 		
 		for (long encodedPos : fullSections) {
@@ -517,8 +518,8 @@ public class ImprovedExplosion extends Explosion {
 		PROFILER.stopBenchmarkTime(Benchmark.BENCHMARK_5);
 
 		PROFILER.startBenchmark(Benchmark.BENCHMARK_6, "luckytntlib.benchmarking.light_update_time");
-		LightUpdateHelper.updateDirectSkyLight((ServerLevel)level, chunks);
-		LightUpdateHelper.updateIndirectSkyLight((ServerLevel)level, chunks);
+		LightUpdateHelper.updateDirectSkyLight((ServerLevel)level, chunks, dataLayerCache);
+		LightUpdateHelper.updateIndirectSkyLight((ServerLevel)level, chunks, dataLayerCache);
 		PROFILER.stopBenchmarkTime(Benchmark.BENCHMARK_6);
 		
 		((ServerLevel)level).save(null, false, false);
@@ -535,6 +536,7 @@ public class ImprovedExplosion extends Explosion {
 		BlockPos center = BlockPos.containing(getPosition());
 		
 		HashMap<LevelChunk, BitSet> chunks = new HashMap<>();
+		Long2ObjectMap<LightUpdateHelper.LightDataHolder> dataLayerCache = new Long2ObjectOpenHashMap<>();
 		PacketHandler.CHANNEL.send(PacketDistributor.ALL.noArg(), new ClientboundSetupExplosionPacket(rule, new Vec3(posX, posY, posZ), worldSeed));
 
 		for (long encodedPos : fullSections) {
@@ -648,8 +650,8 @@ public class ImprovedExplosion extends Explosion {
 		PROFILER.stopBenchmarkTime(Benchmark.BENCHMARK_5);
 		
 		PROFILER.startBenchmark(Benchmark.BENCHMARK_6, "luckytntlib.benchmarking.light_update_time");
-		LightUpdateHelper.updateDirectSkyLight((ServerLevel)level, chunks);
-		LightUpdateHelper.updateIndirectSkyLight((ServerLevel)level, chunks);
+		LightUpdateHelper.updateDirectSkyLight((ServerLevel)level, chunks, dataLayerCache);
+		LightUpdateHelper.updateIndirectSkyLight((ServerLevel)level, chunks, dataLayerCache);
 		PROFILER.stopBenchmarkTime(Benchmark.BENCHMARK_6);
 		
 		((ServerLevel)level).save(null, false, false);

@@ -16,6 +16,7 @@ import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.chunk.LevelChunk;
+import net.minecraft.world.level.chunk.LevelChunkSection;
 import net.minecraft.world.level.chunk.PalettedContainer;
 import net.minecraft.world.level.levelgen.SingleThreadedRandomSource;
 import net.minecraft.world.level.lighting.ChunkSkyLightSources;
@@ -39,13 +40,13 @@ public class ClientAccess {
 		if (level == null) {
 			return;
 		}
-		
+
+		LevelLightEngine engine = level.getLightEngine();
 		LevelChunk chunk = level.getChunk(pos.getX(), pos.getZ());
 		chunk.setLoaded(true);
 		
-		if (updateLight) {		
+		if (updateLight) {
 			level.queueLightUpdate(() -> {
-				LevelLightEngine engine = level.getLightEngine();
 				int sectionX = pos.getX() << 4;
 				int sectionY = (pos.getY() + level.getMinSection()) << 4;
 				int sectionZ = pos.getZ() << 4;
@@ -62,7 +63,8 @@ public class ClientAccess {
 				engine.runLightUpdates();
 			});
 		} else {
-			PalettedContainer<BlockState> states = chunk.getSection(pos.getY()).getStates();
+			LevelChunkSection section = chunk.getSection(pos.getY());
+			PalettedContainer<BlockState> states = section.getStates();
 			
 			ExplosionRule rule = currentRule;
 			Vec3 center = currentCenter;
@@ -117,6 +119,9 @@ public class ClientAccess {
 					}
 				}
 			}
+			
+			section.recalcBlockCounts();
+			engine.updateSectionStatus(SectionPos.of(pos.getX(), pos.getY() + level.getMinSection(), pos.getZ()), section.hasOnlyAir());
 		}
 	}
 	
@@ -145,7 +150,7 @@ public class ClientAccess {
 		} catch (IllegalAccessException e) {
 			e.printStackTrace();
 		}
-		
+
 		if (heightmap != null) {
 			for (int i = 0; i < 256; i++) {
 				heightmap.set(i, data[i]);

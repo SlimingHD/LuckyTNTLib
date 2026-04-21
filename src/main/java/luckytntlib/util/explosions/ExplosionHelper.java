@@ -7,6 +7,8 @@ import javax.annotation.Nullable;
 
 import org.joml.Vector3f;
 
+import it.unimi.dsi.fastutil.longs.Long2ObjectMap;
+import it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap;
 import luckytntlib.config.LuckyTNTLibConfigValues;
 import luckytntlib.network.ClientboundSetupExplosionPacket;
 import luckytntlib.network.ClientboundUpdateChunkSectionPacket;
@@ -367,6 +369,7 @@ public class ExplosionHelper {
 			int affectedBlocks = 0;
 			
 			HashMap<LevelChunk, BitSet> chunks = new HashMap<LevelChunk, BitSet>();
+			Long2ObjectMap<LightUpdateHelper.LightDataHolder> dataLayerCache = new Long2ObjectOpenHashMap<>();
 			long worldSeed = server.getSeed();
 			ChunkPos pos = new ChunkPos(Mth.floor(position.x) >> 4, Mth.floor(position.z) >> 4);
 			SingleThreadedRandomSource random = new SingleThreadedRandomSource(0);
@@ -460,8 +463,8 @@ public class ExplosionHelper {
 			}
 			
 			profiler.startBenchmark(Benchmark.BENCHMARK_3, "luckytntlib.benchmarking.light_update_time");
-			LightUpdateHelper.updateDirectSkyLight(server, chunks);
-			LightUpdateHelper.updateIndirectSkyLight(server, chunks);
+			LightUpdateHelper.updateDirectSkyLight(server, chunks, dataLayerCache);
+			LightUpdateHelper.updateIndirectSkyLight(server, chunks, dataLayerCache);
 			profiler.stopBenchmarkTime(Benchmark.BENCHMARK_3);
 			
 			server.save(null, false, false);
