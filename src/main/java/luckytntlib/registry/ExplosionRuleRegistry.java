@@ -58,5 +58,6 @@ public class ExplosionRuleRegistry {
 		event.register(EXPLOSION_RULES_KEY, FilterOffYExplosionRule.RESOURCE_LOCATION, () -> FilterOffYExplosionRule::decode);
 		event.register(EXPLOSION_RULES_KEY, CopyBlockExplosionRule.RESOURCE_LOCATION, () -> CopyBlockExplosionRule::decode);
 		event.register(EXPLOSION_RULES_KEY, OffsetExplosionRule.RESOURCE_LOCATION, () -> OffsetExplosionRule::decode);
+		event.register(EXPLOSION_RULES_KEY, FilterLiquidExplosionRule.RESOURCE_LOCATION, () -> FilterLiquidExplosionRule::decode);
 	}
 }

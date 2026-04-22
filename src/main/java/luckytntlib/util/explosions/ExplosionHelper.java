@@ -1,5 +1,8 @@
 package luckytntlib.util.explosions;
 
+import java.lang.reflect.InaccessibleObjectException;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.util.BitSet;
 import java.util.HashMap;
 
@@ -17,9 +20,12 @@ import luckytntlib.util.ExplosionProfiler;
 import luckytntlib.util.ExplosionProfiler.Benchmark;
 import luckytntlib.util.ExplosionProfiler.Counter;
 import luckytntlib.util.explosions.rules.ExplosionRule;
+import net.minecraft.Util;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.SectionPos;
+import net.minecraft.server.level.ChunkHolder;
+import net.minecraft.server.level.ServerChunkCache;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.tags.BlockTags;
 import net.minecraft.util.Mth;
@@ -54,7 +60,7 @@ import net.minecraftforge.network.PacketDistributor;
  * Keeping that in mind, if your specific use case isn't covered by the new system, you'll have to make do yourself.
  */
 public class ExplosionHelper {
-
+	
 	/**
 	 * {@link DistanceCalculator} for calculating a explosion crater shaped like a spheroid
 	 */
@@ -63,6 +69,22 @@ public class ExplosionHelper {
 	 * {@link DistanceCalculator} for calculating a explosion crater shaped like a cuboid
 	 */
 	public static final DistanceCalculator CUBOID_CALCULATOR = (x, z, r, s) -> Math.abs(x) <= r * s.x && Math.abs(z) <= r * s.z ? (int)(r * r * s.y * s.y) : 0;
+	/**
+	 * Cached method for less reflection
+	 */
+	public static final Method getChunkHolder = Util.make(() -> {
+		try {
+			for (Method method : ServerChunkCache.class.getDeclaredMethods()) {
+				method.setAccessible(true);
+				if (method.getReturnType() == ChunkHolder.class) {
+					return method;
+				}
+			}
+		} catch (SecurityException | InaccessibleObjectException e) {
+			e.printStackTrace();
+		}
+		return null;
+	});
 	
 	
 	private ExplosionHelper() {
@@ -384,6 +406,15 @@ public class ExplosionHelper {
 					ChunkPos chunkPos = new ChunkPos(pos.x + x, pos.z + z);
 					LevelChunk chunk = server.getChunk(chunkPos.x, chunkPos.z);
 					chunk.setLoaded(true);
+					
+					if (getChunkHolder != null) {
+						try {
+							ChunkHolder holder = (ChunkHolder)getChunkHolder.invoke(server.getChunkSource(), new Object[]{chunkPos.toLong()});
+							holder.broadcastChanges(chunk);
+						} catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
+							e.printStackTrace();
+						}
+					}
 
 					boolean chunkEdited = false;
 					int height = server.getMinBuildHeight();
@@ -541,6 +572,7 @@ public class ExplosionHelper {
 					}
 				}
 			}
+			
 			stopBenchmark(profiler, checkedBlocks, affectedBlocks);
 		}
 	}

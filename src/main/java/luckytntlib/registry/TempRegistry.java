@@ -10,7 +10,6 @@ import luckytntlib.util.explosions.ImprovedExplosion;
 import luckytntlib.util.explosions.rules.BlockExplosionRule;
 import luckytntlib.util.tnteffects.PrimedTNTEffect;
 import luckytntlib.util.tnteffects.TNTXStrengthEffect;
-import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.item.Item;

@@ -1,5 +1,6 @@
 package luckytntlib.util.explosions;
 
+import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.BitSet;
 import java.util.HashMap;
@@ -31,6 +32,7 @@ import luckytntlib.util.explosions.rules.FireExplosionRule;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.SectionPos;
 import net.minecraft.core.particles.ParticleTypes;
+import net.minecraft.server.level.ChunkHolder;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.util.Mth;
@@ -40,6 +42,7 @@ import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.enchantment.ProtectionEnchantment;
+import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.EntityBasedExplosionDamageCalculator;
 import net.minecraft.world.level.Explosion;
 import net.minecraft.world.level.ExplosionDamageCalculator;
@@ -423,6 +426,28 @@ public class ImprovedExplosion extends Explosion {
 	 */
 	void finishImprovedExplosion(Map<Long, BitSet> editedSections, Set<Long> fullSections, @Nullable ExplosionRule rule) {
 		PROFILER.startBenchmark(Benchmark.BENCHMARK_5, "luckytntlib.benchmarking.explosion_finish_time");
+		
+		if (ExplosionHelper.getChunkHolder != null) {
+			Set<ChunkPos> chunks = new HashSet<>();
+			for (long section : fullSections) {
+				SectionPos pos = SectionPos.of(section);
+				chunks.add(new ChunkPos(pos.getX(), pos.getZ()));
+			}
+			for (long section : editedSections.keySet()) {
+				SectionPos pos = SectionPos.of(section);
+				chunks.add(new ChunkPos(pos.getX(), pos.getZ()));
+			}
+			for (ChunkPos pos : chunks) {
+				try {
+					LevelChunk chunk = level.getChunk(pos.x, pos.z);
+					ChunkHolder holder = (ChunkHolder)ExplosionHelper.getChunkHolder.invoke(((ServerLevel)level).getChunkSource(), new Object[]{pos.toLong()});
+					holder.broadcastChanges(chunk);
+				} catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
+					e.printStackTrace();
+				}
+			}
+		}
+		
 		if (customExplosionEffect != null) {
 			finishCustomExplosion(editedSections, fullSections);
 		} else if (performsBlockUpdates) {
