@@ -49,8 +49,8 @@ public class TempRegistry {
 		
 		@Override
 		public void serverExplosion(IExplosiveEntity ent) {
-			ExplosionHelper.createCylindricalCrater(ent.getLevel(), ent.getPos(), 50, 25, 100f, new BlockExplosionRule(Blocks.WATER.defaultBlockState()));
-			BiomeSetter.setBiomeInCylinder((ServerLevel)ent.getLevel(), ent.getPos(), 100, 50, Biomes.WARM_OCEAN);
+			ExplosionHelper.createCylindricalCrater(ent.getLevel(), ent.getPos(), 100, 50, 100f, new BlockExplosionRule(Blocks.WATER.defaultBlockState()));
+			BiomeSetter.setBiomeInCylinder(ent.getLevel(), ent.getPos(), 110, 60, Biomes.WARM_OCEAN);
 		}
 	}
 	
