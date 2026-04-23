@@ -27,7 +27,7 @@ public class LuckyTNTLibConfigValues {
 		
 		builder.comment("Post explosions").push("Quality");
 		UPDATE_BLOCK_LIGHT = builder.comment("En- or disables block light updates when using more performant explosions. Enabling this will make block lights update correctly at the cost of performance.").define("updateBlockLight", true);
-		BLOCK_UPDATE_THRESHOLD = builder.comment("Defines the radius at which explosions will stop perform blocks updates. This setting significantly impacts performance. For reference, Supernova has radius 200.").defineInRange("blockUpdateRadius", 90, 30, 300);
+		BLOCK_UPDATE_THRESHOLD = builder.comment("Defines the radius at which explosions will stop perform blocks updates. This setting significantly impacts performance. For reference, Supernova has radius 200.").defineInRange("blockUpdateRadius", 50, 30, 300);
 		builder.pop();
 		
 		builder.comment("Debug settings").push("Debug");

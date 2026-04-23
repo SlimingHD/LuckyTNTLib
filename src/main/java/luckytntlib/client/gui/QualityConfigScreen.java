@@ -40,7 +40,7 @@ public class QualityConfigScreen extends Screen {
 		updateBlockLight.setTooltip(Tooltip.create(Component.translatable("luckytntlib.config.update_block_light_tooltip")));
 		rows.addChild(new CenteredStringWidget(Component.translatable("luckytntlib.config.update_block_light"), font));
 		rows.addChild(new Button.Builder(Component.translatable("luckytntlib.config.reset"), button -> resetBooleanValue(LuckyTNTLibConfigValues.UPDATE_BLOCK_LIGHT, updateBlockLight)).width(100).build());
-		rows.addChild(blockUpdateThreshold = new ForgeSlider(0, 0, 100, 20, Component.empty(), Component.empty(), 60, 300, LuckyTNTLibConfigValues.BLOCK_UPDATE_THRESHOLD.get(), true) {
+		rows.addChild(blockUpdateThreshold = new ForgeSlider(0, 0, 100, 20, Component.empty(), Component.empty(), 30, 300, LuckyTNTLibConfigValues.BLOCK_UPDATE_THRESHOLD.get(), true) {
 			@Override
 			protected void applyValue() {
 				LuckyTNTLibConfigValues.BLOCK_UPDATE_THRESHOLD.set((int)getValue());
