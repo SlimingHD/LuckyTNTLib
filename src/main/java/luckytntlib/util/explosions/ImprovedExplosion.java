@@ -427,7 +427,7 @@ public class ImprovedExplosion extends Explosion {
 	void finishImprovedExplosion(Map<Long, BitSet> editedSections, Set<Long> fullSections, @Nullable ExplosionRule rule) {
 		PROFILER.startBenchmark(Benchmark.BENCHMARK_5, "luckytntlib.benchmarking.explosion_finish_time");
 		
-		if (ExplosionHelper.getChunkHolder != null) {
+		if (ExplosionHelper.GET_CHUNK_HOLDER != null) {
 			Set<ChunkPos> chunks = new HashSet<>();
 			for (long section : fullSections) {
 				SectionPos pos = SectionPos.of(section);
@@ -440,7 +440,7 @@ public class ImprovedExplosion extends Explosion {
 			for (ChunkPos pos : chunks) {
 				try {
 					LevelChunk chunk = level.getChunk(pos.x, pos.z);
-					ChunkHolder holder = (ChunkHolder)ExplosionHelper.getChunkHolder.invoke(((ServerLevel)level).getChunkSource(), new Object[]{pos.toLong()});
+					ChunkHolder holder = (ChunkHolder)ExplosionHelper.GET_CHUNK_HOLDER.invoke(((ServerLevel)level).getChunkSource(), new Object[]{pos.toLong()});
 					holder.broadcastChanges(chunk);
 				} catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
 					e.printStackTrace();

@@ -64,7 +64,7 @@ public class ExplosionHelper {
 	/**
 	 * {@link DistanceCalculator} for calculating a explosion crater shaped like a spheroid
 	 */
-	public static final DistanceCalculator SPHEROID_CALCULATOR = (x, z, r, s) -> (int)((r * r - x * x / s.x - z * z / s.z) * s.y);
+	public static final DistanceCalculator SPHEROID_CALCULATOR = (x, z, r, s) -> (int)((r * r - x * x / (s.x * s.x) - z * z / (s.z * s.z)) * s.y * s.y);
 	/**
 	 * {@link DistanceCalculator} for calculating a explosion crater shaped like a cuboid
 	 */
@@ -72,7 +72,7 @@ public class ExplosionHelper {
 	/**
 	 * Cached method for less reflection
 	 */
-	public static final Method getChunkHolder = Util.make(() -> {
+	public static final Method GET_CHUNK_HOLDER = Util.make(() -> {
 		try {
 			for (Method method : ServerChunkCache.class.getDeclaredMethods()) {
 				method.setAccessible(true);
@@ -348,7 +348,7 @@ public class ExplosionHelper {
 		if (radiusXZ < LuckyTNTLibConfigValues.BLOCK_UPDATE_THRESHOLD.get() && radiusY < LuckyTNTLibConfigValues.BLOCK_UPDATE_THRESHOLD.get()) {
 			legacyScaledCylindricalExplosion(level, position, radiusXZ, radiusY, scaling, maxResistance, rule);
 		} else {
-			DistanceCalculator calc = (x, z, r, s) -> Math.sqrt(x * x / s.x + z * z / s.z) <= radiusXZ ? (int)(radiusY * radiusY * s.y * s.y) : 0;
+			DistanceCalculator calc = (x, z, r, s) -> x * x / (s.x * s.x) + z * z / (s.z * s.z) <= radiusXZ * radiusXZ ? (int)(radiusY * radiusY * s.y * s.y) : 0;
 			createCrater(level, position, radiusXZ, scaling, maxResistance, calc, rule);
 		}
 	}
@@ -407,9 +407,9 @@ public class ExplosionHelper {
 					LevelChunk chunk = server.getChunk(chunkPos.x, chunkPos.z);
 					chunk.setLoaded(true);
 					
-					if (getChunkHolder != null) {
+					if (GET_CHUNK_HOLDER != null) {
 						try {
-							ChunkHolder holder = (ChunkHolder)getChunkHolder.invoke(server.getChunkSource(), new Object[]{chunkPos.toLong()});
+							ChunkHolder holder = (ChunkHolder)GET_CHUNK_HOLDER.invoke(server.getChunkSource(), new Object[]{chunkPos.toLong()});
 							holder.broadcastChanges(chunk);
 						} catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
 							e.printStackTrace();
@@ -546,7 +546,7 @@ public class ExplosionHelper {
 			for (int offX = (int)(-radius * scaling.x); offX <= Mth.ceil(radius * scaling.x); offX++) {
 				for (int offY = (int)(-radius * scaling.y); offY <= Mth.ceil(radius * scaling.y); offY++) {
 					for (int offZ = (int)(-radius * scaling.z); offZ <= Mth.ceil(radius * scaling.z); offZ++) {
-						float distSqr = offX * offX / scaling.x + offY * offY / scaling.y + offZ * offZ / scaling.z ;
+						float distSqr = offX * offX / Mth.square(scaling.x) + offY * offY / Mth.square(scaling.y) + offZ * offZ / Mth.square(scaling.z);
 						if (distSqr > radiusSqr) {
 							continue;
 						}
@@ -685,7 +685,7 @@ public class ExplosionHelper {
 			for (int offX = (int)(-radius * scaling.x); offX <= Mth.ceil(radius * scaling.x); offX++) {
 				for (int offY = (int)(-radiusY * scaling.y); offY <= Mth.ceil(radiusY * scaling.y); offY++) {
 					for (int offZ = (int)(-radius * scaling.z); offZ <= Mth.ceil(radius * scaling.z); offZ++) {
-						float distSqr = offX * offX / scaling.x + offZ * offZ / scaling.z;
+						float distSqr = offX * offX / Mth.square(scaling.x) + offZ * offZ / Mth.square(scaling.z);
 						if (distSqr > radiusSqr) {
 							continue;
 						}
@@ -811,7 +811,7 @@ public class ExplosionHelper {
 		for (int offX = (int)(-radius * scaling.x); offX <= Mth.ceil(radius * scaling.x); offX++) {
 			for (int offY = (int)(-radius * scaling.y); offY <= Mth.ceil(radius * scaling.y); offY++) {
 				for (int offZ = (int)(-radius * scaling.z); offZ <= Mth.ceil(radius * scaling.z); offZ++) {
-					float distSqr = offX * offX / scaling.x + offY * offY / scaling.y + offZ * offZ / scaling.z;
+					float distSqr = offX * offX / Mth.square(scaling.x) + offY * offY / Mth.square(scaling.y) + offZ * offZ / Mth.square(scaling.z);
 					if (distSqr <= radiusSqr) {
 						BlockPos pos = center.offset(offX, offY, offZ);
 						BlockState state = level.getBlockState(pos);
@@ -899,7 +899,7 @@ public class ExplosionHelper {
 		for (int offX = (int)(-radius * scaling.x); offX <= Mth.ceil(radius * scaling.x); offX++) {
 			for (int offY = (int)(-radiusY * scaling.y); offY <= Mth.ceil(radiusY * scaling.y); offY++) {
 				for (int offZ = (int)(-radius * scaling.z); offZ <= Mth.ceil(radius * scaling.z); offZ++) {
-					float distSqr = offX * offX / scaling.x + offZ * offZ / scaling.z;
+					float distSqr = offX * offX / Mth.square(scaling.x) + offZ * offZ / Mth.square(scaling.z);
 					if (distSqr <= radiusSqr) {
 						BlockPos pos = center.offset(offX, offY, offZ);
 						BlockState state = level.getBlockState(pos);
