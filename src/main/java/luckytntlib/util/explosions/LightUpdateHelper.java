@@ -394,29 +394,19 @@ public class LightUpdateHelper {
 		HashSet<Long> boarderChunks = new HashSet<>();
 		for (long chunk : chunkSet) {
 			ChunkPos pos = new ChunkPos(chunk);
-			
-			long offsetChunk = ChunkPos.asLong(pos.x + 1, pos.z);
-			if (!chunkSet.contains(offsetChunk) && !boarderChunks.contains(offsetChunk)) {
-				processBoarderChunk(server, server.getChunk(pos.x + 1, pos.z), packetData, dataLayerCache);
-				boarderChunks.add(offsetChunk);
-			}
-			
-			offsetChunk = ChunkPos.asLong(pos.x - 1, pos.z);
-			if (!chunkSet.contains(offsetChunk) && !boarderChunks.contains(offsetChunk)) {
-				processBoarderChunk(server, server.getChunk(pos.x - 1, pos.z), packetData, dataLayerCache);
-				boarderChunks.add(offsetChunk);
-			}
-
-			offsetChunk = ChunkPos.asLong(pos.x, pos.z + 1);
-			if (!chunkSet.contains(offsetChunk) && !boarderChunks.contains(offsetChunk)) {
-				processBoarderChunk(server, server.getChunk(pos.x, pos.z + 1), packetData, dataLayerCache);
-				boarderChunks.add(offsetChunk);
-			}
-
-			offsetChunk = ChunkPos.asLong(pos.x, pos.z - 1);
-			if (!chunkSet.contains(offsetChunk) && !boarderChunks.contains(offsetChunk)) {
-				processBoarderChunk(server, server.getChunk(pos.x, pos.z - 1), packetData, dataLayerCache);
-				boarderChunks.add(offsetChunk);
+			for (int offX = -1; offX <= 1; offX++) {
+				for (int offZ = -1; offZ <= 1; offZ++) {
+					if (offX == 0 && offZ == 0) {
+						continue;
+					}
+					int x = pos.x + offX;
+					int z = pos.z + offZ;
+					long offsetChunk = ChunkPos.asLong(x, z);
+					if (!chunkSet.contains(offsetChunk) && !boarderChunks.contains(offsetChunk)) {
+						processBoarderChunk(server, server.getChunk(x, z), packetData, dataLayerCache);
+						boarderChunks.add(offsetChunk);
+					}
+				}
 			}
 		}
 		
