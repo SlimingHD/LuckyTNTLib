@@ -28,10 +28,11 @@ public class TempRegistry {
     
     //TNT EFFECTS
 	public static final TNTXStrengthEffect.Builder TNT_X10000_EFFECT = new TNTXStrengthEffect.Builder().strength(300).resistanceImpact(0.167f).randomVecLength(0.05f).knockbackStrength(30f).isStrongExplosion(true);
+	public static final TNTXStrengthEffect.Builder TNT_X50000_EFFECT = new TNTXStrengthEffect.Builder().strength(600).resistanceImpact(0.133f).randomVecLength(0.025f).knockbackStrength(60f).isStrongExplosion(true);
 
 	//ENTITIES
 	public static final RegistryObject<EntityType<PrimedLTNT>> ENT_TNT_X10000 = RH.registerTNTEntity("tnt_x10000", /*TNT_X10000_EFFECT.fuse(80).buildTNT(() -> TempRegistry.BLOCK_TNT_X10000)*/new TestEffectSingleThreaded());
-	public static final RegistryObject<EntityType<PrimedLTNT>> ENT_TNT_X10000_MULTI = RH.registerTNTEntity("tnt_x10000_multi", TNT_X10000_EFFECT.fuse(80).buildTNT(() -> TempRegistry.BLOCK_TNT_X10000_MULTI));
+	public static final RegistryObject<EntityType<PrimedLTNT>> ENT_TNT_X10000_MULTI = RH.registerTNTEntity("tnt_x10000_multi", TNT_X50000_EFFECT.fuse(80).buildTNT(() -> TempRegistry.BLOCK_TNT_X10000_MULTI));
 	public static final RegistryObject<EntityType<PrimedLTNT>> ENT_SUPERNOVA = RH.registerTNTEntity("supernova", new TestEffect());
 	
 	//BLOCKS
@@ -44,7 +45,7 @@ public class TempRegistry {
 		
 		@Override
 		public void serverExplosion(IExplosiveEntity ent) {
-			ExplosionHelper.createSphericalCrater(ent.getLevel(), ent.getPos(), 200, 200f);
+			ExplosionHelper.createSphericalCrater(ent.getLevel(), ent.getPos(), 200, 5000f);
 		}
 	}
 	
@@ -54,7 +55,7 @@ public class TempRegistry {
 		public void serverExplosion(IExplosiveEntity ent) {
 			ImprovedExplosion explosion = new ImprovedExplosion(ent.getLevel(), (Entity)ent, null, ent.getPos(), 300);
 			explosion.doEntityExplosion(1f, true);
-			explosion.doImprovedBlockExplosion(0.167f, 0.05f, true, true, null);
+			explosion.doImprovedBlockExplosion(0.167f, 0.05f, true, false, null);
 			explosion.spawnExplosionParticles();
 		}
 	}

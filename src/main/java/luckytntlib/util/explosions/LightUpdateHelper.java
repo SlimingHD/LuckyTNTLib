@@ -208,8 +208,10 @@ public class LightUpdateHelper {
 	 */
 	public static void updateIndirectSkyLight(ServerLevel server, HashMap<LevelChunk, BitSet> chunks, Long2ObjectMap<LightDataHolder> dataLayerCache) {
 		ThreadedLevelLightEngine engine = server.getChunkSource().getLightEngine();
-		Long2ObjectMap<BitSet> packetData = updateIndirectSkylightChunkBoarders(server, chunks, dataLayerCache);
+		Long2ObjectMap<BitSet> packetData = new Long2ObjectLinkedOpenHashMap<>();
 		boolean updateBlockLight = LuckyTNTLibConfigValues.UPDATE_BLOCK_LIGHT.get();
+		
+		updateIndirectSkylightChunkBoarders(server, chunks, packetData, dataLayerCache);
 		
 		for (Entry<LevelChunk, BitSet> entry : chunks.entrySet()) {
 			LevelChunk chunk = entry.getKey();
@@ -271,25 +273,63 @@ public class LightUpdateHelper {
 		for (Entry<Long, BitSet> entry : packetData.long2ObjectEntrySet()) {
 			SectionPos pos = SectionPos.of(entry.getKey());
 			BitSet blocksToCheck = entry.getValue();
+			LevelChunk chunk = server.getChunk(pos.getX(), pos.getZ());
 			
+			int chunkX = pos.x() << 4;
+			int sectionY = pos.y() << 4;
+			int chunkZ = pos.z() << 4;
 			for (int x = 0; x < 16; ++x) {
 				for (int z = 0; z < 16; ++z) {
 					for (int y = 15; y >= 0; --y) {
 						if (!blocksToCheck.get(ExplosionHelper.encodeSectionPos(x, y, z))) {
 							continue;
 						}
-						engine.checkBlock(new BlockPos((pos.getX() << 4) + x, (pos.getY() << 4) + y, (pos.getZ() << 4) + z));
+						engine.checkBlock(new BlockPos(chunkX + x, sectionY + y, chunkZ + z));
 					}
 				}
 			}
+			engine.retainData(chunk.getPos(), true);
 			engine.updateSectionStatus(pos, false);
 			engine.setLightEnabled(new ChunkPos(pos.getX(), pos.getZ()), true);
 
-			PacketHandler.CHANNEL.send(PacketDistributor.DIMENSION.with(() -> server.dimension()), new ClientboundUpdateChunkSectionPacket(SectionPos.of(pos.getX(), pos.getY() - server.getMinSection(), pos.getZ()), blocksToCheck, false, true));
+			PacketHandler.CHANNEL.send(PacketDistributor.TRACKING_CHUNK.with(() -> chunk), new ClientboundUpdateChunkSectionPacket(SectionPos.of(pos.getX(), pos.getY() - server.getMinSection(), pos.getZ()), blocksToCheck, false, true));
 		}
 		engine.tryScheduleUpdate();
+	}
+	
+	/**
+	 * Updates all chunks that weren't edited themselves but boarder a chunk that has been edited
+	 * @param server  the current {@link ServerLevel}
+	 * @param chunks  a {@link HashMap} containing {@link BitSet}s linked to a {@link LevelChunk} with bits set to true according to the {@link LevelChunkSection}s in the chunk that have been edited
+	 * @param packetData  a {@link Long2ObjectMap} holding all the information on what blocks should be updated
+	 * @param dataLayerCache  a {@link Long2ObjectMap} used to cache light data
+	 * 
+	 * @see #updateIndirectSkyLight(ServerLevel, HashMap, Long2ObjectMap)
+	 */
+	private static void updateIndirectSkylightChunkBoarders(ServerLevel server, HashMap<LevelChunk, BitSet> chunks, Long2ObjectMap<BitSet> packetData, Long2ObjectMap<LightDataHolder> dataLayerCache) {
+		HashSet<Long> chunkSet = new HashSet<>();
+		for (Entry<LevelChunk, BitSet> entry : chunks.entrySet()) {
+			chunkSet.add(entry.getKey().getPos().toLong());
+		}
 		
-		dataLayerCache = null;
+		HashSet<Long> boarderChunks = new HashSet<>();
+		for (long chunk : chunkSet) {
+			ChunkPos pos = new ChunkPos(chunk);
+			for (int offX = -1; offX <= 1; offX++) {
+				for (int offZ = -1; offZ <= 1; offZ++) {
+					if (offX == 0 && offZ == 0) {
+						continue;
+					}
+					int x = pos.x + offX;
+					int z = pos.z + offZ;
+					long offsetChunk = ChunkPos.asLong(x, z);
+					if (!chunkSet.contains(offsetChunk) && !boarderChunks.contains(offsetChunk)) {
+						processBoarderChunk(server, server.getChunk(x, z), packetData, dataLayerCache);
+						boarderChunks.add(offsetChunk);
+					}
+				}
+			}
+		}
 	}
 	
 	/**
@@ -373,44 +413,6 @@ public class LightUpdateHelper {
 			dataLayerCache.put(pos, new LightDataHolder());
 		}
 		dataLayerCache.get(pos).put(layer, data);
-	}
-	
-	/**
-	 * Updates all chunks that weren't edited themselves but boarder a chunk that has been edited
-	 * @param server  the current {@link ServerLevel}
-	 * @param chunks  a {@link HashMap} containing {@link BitSet}s linked to a {@link LevelChunk} with bits set to true according to the {@link LevelChunkSection}s in the chunk that have been edited
-	 * @param dataLayerCache  a {@link Long2ObjectMap} used to cache light data
-	 * 
-	 * @see #updateIndirectSkyLight(ServerLevel, HashMap, Long2ObjectMap)
-	 */
-	private static Long2ObjectMap<BitSet> updateIndirectSkylightChunkBoarders(ServerLevel server, HashMap<LevelChunk, BitSet> chunks, Long2ObjectMap<LightDataHolder> dataLayerCache) {
-		Long2ObjectMap<BitSet> packetData = new Long2ObjectLinkedOpenHashMap<>();
-		
-		HashSet<Long> chunkSet = new HashSet<>();
-		for (Entry<LevelChunk, BitSet> entry : chunks.entrySet()) {
-			chunkSet.add(entry.getKey().getPos().toLong());
-		}
-		
-		HashSet<Long> boarderChunks = new HashSet<>();
-		for (long chunk : chunkSet) {
-			ChunkPos pos = new ChunkPos(chunk);
-			for (int offX = -1; offX <= 1; offX++) {
-				for (int offZ = -1; offZ <= 1; offZ++) {
-					if (offX == 0 && offZ == 0) {
-						continue;
-					}
-					int x = pos.x + offX;
-					int z = pos.z + offZ;
-					long offsetChunk = ChunkPos.asLong(x, z);
-					if (!chunkSet.contains(offsetChunk) && !boarderChunks.contains(offsetChunk)) {
-						processBoarderChunk(server, server.getChunk(x, z), packetData, dataLayerCache);
-						boarderChunks.add(offsetChunk);
-					}
-				}
-			}
-		}
-		
-		return packetData;
 	}
 	
 	/**
