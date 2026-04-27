@@ -141,7 +141,8 @@ public class ExplosionTask extends RecursiveTask<Long2ObjectMap<BitSet>> {
 							for (int y = 0; y < 16; y++) {
 								for (int z = 0; z < 16; z++) {
 									currentBlockState = section.getBlockState(x, y, z);
-									explosionResistances[x << 8 | y << 4 | z] = ignoreFluids && !currentBlockState.getFluidState().isEmpty() ? 0f : Math.max(currentBlockState.getBlock().getExplosionResistance(), currentBlockState.getFluidState().getExplosionResistance());								}
+									explosionResistances[x << 8 | y << 4 | z] = ignoreFluids && !currentBlockState.getFluidState().isEmpty() ? 0f : Math.max(currentBlockState.getBlock().getExplosionResistance(), currentBlockState.getFluidState().getExplosionResistance());
+								}
 							}
 						}
 						return explosionResistances;
