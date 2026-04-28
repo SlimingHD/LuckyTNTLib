@@ -389,7 +389,7 @@ public class ExplosionHelper {
 			int checkedBlocks = 0;
 			int affectedBlocks = 0;
 			
-			HashMap<LevelChunk, BitSet> chunks = new HashMap<LevelChunk, BitSet>();
+			HashMap<LevelChunk, BitSet> chunks = new HashMap<>();
 			Long2ObjectMap<LightUpdateHelper.LightDataHolder> dataLayerCache = new Long2ObjectOpenHashMap<>();
 			long worldSeed = server.getSeed();
 			ChunkPos pos = new ChunkPos(Mth.floor(position.x) >> 4, Mth.floor(position.z) >> 4);

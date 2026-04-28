@@ -17,6 +17,8 @@ public interface DistanceCalculator {
 	 * @param scaling  a {@link Vector3f} that contains the scalings for all axes
 	 * @return the maximum squared y distance from the y-plane the explosion it's used for took place in
 	 * 
+	 * @apiNote if you do not want the provided position to be affected, simply return {@code -1}
+	 * 
 	 * @see <i> Implementation examples: </i>
 	 * @see ExplosionHelper#SPHEROID_CALCULATOR
 	 * @see ExplosionHelper#CUBOID_CALCULATOR
