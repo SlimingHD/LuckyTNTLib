@@ -88,6 +88,8 @@ public class LightUpdateHelper {
 			List<byte[]> skyUpdates = lightData.getSkyUpdates();
 			BitStorage heightmap = null;
 			
+			chunk.setLightCorrect(false);
+			
 			try {
 				heightmap = (BitStorage)heightmapField.get(server.getChunk(pos.x, pos.z).getSkyLightSources());
 			} catch(IllegalAccessException e) {
@@ -273,7 +275,6 @@ public class LightUpdateHelper {
 		for (Entry<Long, BitSet> entry : packetData.long2ObjectEntrySet()) {
 			SectionPos pos = SectionPos.of(entry.getKey());
 			BitSet blocksToCheck = entry.getValue();
-			LevelChunk chunk = server.getChunk(pos.getX(), pos.getZ());
 			
 			int chunkX = pos.x() << 4;
 			int sectionY = pos.y() << 4;
@@ -288,11 +289,11 @@ public class LightUpdateHelper {
 					}
 				}
 			}
-			engine.retainData(chunk.getPos(), true);
+			engine.retainData(new ChunkPos(pos.x(), pos.z()), true);
 			engine.updateSectionStatus(pos, false);
 			engine.setLightEnabled(new ChunkPos(pos.getX(), pos.getZ()), true);
 
-			PacketHandler.CHANNEL.send(PacketDistributor.TRACKING_CHUNK.with(() -> chunk), new ClientboundUpdateChunkSectionPacket(SectionPos.of(pos.getX(), pos.getY() - server.getMinSection(), pos.getZ()), blocksToCheck, false, true));
+			PacketHandler.CHANNEL.send(PacketDistributor.DIMENSION.with(() -> server.dimension()), new ClientboundUpdateChunkSectionPacket(SectionPos.of(pos.getX(), pos.getY() - server.getMinSection(), pos.getZ()), blocksToCheck, false, true));
 		}
 		engine.tryScheduleUpdate();
 	}
@@ -344,6 +345,8 @@ public class LightUpdateHelper {
 	private static void processBoarderChunk(ServerLevel server, LevelChunk chunk, Long2ObjectMap<BitSet> packetData, Long2ObjectMap<LightDataHolder> dataLayerCache) {
 		ChunkPos pos = chunk.getPos();
 		
+		chunk.setLightCorrect(false);
+		
 		int lowestEmptySectionBottom = 0;
 		for (int i = server.getMaxSection() - 1; i >= server.getMinSection(); --i) {
 			if (!chunk.getSection(chunk.getSectionIndexFromSectionY(i)).hasOnlyAir()) {
@@ -351,7 +354,7 @@ public class LightUpdateHelper {
 				break;
 			}
 		}
-
+		
 		for (int x = 0; x < 16; ++x) {
 			for (int z = 0; z < 16; ++z) {
 				int lowestLightY = Math.max(chunk.getSkyLightSources().getLowestSourceY(x, z), server.getMinBuildHeight());
