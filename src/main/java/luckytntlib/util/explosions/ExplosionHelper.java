@@ -401,9 +401,9 @@ public class ExplosionHelper {
 			
 			float scale = Math.max(scaling.x, scaling.z);
 			int chunkRadius = (int)Math.ceil((float)(radius * scale) / 16f) + 1;
-			for (int x = -chunkRadius; x <= chunkRadius; x++) {
-				for (int z = -chunkRadius; z <= chunkRadius; z++) {
-					ChunkPos chunkPos = new ChunkPos(pos.x + x, pos.z + z);
+			for (int chunkX = -chunkRadius; chunkX <= chunkRadius; ++chunkX) {
+				for (int chunkZ = -chunkRadius; chunkZ <= chunkRadius; ++chunkZ) {
+					ChunkPos chunkPos = new ChunkPos(pos.x + chunkX, pos.z + chunkZ);
 					LevelChunk chunk = server.getChunk(chunkPos.x, chunkPos.z);
 					chunk.setLoaded(true);
 					
@@ -429,18 +429,18 @@ public class ExplosionHelper {
 						BitSet changed = new BitSet(4096);
 						boolean sectionChanged = false;
 
-						for (int i = 0; i < 16; i++) {
-							for (int k = 0; k < 16; k++) {
-								int dx = chunkPos.getBlockX(i) - center.getX();
-								int dz = chunkPos.getBlockZ(k) - center.getZ();
+						for (int x = 0; x < 16; ++x) {
+							for (int z = 0; z < 16; ++z) {
+								int dx = (chunkPos.x << 4) + x - center.getX();
+								int dz = (chunkPos.z << 4) + z - center.getZ();
 								int dyMax = calculator.getMaxYDistanceSqr(dx, dz, radius, scaling);
-								for (int j = 0; j < 16; j++) {
-									int dy = height + j - center.getY();
+								for (int y = 0; y < 16; ++y) {
+									int dy = height + y - center.getY();
 									if (dy * dy >= dyMax) {
 										continue;
 									}
 									
-									BlockState state = states.get(i, j, k);
+									BlockState state = states.get(x, y, z);
 									if ((!useRule && state.isAir()) || Math.max(state.getBlock().getExplosionResistance(), state.getFluidState().getExplosionResistance()) > maxResistance) {
 										continue;
 									}
@@ -454,12 +454,11 @@ public class ExplosionHelper {
 										continue;
 									}
 									
-									states.set(i, j, k, newState);
+									states.set(x, y, z, newState);
 
-									BlockPos blockpos = new BlockPos((chunkPos.x << 4) + i, height + j, (chunkPos.z << 4) + k);
-									chunk.removeBlockEntity(blockpos);
+									chunk.removeBlockEntity(new BlockPos((chunkPos.x << 4) + x, height + y, (chunkPos.z << 4) + z));
 
-									changed.set(encodeSectionPos(i, j, k));
+									changed.set(encodeSectionPos(x, y, z));
 
 									if (!chunkEdited) {
 										chunkEdited = true;
@@ -488,7 +487,9 @@ public class ExplosionHelper {
 
 						height += 16;
 					}
-					chunk.setUnsaved(true);
+					if (chunkEdited) {
+						chunk.setUnsaved(true);
+					}
 				}
 			}
 			
@@ -973,7 +974,7 @@ public class ExplosionHelper {
 	 * @see #decodeSectionPos(int)
 	 */
 	public static int encodeSectionPos(int x, int y, int z) {
-		return ((x & 15) << 8) | ((y & 15) << 4) | (z & 15);
+		return (x << 8) | (y << 4) | z;
 	}
 	
 	/**

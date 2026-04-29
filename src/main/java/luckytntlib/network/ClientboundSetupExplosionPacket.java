@@ -50,8 +50,7 @@ public class ClientboundSetupExplosionPacket {
 			seed = 0l;
 			return;
 		}
-		JsonObject root = GsonHelper.parse(buffer.readUtf());
-		rule = ExplosionRule.parse(root);
+		rule = ExplosionRule.parse(GsonHelper.parse(buffer.readUtf()));
 		center = new Vec3(buffer.readDouble(), buffer.readDouble(), buffer.readDouble());
 		seed = buffer.readLong();
 	}

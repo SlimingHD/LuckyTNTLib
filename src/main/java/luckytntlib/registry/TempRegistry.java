@@ -45,7 +45,7 @@ public class TempRegistry {
 		
 		@Override
 		public void serverExplosion(IExplosiveEntity ent) {
-			ExplosionHelper.createSphericalCrater(ent.getLevel(), ent.getPos(), 200, 5000f);
+			ExplosionHelper.createSphericalCrater(ent.getLevel(), ent.getPos(), 500, 5000f);
 		}
 	}
 	
