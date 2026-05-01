@@ -2,6 +2,10 @@ package luckytntlib.util.explosions;
 
 import org.joml.Vector3f;
 
+import luckytntlib.util.explosions.rules.ExplosionRule;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.phys.Vec3;
+
 /**
  * The DistanceCalculator is a {@link FunctionalInterface} used to calculate the maximum squared y distance for a pair of x and z coordinates in the context of explosions.
  * It is mainly used in the {@link ExplosionHelper}.
@@ -22,7 +26,7 @@ public interface DistanceCalculator {
 	 * @see <i> Implementation examples: </i>
 	 * @see ExplosionHelper#SPHEROID_CALCULATOR
 	 * @see ExplosionHelper#CUBOID_CALCULATOR
-	 * @see ExplosionHelper#createScaledCylindricalCrater(net.minecraft.world.level.Level, net.minecraft.world.phys.Vec3, int, int, Vector3f, int, luckytntlib.util.explosions.rules.ExplosionRule)
+	 * @see ExplosionHelper#createScaledCylindricalCrater(Level, Vec3, int, int, Vector3f, int, ExplosionRule)
 	 */
 	public int getMaxYDistanceSqr(int x, int z, int radius, Vector3f scaling);
 }

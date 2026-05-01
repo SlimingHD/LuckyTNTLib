@@ -1,6 +1,7 @@
 package luckytntlib.util.explosions;
 
 import java.lang.reflect.Field;
+import java.util.Arrays;
 import java.util.BitSet;
 import java.util.Collections;
 import java.util.HashMap;
@@ -16,6 +17,7 @@ import luckytntlib.config.LuckyTNTLibConfigValues;
 import luckytntlib.network.ClientboundUpdateChunkSectionPacket;
 import luckytntlib.network.ClientboundUpdateSkyLightSourcesPacket;
 import luckytntlib.network.PacketHandler;
+import net.minecraft.Util;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.SectionPos;
 import net.minecraft.network.protocol.game.ClientboundLightUpdatePacket;
@@ -45,15 +47,26 @@ import net.minecraftforge.network.PacketDistributor;
 public class LightUpdateHelper {
 	
 	/**
-	 * A byte array of the length 2048 filled with the value 255. Used to replace the sky light data of empty sections that can see the sky.
-	 */
-	private static final byte[] skyData = new DataLayer(15).getData();
-	
-	/**
 	 * Cached {@link Field} for less reflection
 	 */
-	private static Field heightmapField;
+	public static final Field HEIGHTMAP_FIELD = Util.make(() -> {
+		for (Field f : ChunkSkyLightSources.class.getDeclaredFields()) {
+			f.setAccessible(true);
+			if (f.getType() == BitStorage.class) {
+				return f;
+			}
+		}
+		return null;
+	});
 	
+	/**
+	 * A byte array of the length 2048 filled with the value 255. Used to replace the sky light data of empty sections that can see the sky.
+	 */
+	private static final byte[] skyData = Util.make(new byte[2048], a -> Arrays.fill(a, (byte)255));
+	
+	
+	private LightUpdateHelper() {
+	}
 	
 	/**
 	 * Calculates the updates to direct sky light after explosions. <br>
@@ -69,16 +82,6 @@ public class LightUpdateHelper {
 		BitSet emptyBitSet = new BitSet(0);
 		int minY = server.getMinBuildHeight() - 1;
 		
-		if (heightmapField == null) {
-			for (Field f : ChunkSkyLightSources.class.getDeclaredFields()) {
-				f.setAccessible(true);
-				if (f.getType() == BitStorage.class) {
-					heightmapField = f;
-					break;
-				}
-			}
-		}
-		
 		for (Entry<LevelChunk, BitSet> entry : chunks.entrySet()) {
 			LevelChunk chunk = entry.getKey();
 			BitSet editedSections = entry.getValue();
@@ -91,8 +94,8 @@ public class LightUpdateHelper {
 			chunk.setLightCorrect(false);
 			
 			try {
-				heightmap = (BitStorage)heightmapField.get(server.getChunk(pos.x, pos.z).getSkyLightSources());
-			} catch(IllegalAccessException e) {
+				heightmap = (BitStorage)HEIGHTMAP_FIELD.get(server.getChunk(pos.x, pos.z).getSkyLightSources());
+			} catch(IllegalAccessException | NullPointerException e) {
 				e.printStackTrace();
 			}
 
@@ -103,8 +106,8 @@ public class LightUpdateHelper {
 				if (i == server.getMaxSection() || i == server.getMinSection() - 1 || chunk.getSection(chunk.getSectionIndexFromSectionY(i)).hasOnlyAir()) {
 					lowestEmptySection = i - (server.getMinSection() - 1);
 					lowestEmptySectionY = i;
-					
 					long section = SectionPos.asLong(pos.x, i, pos.z);
+					
 					if (editedSections.get(lowestEmptySection)) {
 						lightData.getSkyYMask().set(i - (server.getMinSection() - 1));
 						lightData.getEmptyBlockYMask().set(i - (server.getMinSection() - 1));
@@ -458,11 +461,8 @@ public class LightUpdateHelper {
 		int realZ = shiftCoordinate(z);
 		
 		long s = section.asLong();
-		if (dataLayerCache.get(s) == null) {
-			dataLayerCache.put(s, new LightDataHolder());
-		}
-		if (dataLayerCache.get(s).isEmpty(layer)) {
-			dataLayerCache.get(s).put(layer, server.getLightEngine().getLayerListener(layer).getDataLayerData(section));
+		if (dataLayerCache.get(s) == null || dataLayerCache.get(s).isEmpty(layer)) {
+			cacheDataLayer(s, server.getLightEngine().getLayerListener(layer).getDataLayerData(section), layer, dataLayerCache);
 		}
 		
 		DataLayer data = dataLayerCache.get(s).get(layer);

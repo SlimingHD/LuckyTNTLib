@@ -1,12 +1,12 @@
 package luckytntlib.client;
 
-import java.lang.reflect.Field;
 import java.util.BitSet;
 
 import javax.annotation.Nullable;
 
 import luckytntlib.util.explosions.ExplosionHelper;
 import luckytntlib.util.explosions.HeightmapUpdateHelper;
+import luckytntlib.util.explosions.LightUpdateHelper;
 import luckytntlib.util.explosions.rules.ExplosionRule;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientLevel;
@@ -21,7 +21,6 @@ import net.minecraft.world.level.chunk.LevelChunkSection;
 import net.minecraft.world.level.chunk.PalettedContainer;
 import net.minecraft.world.level.levelgen.Heightmap;
 import net.minecraft.world.level.levelgen.SingleThreadedRandomSource;
-import net.minecraft.world.level.lighting.ChunkSkyLightSources;
 import net.minecraft.world.level.lighting.LevelLightEngine;
 import net.minecraft.world.phys.Vec3;
 
@@ -32,8 +31,6 @@ public class ClientAccess {
 	@Nullable
 	private static Vec3 currentCenter;
 	private static long levelSeed;
-
-	private static Field heightmapField;
 	
 	public static void updateChunkSection(SectionPos pos, BitSet changed, boolean allAffected) {
 		Minecraft minecraft = Minecraft.getInstance();
@@ -145,19 +142,9 @@ public class ClientAccess {
 		
 		BitStorage heightmap = null;
 		
-		if (heightmapField == null) {
-			for (Field f : ChunkSkyLightSources.class.getDeclaredFields()) {
-				f.setAccessible(true);
-				if (f.getType() == BitStorage.class) {
-					heightmapField = f;
-					break;
-				}
-			}
-		}
-		
 		try {
-			heightmap = (BitStorage)heightmapField.get(level.getChunk(pos.x, pos.z).getSkyLightSources());
-		} catch (IllegalAccessException e) {
+			heightmap = (BitStorage)LightUpdateHelper.HEIGHTMAP_FIELD.get(level.getChunk(pos.x, pos.z).getSkyLightSources());
+		} catch (IllegalAccessException | NullPointerException e) {
 			e.printStackTrace();
 		}
 
