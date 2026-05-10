@@ -49,15 +49,13 @@ public class DebugConfigScreen extends Screen {
 		footerGrid.defaultCellSetting().paddingHorizontal(4).paddingBottom(4).alignHorizontallyCenter();
 		RowHelper footerRows = footerGrid.createRowHelper(3);
 		
-		Button backButton = new Button.Builder(CommonComponents.GUI_BACK, button -> {
-			onClose();
-		}).width(100).build();
+		Button backButton = new Button.Builder(CommonComponents.GUI_BACK, button -> onClose()).width(100).build();
+		Button doneButton = new Button.Builder(CommonComponents.GUI_DONE, button -> minecraft.setScreen(null)).width(100).build();
 		@SuppressWarnings("removal")
-		Button nextButton = new Button.Builder(CommonComponents.GUI_CONTINUE, button -> {
-			minecraft.pushGuiLayer(new DeprecatedConfigScreen());
-		}).width(100).build();
+		Button nextButton = new Button.Builder(CommonComponents.GUI_CONTINUE, button -> minecraft.pushGuiLayer(new DeprecatedConfigScreen())).width(100).build();
+		
 		footerRows.addChild(backButton);
-		footerRows.addChild(new Button.Builder(CommonComponents.GUI_DONE, button -> minecraft.setScreen(null)).width(100).build());
+		footerRows.addChild(doneButton);
 		footerRows.addChild(nextButton);
 		
 		layout.addToFooter(footerGrid);
