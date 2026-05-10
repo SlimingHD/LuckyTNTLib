@@ -33,7 +33,7 @@ public class DeprecatedConfigScreen extends Screen {
 	@Override
 	public void init() {
 		if (layout instanceof LTLHeaderAndFooterLayoutExtension layout) {
-			layout.getContentsFrameLayoutLTL().defaultChildLayoutSetting().paddingTop(30);
+			layout.getContentsFrameLayoutLTL().defaultChildLayoutSetting().paddingTop(15);
 		}
 		
 		LinearLayout linear = layout.addToHeader(new LinearLayout(0, 0, Orientation.VERTICAL));
