@@ -1,6 +1,7 @@
 package luckytntlib.client.gui;
 
 import luckytntlib.config.LuckyTNTLibConfigValues;
+import luckytntlib.util.LTLHeaderAndFooterLayoutExtension;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.StringWidget;
@@ -30,6 +31,10 @@ public class QualityConfigScreen extends Screen {
 	
 	@Override
 	public void init() {
+		if (layout instanceof LTLHeaderAndFooterLayoutExtension layout) {
+			layout.getContentsFrameLayoutLTL().defaultChildLayoutSetting().paddingTop(15);
+		}
+		
 		LinearLayout linear = layout.addToHeader(new LinearLayout(0, 0, Orientation.VERTICAL));
 		linear.addChild(new StringWidget(title, font), LayoutSettings.defaults().alignHorizontallyCenter());
 		GridLayout grid = new GridLayout();

@@ -35,11 +35,11 @@ public class LDynamiteRenderer<T extends LExplosiveProjectile & ItemSupplier> ex
 	
 	@Override
 	public void render(T entity, float yaw, float partialTicks, PoseStack poseStack, MultiBufferSource buffer, int light) {
-		if (entity.tickCount >= 2 || !(this.entityRenderDispatcher.camera.getEntity().distanceToSqr(entity) < 12.25D)) {
+		if (entity.tickCount >= 2 || !(this.entityRenderDispatcher.camera.getEntity().distanceToSqr(entity) < 12.25d)) {
 			poseStack.pushPose();
 			poseStack.scale(entity.getEffect().getSize(entity), entity.getEffect().getSize(entity), entity.getEffect().getSize(entity));
 			poseStack.mulPose(this.entityRenderDispatcher.cameraOrientation());
-			poseStack.mulPose(Axis.YP.rotationDegrees(180.0F));
+			poseStack.mulPose(Axis.YP.rotationDegrees(180f));
 			itemRenderer.renderStatic(entity.getItem(), ItemDisplayContext.GROUND, light, OverlayTexture.NO_OVERLAY, poseStack, buffer, entity.level(), entity.getId());
 			poseStack.popPose();
 			super.render(entity, yaw, partialTicks, poseStack, buffer, light);

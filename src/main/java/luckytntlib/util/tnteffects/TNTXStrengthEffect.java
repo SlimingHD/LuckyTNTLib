@@ -118,26 +118,11 @@ public class TNTXStrengthEffect extends PrimedTNTEffect {
 		
 		public Builder() {			
 		}
-		
-		private Builder(boolean useOldExplosion, int fuse, int strength, float xzStrength, float yStrength, float resistanceImpact, float randomVecLength, boolean fire, float knockbackStrength, boolean isStrongExplosion, float size, boolean airFuse,  boolean explodesOnImpact) {
-			this.useOldExplosion = useOldExplosion;
-			this.fuse = fuse;
-			this.strength = strength;
-			this.xzStrength = xzStrength;
-			this.yStrength = yStrength;
-			this.resistanceImpact = resistanceImpact;
-			this.randomVecLength = randomVecLength;
-			this.fire = fire;
-			this.knockbackStrength = knockbackStrength;
-			this.isStrongExplosion = isStrongExplosion;
-			this.size = size;
-			this.airFuse = airFuse;
-			this.explodesOnImpact = explodesOnImpact;
-		}
 
 		@Deprecated(since = "47.2.32.2", forRemoval = true)
 		public Builder useOldExplosion() {
-			return new Builder(true, fuse, strength, xzStrength, yStrength, resistanceImpact, randomVecLength, fire, knockbackStrength, isStrongExplosion, size, airFuse, explodesOnImpact);
+			useOldExplosion = true;
+			return this;
 		}
 
 		/**
@@ -145,7 +130,8 @@ public class TNTXStrengthEffect extends PrimedTNTEffect {
 		 * @param fuse
 		 */
 		public Builder fuse(int fuse) {
-			return new Builder(useOldExplosion, fuse, strength, xzStrength, yStrength, resistanceImpact, randomVecLength, fire, knockbackStrength, isStrongExplosion, size, airFuse, explodesOnImpact);
+			this.fuse = fuse;
+			return this;
 		}
 		
 		/**
@@ -153,7 +139,8 @@ public class TNTXStrengthEffect extends PrimedTNTEffect {
 		 * @param strength
 		 */
 		public Builder strength(int strength) {
-			return new Builder(useOldExplosion, fuse, strength, xzStrength, yStrength, resistanceImpact, randomVecLength, fire, knockbackStrength, isStrongExplosion, size, airFuse, explodesOnImpact);
+			this.strength = strength;
+			return this;
 		}
 		
 		/**
@@ -162,7 +149,8 @@ public class TNTXStrengthEffect extends PrimedTNTEffect {
 		 */
 		@Deprecated(since = "47.2.32.2", forRemoval = true)
 		public Builder xzStrength(float xzStrength) {
-			return new Builder(useOldExplosion, fuse, strength, xzStrength, yStrength, resistanceImpact, randomVecLength, fire, knockbackStrength, isStrongExplosion, size, airFuse, explodesOnImpact);
+			this.xzStrength = xzStrength;
+			return this;
 		}
 		
 		/**
@@ -171,7 +159,8 @@ public class TNTXStrengthEffect extends PrimedTNTEffect {
 		 */
 		@Deprecated(since = "47.2.32.2", forRemoval = true)
 		public Builder yStrength(float yStrength) {
-			return new Builder(useOldExplosion, fuse, strength, xzStrength, yStrength, resistanceImpact, randomVecLength, fire, knockbackStrength, isStrongExplosion, size, airFuse, explodesOnImpact);
+			this.yStrength = yStrength;
+			return this;
 		}
 		
 		/**
@@ -179,7 +168,8 @@ public class TNTXStrengthEffect extends PrimedTNTEffect {
 		 * @param resistanceImpact
 		 */
 		public Builder resistanceImpact(float resistanceImpact) {
-			return new Builder(useOldExplosion, fuse, strength, xzStrength, yStrength, resistanceImpact, randomVecLength, fire, knockbackStrength, isStrongExplosion, size, airFuse, explodesOnImpact);
+			this.resistanceImpact = resistanceImpact;
+			return this;
 		}
 		
 		/**
@@ -188,7 +178,8 @@ public class TNTXStrengthEffect extends PrimedTNTEffect {
 		 * @param randomVecLength
 		 */
 		public Builder randomVecLength(float randomVecLength) {
-			return new Builder(useOldExplosion, fuse, strength, xzStrength, yStrength, resistanceImpact, randomVecLength, fire, knockbackStrength, isStrongExplosion, size, airFuse, explodesOnImpact);
+			this.randomVecLength = randomVecLength;
+			return this;
 		}
 
 		/**
@@ -196,7 +187,8 @@ public class TNTXStrengthEffect extends PrimedTNTEffect {
 		 * @param fire
 		 */
 		public Builder fire(boolean fire) {
-			return new Builder(useOldExplosion, fuse, strength, xzStrength, yStrength, resistanceImpact, randomVecLength, fire, knockbackStrength, isStrongExplosion, size, airFuse, explodesOnImpact);
+			this.fire = fire;
+			return this;
 		}
 
 		/**
@@ -204,7 +196,8 @@ public class TNTXStrengthEffect extends PrimedTNTEffect {
 		 * @param knockbackStrength
 		 */
 		public Builder knockbackStrength(float knockbackStrength) {
-			return new Builder(useOldExplosion, fuse, strength, xzStrength, yStrength, resistanceImpact, randomVecLength, fire, knockbackStrength, isStrongExplosion, size, airFuse, explodesOnImpact);
+			this.knockbackStrength = knockbackStrength;
+			return this;
 		}
 		
 		/**
@@ -212,7 +205,8 @@ public class TNTXStrengthEffect extends PrimedTNTEffect {
 		 * @param isStrongExplosion
 		 */
 		public Builder isStrongExplosion(boolean isStrongExplosion) {
-			return new Builder(useOldExplosion, fuse, strength, xzStrength, yStrength, resistanceImpact, randomVecLength, fire, knockbackStrength, isStrongExplosion, size, airFuse, explodesOnImpact);
+			this.isStrongExplosion = isStrongExplosion;
+			return this;
 		}
 
 		/**
@@ -220,7 +214,8 @@ public class TNTXStrengthEffect extends PrimedTNTEffect {
 		 * @param size
 		 */
 		public Builder size(float size) {
-			return new Builder(useOldExplosion, fuse, strength, xzStrength, yStrength, resistanceImpact, randomVecLength, fire, knockbackStrength, isStrongExplosion, size, airFuse, explodesOnImpact);
+			this.size = size;
+			return this;
 		}
 		
 		/**
@@ -229,7 +224,8 @@ public class TNTXStrengthEffect extends PrimedTNTEffect {
 		 * @param airFuse
 		 */
 		public Builder airFuse(boolean airFuse) {
-			return new Builder(useOldExplosion, fuse, strength, xzStrength, yStrength, resistanceImpact, randomVecLength, fire, knockbackStrength, isStrongExplosion, size, airFuse, explodesOnImpact);
+			this.airFuse = airFuse;
+			return this;
 		}
 		
 		/**
@@ -238,7 +234,8 @@ public class TNTXStrengthEffect extends PrimedTNTEffect {
 		 * @param explodesOnImpact
 		 */
 		public Builder explodesOnImpact(boolean explodesOnImpact) {
-			return new Builder(useOldExplosion, fuse, strength, xzStrength, yStrength, resistanceImpact, randomVecLength, fire, knockbackStrength, isStrongExplosion, size, airFuse, explodesOnImpact);
+			this.explodesOnImpact = explodesOnImpact;
+			return this;
 		}
 		
 		/**

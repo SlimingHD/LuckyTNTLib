@@ -43,13 +43,13 @@ public class LTNTMinecartItem extends MinecartItem {
 		Level level = context.getLevel();
 		BlockPos pos = context.getClickedPos();
 		BlockState state = level.getBlockState(pos);
-		if(!state.is(BlockTags.RAILS)) {
+		if (!state.is(BlockTags.RAILS)) {
 			return InteractionResult.FAIL;
 		}
 		ItemStack stack = context.getItemInHand();
 		double railHeight = 0;
-		if(!level.isClientSide) {
-            RailShape rail = state.getBlock() instanceof BaseRailBlock ? ((BaseRailBlock)state.getBlock()).getRailDirection(state, level, pos, null) : RailShape.NORTH_SOUTH;
+		if (!level.isClientSide) {
+            RailShape rail = state.getBlock() instanceof BaseRailBlock railBlock ? railBlock.getRailDirection(state, level, pos, null) : RailShape.NORTH_SOUTH;
             if (rail.isAscending()) {
                railHeight = 0.5D;
             }
@@ -75,8 +75,8 @@ public class LTNTMinecartItem extends MinecartItem {
 	 * @throws NullPointerException
 	 */
 	@Nullable
-	public LTNTMinecart createMinecart(Level level, double x, double y, double z, @Nullable LivingEntity placer) throws NullPointerException{
-		if(minecart != null) {
+	public LTNTMinecart createMinecart(Level level, double x, double y, double z, @Nullable LivingEntity placer) throws NullPointerException {
+		if (minecart != null) {
 			LTNTMinecart cart = minecart.get().get().create(level);
 			cart.setPos(x, y, z);
 			level.addFreshEntity(cart);

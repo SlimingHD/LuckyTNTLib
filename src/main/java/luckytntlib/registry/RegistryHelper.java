@@ -152,30 +152,30 @@ public class RegistryHelper {
 	 */
 	public RegistryObject<LTNTBlock> registerTNTBlock(DeferredRegister<Block> blockRegistry, @Nullable DeferredRegister<Item> itemRegistry, Supplier<LTNTBlock> TNTBlock, TNTBlockRegistryData blockData){
 		RegistryObject<LTNTBlock> block = blockRegistry.register(blockData.getRegistryName(), TNTBlock);
-		if(itemRegistry != null && blockData.makeItem()) {
+		if (itemRegistry != null && blockData.makeItem()) {
 			RegistryObject<Item> item = itemRegistry.register(blockData.getRegistryName(), () -> new BlockItem(block.get(), new Item.Properties()) {
 				
 				@Override
 				public void appendHoverText(ItemStack stack, @Nullable Level level, List<Component> components, TooltipFlag flag) {
 					super.appendHoverText(stack, level, components, flag);
-					if(!blockData.getDescription().getString().equals("")) {
+					if (!blockData.getDescription().getString().equals("")) {
 						components.add(blockData.getDescription());
 					}
 				}
 			});
 			
-			if(blockData.addToTNTLists()) {
-				if(TNTLists.get(blockData.getTab()) == null) {
-					TNTLists.put(blockData.getTab(), new ArrayList<RegistryObject<LTNTBlock>>());
+			if (blockData.addToTNTLists()) {
+				if (TNTLists.get(blockData.getTab()) == null) {
+					TNTLists.put(blockData.getTab(), new ArrayList<>());
 				}
 				TNTLists.get(blockData.getTab()).add(block);
 			}
-			if(blockData.addDispenseBehavior()) {
-				TNT_DISPENSER_REGISTRY_LIST.add(new Pair<RegistryObject<LTNTBlock>, RegistryObject<Item>>(block, item));
+			if (blockData.addDispenseBehavior()) {
+				TNT_DISPENSER_REGISTRY_LIST.add(Pair.of(block, item));
 			}
-			if(!blockData.getTab().equals("none")) {
-				if(creativeTabItemLists.get(blockData.getTab()) == null) {
-					creativeTabItemLists.put(blockData.getTab(), new ArrayList<RegistryObject<? extends Item>>());
+			if (!blockData.getTab().equals("none")) {
+				if (creativeTabItemLists.get(blockData.getTab()) == null) {
+					creativeTabItemLists.put(blockData.getTab(), new ArrayList<>());
 				}
 				creativeTabItemLists.get(blockData.getTab()).add(item);				
 			}
@@ -239,29 +239,29 @@ public class RegistryHelper {
 	 */
 	public RegistryObject<LTNTBlock> registerLivingTNTBlock(DeferredRegister<Block> blockRegistry, @Nullable DeferredRegister<Item> itemRegistry, Supplier<LivingLTNTBlock> TNTBlock, TNTBlockRegistryData blockData){
 		RegistryObject<LTNTBlock> block = blockRegistry.register(blockData.getRegistryName(), () -> ((LTNTBlock)TNTBlock.get()));
-		if(itemRegistry != null && blockData.makeItem()) {
+		if (itemRegistry != null && blockData.makeItem()) {
 			RegistryObject<Item> item = itemRegistry.register(blockData.getRegistryName(), () -> new BlockItem(block.get(), new Item.Properties()) {
 				
 				@Override
 				public void appendHoverText(ItemStack stack, @Nullable Level level, List<Component> components, TooltipFlag flag) {
 					super.appendHoverText(stack, level, components, flag);
-					if(!blockData.getDescription().getString().equals("")) {
+					if (!blockData.getDescription().getString().equals("")) {
 						components.add(blockData.getDescription());
 					}
 				}
 			});
-			if(blockData.addToTNTLists()) {
-				if(TNTLists.get(blockData.getTab()) == null) {
-					TNTLists.put(blockData.getTab(), new ArrayList<RegistryObject<LTNTBlock>>());
+			if (blockData.addToTNTLists()) {
+				if (TNTLists.get(blockData.getTab()) == null) {
+					TNTLists.put(blockData.getTab(), new ArrayList<>());
 				}
 				TNTLists.get(blockData.getTab()).add(block);
 			}
-			if(blockData.addDispenseBehavior()) {
-				TNT_DISPENSER_REGISTRY_LIST.add(new Pair<RegistryObject<LTNTBlock>, RegistryObject<Item>>(block, item));
+			if (blockData.addDispenseBehavior()) {
+				TNT_DISPENSER_REGISTRY_LIST.add(Pair.of(block, item));
 			}
-			if(!blockData.getTab().equals("none")) {
-				if(creativeTabItemLists.get(blockData.getTab()) == null) {
-					creativeTabItemLists.put(blockData.getTab(), new ArrayList<RegistryObject<? extends Item>>());
+			if (!blockData.getTab().equals("none")) {
+				if (creativeTabItemLists.get(blockData.getTab()) == null) {
+					creativeTabItemLists.put(blockData.getTab(), new ArrayList<>());
 				}
 				creativeTabItemLists.get(blockData.getTab()).add(item);				
 			}
@@ -316,18 +316,18 @@ public class RegistryHelper {
 	 */
 	public RegistryObject<LDynamiteItem> registerDynamiteItem(DeferredRegister<Item> itemRegistry, String registryName, Supplier<LDynamiteItem> dynamiteSupplier, String tab, boolean addToLists, boolean addDispenseBehavior){
 		RegistryObject<LDynamiteItem> item = itemRegistry.register(registryName, dynamiteSupplier);		
-		if(addToLists) {
-			if(dynamiteLists.get(tab) == null) {
-				dynamiteLists.put(tab, new ArrayList<RegistryObject<LDynamiteItem>>());
+		if (addToLists) {
+			if (dynamiteLists.get(tab) == null) {
+				dynamiteLists.put(tab, new ArrayList<>());
 			}
 			dynamiteLists.get(tab).add(item);
 		}
-		if(addDispenseBehavior) {
+		if (addDispenseBehavior) {
 			DYNAMITE_DISPENSER_REGISTRY_LIST.add(item);
 		}
-		if(!tab.equals("none")) {
-			if(creativeTabItemLists.get(tab) == null) {
-				creativeTabItemLists.put(tab, new ArrayList<RegistryObject<? extends Item>>());
+		if (!tab.equals("none")) {
+			if (creativeTabItemLists.get(tab) == null) {
+				creativeTabItemLists.put(tab, new ArrayList<>());
 			}
 			creativeTabItemLists.get(tab).add(item);
 		}
@@ -370,18 +370,18 @@ public class RegistryHelper {
 	 */
 	public RegistryObject<LTNTMinecartItem> registerTNTMinecartItem(DeferredRegister<Item> itemRegistry, String registryName, Supplier<LTNTMinecartItem> minecartSupplier, String tab, boolean addToLists, boolean addDispenseBehavior){
 		RegistryObject<LTNTMinecartItem> item = itemRegistry.register(registryName, minecartSupplier);
-		if(addToLists) {
-			if(minecartLists.get(tab) == null) {
-				minecartLists.put(tab, new ArrayList<RegistryObject<LTNTMinecartItem>>());
+		if (addToLists) {
+			if (minecartLists.get(tab) == null) {
+				minecartLists.put(tab, new ArrayList<>());
 			}
 			minecartLists.get(tab).add(item);
 		}
-		if(addDispenseBehavior) {
+		if (addDispenseBehavior) {
 			MINECART_DISPENSER_REGISTRY_LIST.add(item);
 		}
-		if(!tab.equals("none")) {
-			if(creativeTabItemLists.get(tab) == null) {
-				creativeTabItemLists.put(tab, new ArrayList<RegistryObject<? extends Item>>());
+		if (!tab.equals("none")) {
+			if (creativeTabItemLists.get(tab) == null) {
+				creativeTabItemLists.put(tab, new ArrayList<>());
 			}
 			creativeTabItemLists.get(tab).add(item);
 		}
@@ -420,10 +420,9 @@ public class RegistryHelper {
 	 * @return {@link RegistryObject} of an {@link EntityType} of a {@link PrimedLTNT}
 	 */
 	public RegistryObject<EntityType<PrimedLTNT>> registerTNTEntity(DeferredRegister<EntityType<?>> entityRegistry, String registryName, PrimedTNTEffect effect, float size, boolean fireImmune){
-		if(fireImmune) {
+		if (fireImmune) {
 			return entityRegistry.register(registryName, () -> EntityType.Builder.<PrimedLTNT>of((EntityType<PrimedLTNT> type, Level level) -> new PrimedLTNT(type, level, effect), MobCategory.MISC).setShouldReceiveVelocityUpdates(true).setTrackingRange(64).fireImmune().sized(size, size).build(registryName));
-		}
-		else {
+		} else {
 			return entityRegistry.register(registryName, () -> EntityType.Builder.<PrimedLTNT>of((EntityType<PrimedLTNT> type, Level level) -> new PrimedLTNT(type, level, effect), MobCategory.MISC).setShouldReceiveVelocityUpdates(true).setTrackingRange(64).sized(size, size).build(registryName));			
 		}
 	}
@@ -541,10 +540,9 @@ public class RegistryHelper {
 	 * @return {@link RegistryObject} of an {@link EntityType} of a {@link LExplosiveProjectile}
 	 */
 	public RegistryObject<EntityType<LExplosiveProjectile>> registerExplosiveProjectile(DeferredRegister<EntityType<?>> entityRegistry, String registryName, PrimedTNTEffect effect, float size, boolean fireImmune){
-		if(fireImmune) {
+		if (fireImmune) {
 			return entityRegistry.register(registryName, () -> EntityType.Builder.<LExplosiveProjectile>of((EntityType<LExplosiveProjectile> type, Level level) -> new LExplosiveProjectile(type, level, effect), MobCategory.MISC).setShouldReceiveVelocityUpdates(true).setTrackingRange(64).fireImmune().sized(size, size).build(registryName));
-		}
-		else {
+		} else {
 			return entityRegistry.register(registryName, () -> EntityType.Builder.<LExplosiveProjectile>of((EntityType<LExplosiveProjectile> type, Level level) -> new LExplosiveProjectile(type, level, effect), MobCategory.MISC).setShouldReceiveVelocityUpdates(true).setTrackingRange(64).sized(size, size).build(registryName));
 		}
 	}

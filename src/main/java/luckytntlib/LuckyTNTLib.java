@@ -12,7 +12,6 @@ import luckytntlib.item.LDynamiteItem;
 import luckytntlib.item.LTNTMinecartItem;
 import luckytntlib.network.PacketHandler;
 import luckytntlib.registry.RegistryHelper;
-import luckytntlib.registry.TempRegistry;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.core.BlockPos;
@@ -23,12 +22,10 @@ import net.minecraft.core.dispenser.DefaultDispenseItemBehavior;
 import net.minecraft.core.dispenser.DispenseItemBehavior;
 import net.minecraft.tags.BlockTags;
 import net.minecraft.util.Mth;
-import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.BaseRailBlock;
-import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.DispenserBlock;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.RailShape;
@@ -40,47 +37,35 @@ import net.minecraftforge.fml.ModLoadingContext;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.event.lifecycle.FMLCommonSetupEvent;
 import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
-import net.minecraftforge.registries.DeferredRegister;
-import net.minecraftforge.registries.ForgeRegistries;
 import net.minecraftforge.registries.RegistryObject;
 
 @Mod(LuckyTNTLib.MODID)
 public class LuckyTNTLib {
 	
     public static final String MODID = "luckytntlib";
-	public static final DeferredRegister<Block> BLOCKS = DeferredRegister.create(ForgeRegistries.BLOCKS, MODID);
-	public static final DeferredRegister<Item> ITEMS = DeferredRegister.create(ForgeRegistries.ITEMS, MODID);
-	public static final DeferredRegister<EntityType<?>> ENTITIES = DeferredRegister.create(ForgeRegistries.ENTITY_TYPES, MODID);
-	public static final RegistryHelper RH = new RegistryHelper(BLOCKS, ITEMS, ENTITIES);
 
-    public LuckyTNTLib() {
-        IEventBus bus = FMLJavaModLoadingContext.get().getModEventBus();
-        bus.addListener(this::commonSetup);
-        MinecraftForge.EVENT_BUS.register(this);
-        
-        TempRegistry.entityRegistry.register(bus);
-        TempRegistry.blockRegistry.register(bus);
-        TempRegistry.itemRegistry.register(bus);
-        
-        LuckyTNTLibConfigs.register();
-        ModLoadingContext.get().registerExtensionPoint(ConfigScreenHandler.ConfigScreenFactory.class, () -> new ConfigScreenHandler.ConfigScreenFactory(new BiFunction<Minecraft, Screen, Screen>() {		
+	public LuckyTNTLib() {
+		IEventBus bus = FMLJavaModLoadingContext.get().getModEventBus();
+		bus.addListener(this::commonSetup);
+		MinecraftForge.EVENT_BUS.register(this);
+
+		LuckyTNTLibConfigs.register();
+		ModLoadingContext.get().registerExtensionPoint(ConfigScreenHandler.ConfigScreenFactory.class, () -> new ConfigScreenHandler.ConfigScreenFactory(new BiFunction<Minecraft, Screen, Screen>() {
 			@Override
 			public Screen apply(Minecraft mc, Screen screen) {
 				return new MultithreadingConfigScreen();
 			}
 		}));
-        ENTITIES.register(bus);
-        BLOCKS.register(bus);
-        ITEMS.register(bus);
-    }
+	}
     
-    private void commonSetup(final FMLCommonSetupEvent event) {
-    	PacketHandler.register();
-    	
-    	for(Pair<RegistryObject<LTNTBlock>, RegistryObject<Item>> pair : RegistryHelper.TNT_DISPENSER_REGISTRY_LIST) {
-    		LTNTBlock block = pair.getFirst().get();
-    		Item item = pair.getSecond().get();
+	private void commonSetup(final FMLCommonSetupEvent event) {
+		PacketHandler.register();
+
+		for (Pair<RegistryObject<LTNTBlock>, RegistryObject<Item>> pair : RegistryHelper.TNT_DISPENSER_REGISTRY_LIST) {
+			LTNTBlock block = pair.getFirst().get();
+			Item item = pair.getSecond().get();
 			DispenseItemBehavior behaviour = new DispenseItemBehavior() {
+				
 				@Override
 				public ItemStack dispense(BlockSource source, ItemStack stack) {
 					Level level = source.getLevel();
@@ -92,42 +77,43 @@ public class LuckyTNTLib {
 				}
 			};
 			DispenserBlock.registerBehavior(item, behaviour);
-    	}
-    	for(RegistryObject<LDynamiteItem> dynamite : RegistryHelper.DYNAMITE_DISPENSER_REGISTRY_LIST) {
-    		LDynamiteItem item = dynamite.get();
-    		DispenseItemBehavior behaviour = new DispenseItemBehavior() {
-				
+		}
+		for (RegistryObject<LDynamiteItem> dynamite : RegistryHelper.DYNAMITE_DISPENSER_REGISTRY_LIST) {
+			LDynamiteItem item = dynamite.get();
+			DispenseItemBehavior behaviour = new DispenseItemBehavior() {
+
 				@Override
 				public ItemStack dispense(BlockSource source, ItemStack stack) {
 					Level level = source.getLevel();
 					Vec3 dispenserPos = new Vec3(source.getPos().getX() + 0.5f, source.getPos().getY() + 0.5f, source.getPos().getZ() + 0.5f);
 					Position pos = DispenserBlock.getDispensePosition(source);
-					item.shoot(level, pos.x(), pos.y(), pos.z(), new Vec3(pos.x(), pos.y(), pos.z()).add(-dispenserPos.x(), -dispenserPos.y(), -dispenserPos.z()), 2, null);
+					item.shoot(level, pos.x(), pos.y(), pos.z(), new Vec3(pos.x(), pos.y(), pos.z()).add(-dispenserPos.x(), -dispenserPos.y(), -dispenserPos.z()), 2f, null);
 					stack.shrink(1);
 					return stack;
 				}
 			};
 			DispenserBlock.registerBehavior(item, behaviour);
-    	}
-    	for(RegistryObject<LTNTMinecartItem> minecart : RegistryHelper.MINECART_DISPENSER_REGISTRY_LIST) {
-    		LTNTMinecartItem item = minecart.get();
+		}
+		for (RegistryObject<LTNTMinecartItem> minecart : RegistryHelper.MINECART_DISPENSER_REGISTRY_LIST) {
+			LTNTMinecartItem item = minecart.get();
 			DispenseItemBehavior behaviour = new DispenseItemBehavior() {
+				
 				@Override
 				public ItemStack dispense(BlockSource source, ItemStack stack) {
 					Direction direction = source.getBlockState().getValue(DispenserBlock.FACING);
 					Level level = source.getLevel();
-					double x = source.x() + (double) direction.getStepX() * 1.125D;
-					double y = Math.floor(source.y()) + (double) direction.getStepY();
-					double z = source.z() + (double) direction.getStepZ() * 1.125D;
+					double x = source.x() + direction.getStepX() * 1.125d;
+					double y = Math.floor(source.y()) + direction.getStepY();
+					double z = source.z() + direction.getStepZ() * 1.125d;
 					BlockPos pos = source.getPos().relative(direction);
 					BlockState state = level.getBlockState(pos);
-					RailShape rail = state.getBlock() instanceof BaseRailBlock ? ((BaseRailBlock) state.getBlock()).getRailDirection(state, level, pos, null) : RailShape.NORTH_SOUTH;
+					RailShape rail = state.getBlock() instanceof BaseRailBlock railBlock ? railBlock.getRailDirection(state, level, pos, null) : RailShape.NORTH_SOUTH;
 					double railHeight;
 					if (state.is(BlockTags.RAILS)) {
 						if (rail.isAscending()) {
-							railHeight = 0.6D;
+							railHeight = 0.6d;
 						} else {
-							railHeight = 0.1D;
+							railHeight = 0.1d;
 						}
 					} else {
 						if (!state.isAir() || !level.getBlockState(pos.below()).is(BlockTags.RAILS)) {
@@ -136,11 +122,11 @@ public class LuckyTNTLib {
 
 						BlockState stateDown = level.getBlockState(pos.below());
 						@SuppressWarnings("deprecation")
-						RailShape railDown = stateDown.getBlock() instanceof BaseRailBlock ? stateDown.getValue(((BaseRailBlock) stateDown.getBlock()).getShapeProperty()) : RailShape.NORTH_SOUTH;
+						RailShape railDown = stateDown.getBlock() instanceof BaseRailBlock railBlock ? stateDown.getValue(railBlock.getShapeProperty()) : RailShape.NORTH_SOUTH;
 						if (direction != Direction.DOWN && railDown.isAscending()) {
-							railHeight = -0.4D;
+							railHeight = -0.4d;
 						} else {
-							railHeight = -0.9D;
+							railHeight = -0.9d;
 						}
 					}
 
@@ -153,6 +139,6 @@ public class LuckyTNTLib {
 				}
 			};
 			DispenserBlock.registerBehavior(item, behaviour);
-    	}
-    }
+		}
+	}
 }

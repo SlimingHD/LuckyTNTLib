@@ -27,8 +27,8 @@ public class PrimedLTNT extends PrimedTnt implements IExplosiveEntity {
 	public PrimedLTNT(EntityType<PrimedLTNT> type, Level level, PrimedTNTEffect effect) {
 		super(type, level);
 		this.effect = effect;
-	    double movement = level.random.nextDouble() * (double)(Math.PI * 2F);
-	    this.setDeltaMovement(-Math.sin(movement) * 0.02D, 0.2F, -Math.cos(movement) * 0.02D);
+	    double movement = level.random.nextDouble() * (double)(Math.PI * 2f);
+	    setDeltaMovement(-Math.sin(movement) * 0.02d, 0.2f, -Math.cos(movement) * 0.02d);
 	    this.setTNTFuse(effect.getDefaultFuse(this));
 	}
 	
@@ -60,20 +60,20 @@ public class PrimedLTNT extends PrimedTnt implements IExplosiveEntity {
 	@Override
 	public void tick() {
 		if (!isNoGravity()) {
-			setDeltaMovement(getDeltaMovement().add(0.0D, -0.04D, 0.0D));
+			setDeltaMovement(getDeltaMovement().add(0d, -0.04d, 0d));
 			updateInWaterStateAndDoFluidPushing();
 		}
 		move(MoverType.SELF, getDeltaMovement());
-		setDeltaMovement(getDeltaMovement().scale(0.98D));
+		setDeltaMovement(getDeltaMovement().scale(0.98d));
 		if (onGround()) {
-			setDeltaMovement(getDeltaMovement().multiply(0.7D, -0.5D, 0.7D));
+			setDeltaMovement(getDeltaMovement().multiply(0.7d, -0.5d, 0.7d));
 		}
 		effect.baseTick(this);
 	}
 	
 	@Override
 	public void addAdditionalSaveData(CompoundTag tag) {
-		if(igniter != null) {
+		if (igniter != null) {
 			tag.putInt("igniterID", igniter.getId());
 		}
 		super.addAdditionalSaveData(tag);
@@ -81,8 +81,8 @@ public class PrimedLTNT extends PrimedTnt implements IExplosiveEntity {
 	
 	@Override
 	public void readAdditionalSaveData(CompoundTag tag) {
-		if(level().getEntity(tag.getInt("igniterID")) instanceof LivingEntity lEnt) {
-			igniter = lEnt;
+		if (level().getEntity(tag.getInt("igniterID")) instanceof LivingEntity ent) {
+			igniter = ent;
 		}
 		super.readAdditionalSaveData(tag);
 	}

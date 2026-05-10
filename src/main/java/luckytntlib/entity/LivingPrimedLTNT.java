@@ -8,8 +8,8 @@ import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.syncher.EntityDataAccessor;
 import net.minecraft.network.syncher.EntityDataSerializers;
 import net.minecraft.network.syncher.SynchedEntityData;
+import net.minecraft.tags.DamageTypeTags;
 import net.minecraft.world.damagesource.DamageSource;
-import net.minecraft.world.damagesource.DamageTypes;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.PathfinderMob;
@@ -35,7 +35,7 @@ public class LivingPrimedLTNT extends PathfinderMob implements IExplosiveEntity 
 	public LivingPrimedLTNT(EntityType<? extends PathfinderMob> type, Level level, @Nullable PrimedTNTEffect effect) {
 		super(type, level);
 		this.effect = effect;
-		this.setTNTFuse(effect.getDefaultFuse(this));
+		setTNTFuse(effect.getDefaultFuse(this));
 	}
 	
 	@Override
@@ -52,7 +52,7 @@ public class LivingPrimedLTNT extends PathfinderMob implements IExplosiveEntity 
 	
 	@Override
 	public void addAdditionalSaveData(CompoundTag tag) {
-		if(igniter != null) {
+		if (igniter != null) {
 			tag.putInt("throwerID", igniter.getId());
 		}
 		tag.putShort("Fuse", (short)getTNTFuse());
@@ -61,8 +61,8 @@ public class LivingPrimedLTNT extends PathfinderMob implements IExplosiveEntity 
 	
 	@Override
 	public void readAdditionalSaveData(CompoundTag tag) {
-		if(level().getEntity(tag.getInt("throwerID")) instanceof LivingEntity lEnt) {
-			igniter = lEnt;
+		if (level().getEntity(tag.getInt("throwerID")) instanceof LivingEntity ent) {
+			igniter = ent;
 		}
 		setTNTFuse(tag.getShort("Fuse"));
 		super.readAdditionalSaveData(tag);
@@ -87,7 +87,7 @@ public class LivingPrimedLTNT extends PathfinderMob implements IExplosiveEntity 
 
 	@Override
 	public boolean hurt(DamageSource source, float amount) {
-		if(source.is(DamageTypes.FELL_OUT_OF_WORLD)) {
+		if (source.is(DamageTypeTags.BYPASSES_INVULNERABILITY)) {
 			return true;
 		}
 		return false;

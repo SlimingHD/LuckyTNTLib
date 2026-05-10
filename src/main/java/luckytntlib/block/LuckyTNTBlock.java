@@ -42,8 +42,9 @@ public class LuckyTNTBlock extends LTNTBlock {
 	@Override
 	public PrimedLTNT explode(Level level, boolean exploded, double x, double y, double z, @Nullable LivingEntity igniter) {
 		int rand = random.nextInt(TNTs.size());
-		if(level.getBlockState(new BlockPos((int)x, (int)y, (int)z)).getBlock() == this) {
-			level.setBlock(new BlockPos((int)x, (int)y, (int)z), Blocks.AIR.defaultBlockState(), 3);
+		BlockPos pos = BlockPos.containing(x, y, z);
+		if (level.getBlockState(pos).getBlock() == this) {
+			level.setBlock(pos, Blocks.AIR.defaultBlockState(), 3);
 		}
 		return TNTs.get(rand).get().explode(level, exploded, x, y, z, igniter);
 	}

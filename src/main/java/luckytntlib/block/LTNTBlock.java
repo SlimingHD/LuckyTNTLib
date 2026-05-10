@@ -47,7 +47,7 @@ public class LTNTBlock extends TntBlock {
 	
 	@Override
 	public void onCaughtFire(BlockState state, Level level, BlockPos pos, @Nullable Direction face, @Nullable LivingEntity igniter) {
-		if(!level.isClientSide) {
+		if (!level.isClientSide()) {
 			explode(level, false, pos.getX(), pos.getY(), pos.getZ(), igniter);
 		}
 	}
@@ -68,7 +68,7 @@ public class LTNTBlock extends TntBlock {
 	
 	@Override
 	public void onBlockExploded(BlockState state, Level level, BlockPos pos, Explosion explosion) {
-		if(!level.isClientSide) {
+		if (!level.isClientSide()) {
 			explode(level, true, pos.getX(), pos.getY(), pos.getZ(), explosion.getIndirectSourceEntity());
 		}
 	}
@@ -96,15 +96,16 @@ public class LTNTBlock extends TntBlock {
 	 */
 	@Nullable
 	public PrimedLTNT explode(Level level, boolean exploded, double x, double y, double z, @Nullable LivingEntity igniter) throws NullPointerException {
-		if(TNT != null) {
+		if (TNT != null) {
 			PrimedLTNT tnt = TNT.get().create(level);
 			tnt.setFuse(exploded && randomizedFuseUponExploded() ? tnt.getEffect().getDefaultFuse(tnt) / 8 + random.nextInt(Mth.clamp(tnt.getEffect().getDefaultFuse(tnt) / 4, 1, Integer.MAX_VALUE)) : tnt.getEffect().getDefaultFuse(tnt));
 			tnt.setPos(x + 0.5f, y, z + 0.5f);
 			tnt.setOwner(igniter);
 			level.addFreshEntity(tnt);
-			level.playSound(null, new BlockPos((int)x, (int)y, (int)z), SoundEvents.TNT_PRIMED, SoundSource.MASTER, 1, 1);
-			if(level.getBlockState(new BlockPos((int)x, (int)y, (int)z)).getBlock() == this) {
-				level.setBlock(new BlockPos((int)x, (int)y, (int)z), Blocks.AIR.defaultBlockState(), 3);
+			BlockPos pos = BlockPos.containing(x, y, z);
+			level.playSound(null, pos, SoundEvents.TNT_PRIMED, SoundSource.MASTER, 1, 1);
+			if (level.getBlockState(pos).getBlock() == this) {
+				level.setBlock(pos, Blocks.AIR.defaultBlockState(), 3);
 			}
 			return tnt;
 		}

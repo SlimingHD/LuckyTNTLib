@@ -45,21 +45,20 @@ public class LExplosiveProjectile extends AbstractArrow implements IExplosiveEnt
 	
 	@Override
 	public void onHitBlock(BlockHitResult hitResult) {
-		Vec3 pos = hitResult.getLocation().subtract(this.getX(), this.getY(), this.getZ());
+		Vec3 pos = hitResult.getLocation().subtract(getX(), getY(), getZ());
 		setDeltaMovement(pos);
-		Vec3 pos2 = pos.normalize().scale((double) 0.05F);
-		setPosRaw(this.getX() - pos2.x, this.getY() - pos2.y, this.getZ() - pos2.z);
+		Vec3 pos2 = pos.normalize().scale((double) 0.05f);
+		setPosRaw(getX() - pos2.x, getY() - pos2.y, getZ() - pos2.z);
 	    inGround = true;
 	}
 	
 	@Override
 	public void onHitEntity(EntityHitResult hitResult) {
-		if(hitResult.getEntity() instanceof Player player) {
-			if(!(player.isCreative() || player.isSpectator())) {
+		if (hitResult.getEntity() instanceof Player player) {
+			if (!(player.isCreative() || player.isSpectator())) {
 				hitEntity = true;
 			}
-		}
-		else {
+		} else {
 			hitEntity = true;
 		}
 	}
@@ -78,7 +77,7 @@ public class LExplosiveProjectile extends AbstractArrow implements IExplosiveEnt
 	
 	@Override
 	public void addAdditionalSaveData(CompoundTag tag) {
-		if(thrower != null) {
+		if (thrower != null) {
 			tag.putInt("throwerID", thrower.getId());
 		}
 		tag.putShort("Fuse", (short)getTNTFuse());
@@ -87,8 +86,8 @@ public class LExplosiveProjectile extends AbstractArrow implements IExplosiveEnt
 	
 	@Override
 	public void readAdditionalSaveData(CompoundTag tag) {
-		if(level().getEntity(tag.getInt("throwerID")) instanceof LivingEntity lEnt) {
-			thrower = lEnt;
+		if (level().getEntity(tag.getInt("throwerID")) instanceof LivingEntity entity) {
+			thrower = entity;
 		}
 		setTNTFuse(tag.getShort("Fuse"));
 		super.readAdditionalSaveData(tag);
@@ -117,7 +116,7 @@ public class LExplosiveProjectile extends AbstractArrow implements IExplosiveEnt
 	
 	@Override
 	public void setOwner(Entity entity) {
-		thrower = entity instanceof LivingEntity ? (LivingEntity) entity : thrower;
+		thrower = entity instanceof LivingEntity living ? living : thrower;
 	}
 	
 	@Override

@@ -10,7 +10,6 @@ import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
-import net.minecraft.util.Mth;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
@@ -73,8 +72,7 @@ public abstract class PrimedTNTEffect {
 					}
 					ent.destroy();
 				}
-			}
-			else if (airFuse() && entity.getTNTFuse() == 0) {
+			} else if (airFuse() && entity.getTNTFuse() == 0) {
 				if (!entity.getLevel().isClientSide()) {
 					if (playsSound()) {
 						playExplosionSound(entity);
@@ -210,6 +208,6 @@ public abstract class PrimedTNTEffect {
 	 * @return {@link BlockPos} 
 	 */
 	public BlockPos toBlockPos(Vec3 vec) {
-		return new BlockPos(Mth.floor(vec.x), Mth.floor(vec.y), Mth.floor(vec.z));
+		return BlockPos.containing(vec);
 	}
 }

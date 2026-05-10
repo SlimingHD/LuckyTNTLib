@@ -1,7 +1,5 @@
 package luckytntlib.item;
 
-import java.util.Random;
-
 import javax.annotation.Nullable;
 
 import luckytntlib.entity.LExplosiveProjectile;
@@ -11,7 +9,6 @@ import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.InteractionHand;
-import net.minecraft.world.InteractionResult;
 import net.minecraft.world.InteractionResultHolder;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.EntityType;
@@ -32,7 +29,6 @@ public class LDynamiteItem extends Item {
 	
 	@Nullable
 	protected RegistryObject<EntityType<LExplosiveProjectile>> dynamite;
-	protected Random random = new Random();
 	
 	public LDynamiteItem(Item.Properties properties, @Nullable RegistryObject<EntityType<LExplosiveProjectile>> dynamite) {
 		super(properties);
@@ -42,14 +38,14 @@ public class LDynamiteItem extends Item {
 	@Override
 	public InteractionResultHolder<ItemStack> use(Level level, Player player, InteractionHand hand){
 		onUseTick(level, player, player.getItemInHand(hand) , player.getItemInHand(hand).getCount());
-		return new InteractionResultHolder<ItemStack>(InteractionResult.SUCCESS, player.getItemInHand(hand));
+		return InteractionResultHolder.success(player.getItemInHand(hand));
 	}
 	
 	@Override
 	public void onUseTick(Level level, LivingEntity player, ItemStack stack, int count) {
-		if(player instanceof ServerPlayer sPlayer && dynamite != null) {
+		if (player instanceof ServerPlayer serverPlayer && dynamite != null) {
 			shoot(level, player.getX(), player.getY() + player.getEyeHeight(), player.getZ(), player.getViewVector(1), 2, player);		
-			if(!sPlayer.isCreative()) {
+			if (!serverPlayer.isCreative()) {
 				stack.shrink(1);
 			}
 		}
@@ -69,13 +65,13 @@ public class LDynamiteItem extends Item {
 	 */
 	@Nullable
 	public LExplosiveProjectile shoot(Level level, double x, double y, double z, Vec3 direction, float power, @Nullable LivingEntity thrower) throws NullPointerException {
-		if(dynamite != null) {
+		if (dynamite != null) {
 			LExplosiveProjectile dyn = dynamite.get().create(level);
 			dyn.setPos(x, y, z);
 			dyn.shoot(direction.x, direction.y, direction.z, power, 0);
 			dyn.setOwner(thrower);
 			level.addFreshEntity(dyn);
-			level.playSound(null, new BlockPos((int)x, (int)y, (int)z), SoundEvents.SNOWBALL_THROW, SoundSource.MASTER, 1, 0.5f);
+			level.playSound(null, BlockPos.containing(x, y, z), SoundEvents.SNOWBALL_THROW, SoundSource.MASTER, 1f, 0.5f);
 			return dyn;
 		}
 		throw new NullPointerException("Explosive projectile entity type is null");

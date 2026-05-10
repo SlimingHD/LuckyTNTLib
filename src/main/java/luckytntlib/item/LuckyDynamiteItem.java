@@ -29,9 +29,9 @@ public class LuckyDynamiteItem extends LDynamiteItem {
 	
 	@Override
 	public void onUseTick(Level level, LivingEntity player, ItemStack stack, int count) {
-		if(player instanceof ServerPlayer sPlayer) {
+		if (player instanceof ServerPlayer serverPlayer) {
 			shoot(level, player.getX(), player.getY() + player.getEyeHeight(), player.getZ(), player.getViewVector(1), 2, player);		
-			if(!sPlayer.isCreative()) {
+			if (!serverPlayer.isCreative()) {
 				stack.shrink(1);
 			}
 		}
@@ -51,7 +51,6 @@ public class LuckyDynamiteItem extends LDynamiteItem {
 	 */
 	@Override
 	public LExplosiveProjectile shoot(Level level, double x, double y, double z, Vec3 direction, float power, LivingEntity thrower) {
-		int rand = random.nextInt(dynamites.size());
-		return dynamites.get(rand).get().shoot(level, x, y, z, direction, power, thrower);
+		return dynamites.get(level.getRandom().nextInt(dynamites.size())).get().shoot(level, x, y, z, direction, power, thrower);
 	}
 }
