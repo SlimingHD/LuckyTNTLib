@@ -102,8 +102,8 @@ public class LightUpdateHelper {
 			int lowestEmptySection = 0;
 			int lowestEmptySectionY = 0;
 
-			for (int i = server.getMaxSection(); i >= server.getMinSection() - 1; --i) {
-				if (i == server.getMaxSection() || i == server.getMinSection() - 1 || chunk.getSection(chunk.getSectionIndexFromSectionY(i)).hasOnlyAir()) {
+			for (int i = server.getMaxSection(); i >= server.getMinSection(); --i) {
+				if (i == server.getMaxSection() || chunk.getSection(chunk.getSectionIndexFromSectionY(i)).hasOnlyAir()) {
 					lowestEmptySection = i - (server.getMinSection() - 1);
 					lowestEmptySectionY = i;
 					long section = SectionPos.asLong(pos.x, i, pos.z);
@@ -436,7 +436,7 @@ public class LightUpdateHelper {
 		int realX = shiftCoordinate(x);
 		int realZ = shiftCoordinate(z);
 		
-		if (y < server.getMinBuildHeight()) {
+		if (y < server.getMinBuildHeight() || y >= server.getMaxBuildHeight()) {
 			return 0;
 		}
 		
