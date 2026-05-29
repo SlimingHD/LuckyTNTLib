@@ -409,7 +409,7 @@ public class ExplosionHelper {
 					
 					if (GET_CHUNK_HOLDER != null) {
 						try {
-							ChunkHolder holder = (ChunkHolder)GET_CHUNK_HOLDER.invoke(server.getChunkSource(), new Object[]{chunkPos.toLong()});
+							ChunkHolder holder = (ChunkHolder)GET_CHUNK_HOLDER.invoke(server.getChunkSource(), chunkPos.toLong());
 							holder.broadcastChanges(chunk);
 						} catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
 							e.printStackTrace();
